@@ -433,6 +433,12 @@
               <button type="button" onclick="markAllVisibleQuestions(true)" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-emerald-400 border border-gray-700 transition ml-auto" title="Alle sichtbaren Fragen als geprüft markieren">
                 ✓ Alle sichtbaren prüfen
               </button>
+              <button type="button" onclick="markAllVisibleQuestions(false)" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-amber-400 border border-gray-700 transition" title="Alle sichtbaren Fragen als ungeprüft markieren">
+                ⏳ Alle sichtbaren ungeprüft
+              </button>
+              <button type="button" onclick="markAllQuestionsGlobally(false)" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-red-950/40 hover:bg-red-900/50 text-red-300 border border-red-800/60 transition" title="Den gesamten Fragenkatalog als ungeprüft markieren">
+                ⚠️ Alle ungeprüft setzen (Katalog)
+              </button>
             </div>
           </div>
 
@@ -524,6 +530,12 @@
               </button>
               <button type="button" onclick="markAllVisibleFlashcards(true)" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-emerald-400 border border-gray-700 transition ml-auto" title="Alle sichtbaren Karten als geprüft markieren">
                 ✓ Alle sichtbaren prüfen
+              </button>
+              <button type="button" onclick="markAllVisibleFlashcards(false)" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-amber-400 border border-gray-700 transition" title="Alle sichtbaren Karten als ungeprüft markieren">
+                ⏳ Alle sichtbaren ungeprüft
+              </button>
+              <button type="button" onclick="markAllFlashcardsGlobally(false)" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-red-950/40 hover:bg-red-900/50 text-red-300 border border-red-800/60 transition" title="Den gesamten Lernkartenkatalog als ungeprüft markieren">
+                ⚠️ Alle ungeprüft setzen (Katalog)
               </button>
             </div>
           </div>
@@ -3863,6 +3875,45 @@ window.markAllVisibleQuestions = async function(status = true) {
   }
 };
 
+window.markAllQuestionsGlobally = async function(status = false) {
+  const count = allQuestions.length;
+  if (count === 0) return;
+  const actionText = status ? 'ALLE Fragen als GEPRÜFT' : 'ALLE Fragen als UNGEPRÜFT';
+  const warnSub = status ? 'Sie werden sofort in der App für alle Nutzer freigeschaltet.' : 'Achtung: Ungeprüfte Fragen werden in der App ausgeblendet, bis sie einzeln oder gefiltert freigegeben werden!';
+  if (!confirm('Möchtest du wirklich ' + actionText + ' markieren (' + count + ' Fragen)?\n\n' + warnSub)) {
+    return;
+  }
+
+  allQuestions.forEach(q => {
+    q.is_verified = status;
+    if (status) verifiedQuestionIds.add(q.id);
+    else verifiedQuestionIds.delete(q.id);
+  });
+  saveVerifiedQuestions();
+  renderQuestionReviewStats();
+  filterQuestions();
+  showToast('Alle ' + count + ' Fragen als ' + (status ? 'geprüft' : 'ungeprüft') + ' markiert! ' + (status ? '✓' : '⏳'));
+
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/quiz_questions?id=neq.00000000-0000-0000-0000-000000000000', {
+      method: 'PATCH',
+      headers: { ...restHeaders, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ is_verified: status })
+    });
+    if (!res.ok) {
+      for (const q of allQuestions) {
+        fetch(SUPABASE_URL + '/rest/v1/quiz_questions?id=eq.' + q.id, {
+          method: 'PATCH',
+          headers: { ...restHeaders, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ is_verified: status })
+        }).catch(err => console.error('Supabase update error:', err));
+      }
+    }
+  } catch (e) {
+    console.error('Massen-Update Fehler:', e);
+  }
+};
+
 function getFilteredQuestionsList() {
   const search = (document.getElementById('searchQuestionsInput')?.value || '').toLowerCase();
   return allQuestions.filter(q => {
@@ -3974,6 +4025,45 @@ window.markAllVisibleFlashcards = async function(status = true) {
         headers: { ...restHeaders, 'Prefer': 'return=minimal' },
         body: JSON.stringify({ is_verified: status })
       }).catch(err => console.error('Supabase update error:', err));
+    }
+  } catch (e) {
+    console.error('Massen-Update Fehler:', e);
+  }
+};
+
+window.markAllFlashcardsGlobally = async function(status = false) {
+  const count = allFlashcards.length;
+  if (count === 0) return;
+  const actionText = status ? 'ALLE Lernkarten als GEPRÜFT' : 'ALLE Lernkarten als UNGEPRÜFT';
+  const warnSub = status ? 'Sie werden sofort in der App für alle Nutzer freigeschaltet.' : 'Achtung: Ungeprüfte Lernkarten werden in der App ausgeblendet, bis sie einzeln oder gefiltert freigegeben werden!';
+  if (!confirm('Möchtest du wirklich ' + actionText + ' markieren (' + count + ' Karten)?\n\n' + warnSub)) {
+    return;
+  }
+
+  allFlashcards.forEach(fc => {
+    fc.is_verified = status;
+    if (status) verifiedFlashcardIds.add(fc.id);
+    else verifiedFlashcardIds.delete(fc.id);
+  });
+  saveVerifiedFlashcards();
+  renderFlashcardReviewStats();
+  filterFlashcards();
+  showToast('Alle ' + count + ' Lernkarten als ' + (status ? 'geprüft' : 'ungeprüft') + ' markiert! ' + (status ? '✓' : '⏳'));
+
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/flashcards?id=neq.00000000-0000-0000-0000-000000000000', {
+      method: 'PATCH',
+      headers: { ...restHeaders, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ is_verified: status })
+    });
+    if (!res.ok) {
+      for (const fc of allFlashcards) {
+        fetch(SUPABASE_URL + '/rest/v1/flashcards?id=eq.' + fc.id, {
+          method: 'PATCH',
+          headers: { ...restHeaders, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ is_verified: status })
+        }).catch(err => console.error('Supabase update error:', err));
+      }
     }
   } catch (e) {
     console.error('Massen-Update Fehler:', e);
@@ -4361,13 +4451,17 @@ window.handleSaveQuestion = async function(e, andNext = false) {
       window.updateDangerOptionButtons();
       window.clearImage('q');
       selectCorrectOption(0);
-      showToast('Frage gespeichert! Bereit für nächste Frage... ✍️');
+      showToast('Frage gespeichert (4-Augen-Prinzip)! Bereit für nächste Frage... ✍️');
       const qInput = document.getElementById('q_text');
       if (qInput) qInput.focus();
     } else {
       closeQuestionModal();
       window.clearImage('q');
-      showToast('Frage in Cloud gespeichert! ✅');
+      if (!isVerified) {
+        alert('👁️ 4-Augen-Prinzip:\n\nDie Prüfungsfrage wurde gespeichert!\n\nGemäß 4-Augen-Prinzip muss sie erst von einem anderen Moderator oder Administrator geprüft und freigegeben werden, bevor sie für Schüler im Quiz sichtbar ist.');
+      } else {
+        showToast('Frage in Cloud gespeichert & freigegeben! ✅');
+      }
     }
     renderQuestionReviewStats();
     await loadAllData();
@@ -4596,13 +4690,17 @@ window.handleSaveFlashcard = async function(e, andNext = false) {
       document.getElementById('fc_content').value = '';
       document.getElementById('fc_reference').value = '';
       window.clearImage('fc');
-      showToast('Lernkarte gespeichert! Bereit für nächste Karte... 🃏');
+      showToast('Lernkarte gespeichert (4-Augen-Prinzip)! Bereit für nächste Karte... 🃏');
       const tInput = document.getElementById('fc_title');
       if (tInput) tInput.focus();
     } else {
       closeFlashcardModal();
       window.clearImage('fc');
-      showToast('Lernkarte gespeichert! 🃏');
+      if (!isVerified) {
+        alert('👁️ 4-Augen-Prinzip:\n\nDie Lernkarte wurde gespeichert!\n\nGemäß 4-Augen-Prinzip muss sie erst von einem anderen Moderator oder Administrator geprüft und freigegeben werden, bevor sie für Schüler in der App sichtbar ist.');
+      } else {
+        showToast('Lernkarte in Cloud gespeichert & freigegeben! ✅');
+      }
     }
     renderFlashcardReviewStats();
     await loadAllData();
