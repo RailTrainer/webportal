@@ -1491,12 +1491,12 @@
 
         <div class="space-y-2.5 pt-2">
           <div class="flex items-center justify-between">
-            <label class="block text-xs font-bold text-gray-300 uppercase">4 Antwortoptionen * (Kreis = Richtig • Button = Betriebsgefährdend BG)</label>
+            <label class="block text-xs font-bold text-gray-300 uppercase">4 Antwortoptionen * (Kästchen = Richtig (1 oder mehrere) • Button = Betriebsgefährdend BG)</label>
             <span class="text-[11px] text-brand-400 font-semibold" id="correctAnswerIndicatorText">Korrekt: Antwort A</span>
           </div>
 
-          <div id="opt_row_0" onclick="selectCorrectOption(0)" class="flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-brand-500/50 bg-brand-500/5 transition cursor-pointer">
-            <input type="radio" name="q_correct" value="0" id="opt_radio_0" checked class="w-4 h-4 accent-brand-500 cursor-pointer" onclick="event.stopPropagation(); selectCorrectOption(0)">
+          <div id="opt_row_0" onclick="toggleCorrectOption(0)" class="flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-brand-500/50 bg-brand-500/5 transition cursor-pointer">
+            <input type="checkbox" name="q_correct" value="0" id="opt_radio_0" checked class="w-4 h-4 rounded accent-brand-500 cursor-pointer" onclick="event.stopPropagation(); toggleCorrectOption(0)">
             <span class="w-5 h-5 rounded-md bg-brand-600 text-white flex items-center justify-center font-bold text-[11px]">A</span>
             <input type="text" id="q_opt_0" required placeholder="Antwort A" class="flex-1 bg-transparent text-sm text-gray-100 focus:outline-none" onclick="event.stopPropagation()">
             <button type="button" onclick="event.stopPropagation(); toggleDangerOption(0)" id="q_bg_btn_0" class="px-2.5 py-1 rounded-lg border border-gray-800 bg-gray-900 text-gray-400 hover:text-red-400 hover:border-red-500/40 text-xs font-bold transition flex items-center gap-1 shrink-0" title="Als betriebsgefährdend (BG) kennzeichnen">
@@ -1505,8 +1505,8 @@
             </button>
           </div>
 
-          <div id="opt_row_1" onclick="selectCorrectOption(1)" class="flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-gray-800 transition cursor-pointer">
-            <input type="radio" name="q_correct" value="1" id="opt_radio_1" class="w-4 h-4 accent-brand-500 cursor-pointer" onclick="event.stopPropagation(); selectCorrectOption(1)">
+          <div id="opt_row_1" onclick="toggleCorrectOption(1)" class="flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-gray-800 transition cursor-pointer">
+            <input type="checkbox" name="q_correct" value="1" id="opt_radio_1" class="w-4 h-4 rounded accent-brand-500 cursor-pointer" onclick="event.stopPropagation(); toggleCorrectOption(1)">
             <span class="w-5 h-5 rounded-md bg-gray-800 text-gray-300 flex items-center justify-center font-bold text-[11px]">B</span>
             <input type="text" id="q_opt_1" required placeholder="Antwort B" class="flex-1 bg-transparent text-sm text-gray-100 focus:outline-none" onclick="event.stopPropagation()">
             <button type="button" onclick="event.stopPropagation(); toggleDangerOption(1)" id="q_bg_btn_1" class="px-2.5 py-1 rounded-lg border border-gray-800 bg-gray-900 text-gray-400 hover:text-red-400 hover:border-red-500/40 text-xs font-bold transition flex items-center gap-1 shrink-0" title="Als betriebsgefährdend (BG) kennzeichnen">
@@ -1515,8 +1515,8 @@
             </button>
           </div>
 
-          <div id="opt_row_2" onclick="selectCorrectOption(2)" class="flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-gray-800 transition cursor-pointer">
-            <input type="radio" name="q_correct" value="2" id="opt_radio_2" class="w-4 h-4 accent-brand-500 cursor-pointer" onclick="event.stopPropagation(); selectCorrectOption(2)">
+          <div id="opt_row_2" onclick="toggleCorrectOption(2)" class="flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-gray-800 transition cursor-pointer">
+            <input type="checkbox" name="q_correct" value="2" id="opt_radio_2" class="w-4 h-4 rounded accent-brand-500 cursor-pointer" onclick="event.stopPropagation(); toggleCorrectOption(2)">
             <span class="w-5 h-5 rounded-md bg-gray-800 text-gray-300 flex items-center justify-center font-bold text-[11px]">C</span>
             <input type="text" id="q_opt_2" required placeholder="Antwort C" class="flex-1 bg-transparent text-sm text-gray-100 focus:outline-none" onclick="event.stopPropagation()">
             <button type="button" onclick="event.stopPropagation(); toggleDangerOption(2)" id="q_bg_btn_2" class="px-2.5 py-1 rounded-lg border border-gray-800 bg-gray-900 text-gray-400 hover:text-red-400 hover:border-red-500/40 text-xs font-bold transition flex items-center gap-1 shrink-0" title="Als betriebsgefährdend (BG) kennzeichnen">
@@ -1525,8 +1525,8 @@
             </button>
           </div>
 
-          <div id="opt_row_3" onclick="selectCorrectOption(3)" class="flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-gray-800 transition cursor-pointer">
-            <input type="radio" name="q_correct" value="3" id="opt_radio_3" class="w-4 h-4 accent-brand-500 cursor-pointer" onclick="event.stopPropagation(); selectCorrectOption(3)">
+          <div id="opt_row_3" onclick="toggleCorrectOption(3)" class="flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-gray-800 transition cursor-pointer">
+            <input type="checkbox" name="q_correct" value="3" id="opt_radio_3" class="w-4 h-4 rounded accent-brand-500 cursor-pointer" onclick="event.stopPropagation(); toggleCorrectOption(3)">
             <span class="w-5 h-5 rounded-md bg-gray-800 text-gray-300 flex items-center justify-center font-bold text-[11px]">D</span>
             <input type="text" id="q_opt_3" required placeholder="Antwort D" class="flex-1 bg-transparent text-sm text-gray-100 focus:outline-none" onclick="event.stopPropagation()">
             <button type="button" onclick="event.stopPropagation(); toggleDangerOption(3)" id="q_bg_btn_3" class="px-2.5 py-1 rounded-lg border border-gray-800 bg-gray-900 text-gray-400 hover:text-red-400 hover:border-red-500/40 text-xs font-bold transition flex items-center gap-1 shrink-0" title="Als betriebsgefährdend (BG) kennzeichnen">
@@ -4126,22 +4126,70 @@ window.markAllFlashcardsGlobally = async function(status = false) {
   }
 };
 
-window.selectCorrectOption = function(idx) {
+window.toggleCorrectOption = function(idx) {
+  const cb = document.getElementById('opt_radio_' + idx);
+  if (cb) {
+    cb.checked = !cb.checked;
+  }
+  const checked = Array.from(document.querySelectorAll('input[name="q_correct"]:checked'));
+  if (checked.length === 0) {
+    if (cb) cb.checked = true;
+    if (window.showToast) window.showToast('Mindestens eine Antwort muss richtig sein! ⚠️');
+  }
+  window.updateCorrectOptionsUI();
+};
+
+window.setCorrectOptions = function(indices) {
+  const arr = (Array.isArray(indices) && indices.length > 0) ? indices.map(n => parseInt(n)) : [0];
   for (let i = 0; i <= 3; i++) {
-    const radio = document.getElementById('opt_radio_' + i);
+    const cb = document.getElementById('opt_radio_' + i);
+    if (cb) {
+      cb.checked = arr.includes(i);
+    }
+  }
+  window.updateCorrectOptionsUI();
+};
+
+window.updateCorrectOptionsUI = function() {
+  const optLetters = ['A', 'B', 'C', 'D'];
+  const checkedIndices = [];
+  for (let i = 0; i <= 3; i++) {
+    const cb = document.getElementById('opt_radio_' + i);
     const row = document.getElementById('opt_row_' + i);
-    if (radio) radio.checked = (i === idx);
+    const badge = row ? row.querySelector('span') : null;
+    const isChecked = cb ? cb.checked : false;
+    if (isChecked) checkedIndices.push(i);
+
     if (row) {
-      if (i === idx) {
+      if (isChecked) {
         row.className = 'flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-brand-500/60 bg-brand-500/10 shadow-sm transition cursor-pointer';
       } else {
         row.className = 'flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-gray-800 hover:border-gray-700 transition cursor-pointer';
       }
     }
+    if (badge) {
+      if (isChecked) {
+        badge.className = 'w-5 h-5 rounded-md bg-brand-600 text-white flex items-center justify-center font-bold text-[11px]';
+      } else {
+        badge.className = 'w-5 h-5 rounded-md bg-gray-800 text-gray-400 flex items-center justify-center font-bold text-[11px]';
+      }
+    }
   }
-  const label = ['Antwort A', 'Antwort B', 'Antwort C', 'Antwort D'][idx] || 'Antwort ' + (idx + 1);
+
   const ind = document.getElementById('correctAnswerIndicatorText');
-  if (ind) ind.textContent = 'Korrekt: ' + label;
+  if (ind) {
+    if (checkedIndices.length === 1) {
+      ind.textContent = 'Korrekt: Antwort ' + optLetters[checkedIndices[0]];
+    } else if (checkedIndices.length > 1) {
+      ind.textContent = 'Korrekt: Antworten ' + checkedIndices.map(i => optLetters[i]).join(', ') + ' (' + checkedIndices.length + ' richtig)';
+    } else {
+      ind.textContent = 'Bitte mindestens eine Antwort als richtig markieren';
+    }
+  }
+};
+
+window.selectCorrectOption = function(idx) {
+  window.toggleCorrectOption(idx);
 };
 
 window.loadAllData = async function() {
@@ -4262,6 +4310,10 @@ window.renderQuestions = function(list) {
   container.innerHTML = list.map(q => {
     const isVerified = (q.is_verified === true || verifiedQuestionIds.has(q.id));
     const options = Array.isArray(q.options) ? q.options : (typeof q.options === 'string' ? JSON.parse(q.options) : []);
+    const corrIndices = Array.isArray(q.correct_indices) ? q.correct_indices :
+      (Array.isArray(q.correctIndices) ? q.correctIndices :
+      (typeof q.correct_indices === 'string' ? JSON.parse(q.correct_indices) :
+      [typeof q.correct_index === 'number' ? q.correct_index : 0]));
 
     const verifiedBtn = isVerified
       ? '<button type="button" onclick="window.toggleQuestionVerification(\'' + q.id + '\', event)" class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 transition shadow-sm" title="Klicken, um als ungeprüft zu markieren">' +
@@ -4281,6 +4333,7 @@ window.renderQuestions = function(list) {
       '<div class="flex items-start justify-between gap-4 mb-3">' +
         '<div class="flex items-center gap-2 flex-wrap">' +
           '<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand-500/20 text-brand-400 border border-brand-500/30">#' + (q.category || 'Allgemein') + '</span>' +
+          (corrIndices.length > 1 ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-1"><i data-lucide="check-square" class="w-3 h-3 text-purple-400"></i><span>Mehrfachauswahl (' + corrIndices.length + ')</span></span>' : '') +
           verifiedBtn +
           '<span class="text-xs text-gray-500">ID: ' + q.id + '</span>' +
         '</div>' +
@@ -4304,7 +4357,7 @@ window.renderQuestions = function(list) {
         '</div>' : '') +
       '<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">' +
         options.map((opt, oIdx) => {
-          const isCorrect = oIdx === q.correct_index;
+          const isCorrect = corrIndices.includes(oIdx);
           const isDanger = (q.danger_indices || q.dangerIndices || []).includes(oIdx);
           return '<div class="px-3.5 py-2 rounded-xl text-xs flex items-center justify-between gap-2.5 border ' +
             (isCorrect ? 'bg-brand-500/10 border-brand-500/40 text-brand-300 font-semibold' : (isDanger ? 'bg-red-950/20 border-red-500/40 text-gray-200' : 'bg-gray-950 border-gray-800 text-gray-400')) + '">' +
@@ -4313,6 +4366,7 @@ window.renderQuestions = function(list) {
                 (isCorrect ? 'bg-brand-500 text-white' : (isDanger ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400')) + '">' + (['A','B','C','D'][oIdx] || oIdx + 1) + '</span>' +
               '<span class="truncate">' + escapeHtml(opt) + '</span>' +
             '</div>' +
+            (isCorrect && corrIndices.length > 1 ? '<span class="text-[10px] font-bold text-brand-400 bg-brand-500/20 px-1.5 py-0.5 rounded shrink-0">Richtig ✓</span>' : '') +
             (isDanger ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-black bg-red-500/20 text-red-400 border border-red-500/40 shrink-0 flex items-center gap-1"><i data-lucide="alert-triangle" class="w-3 h-3"></i><span>BG</span></span>' : '') +
           '</div>';
         }).join('') +
@@ -4361,7 +4415,7 @@ window.openQuestionModal = function() {
   document.getElementById('q_id').value = '';
   const qVer = document.getElementById('q_verified');
   if (qVer) qVer.checked = true;
-  selectCorrectOption(0);
+  window.setCorrectOptions([0]);
   currentDangerIndices = [];
   window.updateDangerOptionButtons();
   window.clearImage('q');
@@ -4397,7 +4451,11 @@ window.editQuestion = function(id) {
   document.getElementById('q_opt_1').value = opts[1] || '';
   document.getElementById('q_opt_2').value = opts[2] || '';
   document.getElementById('q_opt_3').value = opts[3] || '';
-  selectCorrectOption(q.correct_index || 0);
+  const corrIndices = Array.isArray(q.correct_indices) ? q.correct_indices :
+    (Array.isArray(q.correctIndices) ? q.correctIndices :
+    (typeof q.correct_indices === 'string' ? JSON.parse(q.correct_indices) :
+    [typeof q.correct_index === 'number' ? q.correct_index : 0]));
+  window.setCorrectOptions(corrIndices);
   currentDangerIndices = [...(q.danger_indices || q.dangerIndices || [])];
   window.updateDangerOptionButtons();
   document.getElementById('questionModalTitle').textContent = 'Frage bearbeiten';
@@ -4433,13 +4491,20 @@ window.handleSaveQuestion = async function(e, andNext = false) {
     document.getElementById('q_opt_2').value.trim(),
     document.getElementById('q_opt_3').value.trim()
   ];
-  const checkedRadio = document.querySelector('input[name="q_correct"]:checked');
-  const correctIndex = checkedRadio ? parseInt(checkedRadio.value) : 0;
+  const checkedBoxes = Array.from(document.querySelectorAll('input[name="q_correct"]:checked'));
+  const correctIndices = checkedBoxes.map(cb => parseInt(cb.value));
 
   if (!category || !text || !options[0] || !options[1] || !options[2] || !options[3]) {
     alert('Bitte Kategorie, Fragentext und alle 4 Antwortoptionen ausfüllen.');
     return;
   }
+
+  if (correctIndices.length === 0) {
+    alert('Bitte mindestens eine Antwort als richtig markieren.');
+    return;
+  }
+
+  const correctIndex = correctIndices[0];
 
   const payload = { 
     id, 
@@ -4447,6 +4512,7 @@ window.handleSaveQuestion = async function(e, andNext = false) {
     text, 
     options, 
     correct_index: correctIndex, 
+    correct_indices: correctIndices,
     explanation, 
     image_url: imageUrl, 
     is_verified: isVerified,
@@ -4462,25 +4528,16 @@ window.handleSaveQuestion = async function(e, andNext = false) {
 
     if (!res.ok) {
       const errText = await res.text();
-      if (errText.includes('danger_indices') || errText.includes('PGRST204')) {
-        const proceedWithout = confirm(
-          '⚠️ Die Spalte "danger_indices" (Betriebsgefährdung) existiert noch nicht in der Supabase-Datenbank.\n\n' +
-          'Bitte führe folgenden SQL-Befehl im Supabase SQL Editor aus:\n' +
-          'ALTER TABLE public.quiz_questions ADD COLUMN IF NOT EXISTS danger_indices JSONB DEFAULT \'[]\'::jsonb;\n\n' +
-          'Möchtest du die Frage vorübergehend OHNE Betriebsgefährdung speichern?'
-        );
-        if (proceedWithout) {
-          const fallbackPayload = { ...payload };
-          delete fallbackPayload.danger_indices;
-          res = await fetch(SUPABASE_URL + '/rest/v1/quiz_questions', {
-            method: 'POST',
-            headers: { ...restHeaders, 'Prefer': 'resolution=merge-duplicates' },
-            body: JSON.stringify(fallbackPayload)
-          });
-          if (!res.ok) throw new Error(await res.text());
-        } else {
-          return;
-        }
+      if (errText.includes('correct_indices') || errText.includes('danger_indices') || errText.includes('PGRST204')) {
+        const fallbackPayload = { ...payload };
+        if (errText.includes('correct_indices')) delete fallbackPayload.correct_indices;
+        if (errText.includes('danger_indices')) delete fallbackPayload.danger_indices;
+        res = await fetch(SUPABASE_URL + '/rest/v1/quiz_questions', {
+          method: 'POST',
+          headers: { ...restHeaders, 'Prefer': 'resolution=merge-duplicates' },
+          body: JSON.stringify(fallbackPayload)
+        });
+        if (!res.ok) throw new Error(await res.text());
       } else {
         throw new Error(errText);
       }
@@ -4504,7 +4561,7 @@ window.handleSaveQuestion = async function(e, andNext = false) {
       currentDangerIndices = [];
       window.updateDangerOptionButtons();
       window.clearImage('q');
-      selectCorrectOption(0);
+      window.setCorrectOptions([0]);
       showToast('Frage gespeichert (4-Augen-Prinzip)! Bereit für nächste Frage... ✍️');
       const qInput = document.getElementById('q_text');
       if (qInput) qInput.focus();
@@ -5008,11 +5065,27 @@ window.parseCsvFile = function(file) {
         }
       } else {
         if (cols.length >= 6 && cols[1]) {
+          const rawCorrect = (cols[6] || '0').trim();
+          const parsedIndices = [];
+          const parts = rawCorrect.split(/[,;+/| ]+/);
+          for (const p of parts) {
+            const up = p.trim().toUpperCase();
+            if (['A', 'B', 'C', 'D'].includes(up)) {
+              parsedIndices.push(up.charCodeAt(0) - 65);
+            } else {
+              const num = parseInt(up, 10);
+              if (!isNaN(num) && num >= 0 && num <= 3) {
+                parsedIndices.push(num);
+              }
+            }
+          }
+          const validIndices = parsedIndices.length > 0 ? Array.from(new Set(parsedIndices)) : [0];
           parsedCsvRows.push({
             category: cols[0] || 'Allgemein',
             text: cols[1],
             options: [cols[2] || '', cols[3] || '', cols[4] || '', cols[5] || ''],
-            correct_index: parseInt(cols[6] || 0),
+            correct_index: validIndices[0],
+            correct_indices: validIndices,
             explanation: cols[7] || ''
           });
         }
@@ -5030,8 +5103,14 @@ window.parseCsvFile = function(file) {
         '</tbody>';
     } else {
       document.getElementById('csvPreviewCount').textContent = parsedCsvRows.length + ' Prüfungsfragen erkannt ❓';
-      document.getElementById('csvPreviewTable').innerHTML = '<thead><tr class="text-gray-400 border-b border-gray-800"><th class="py-2 px-3">Kategorie</th><th class="py-2 px-3">Frage</th><th class="py-2 px-3">Richtige Antwort</th></tr></thead><tbody>' +
-        parsedCsvRows.slice(0, 10).map(r => '<tr class="border-b border-gray-800/50"><td class="py-2 px-3 text-brand-400 font-bold">' + r.category + '</td><td class="py-2 px-3 text-gray-200">' + r.text + '</td><td class="py-2 px-3 text-brand-300 font-semibold">' + (r.options[r.correct_index] || '') + '</td></tr>').join('') +
+      document.getElementById('csvPreviewTable').innerHTML = '<thead><tr class="text-gray-400 border-b border-gray-800"><th class="py-2 px-3">Kategorie</th><th class="py-2 px-3">Frage</th><th class="py-2 px-3">Richtige Antwort(en)</th></tr></thead><tbody>' +
+        parsedCsvRows.slice(0, 10).map(r => {
+          const optLabels = (r.correct_indices && r.correct_indices.length > 0)
+            ? r.correct_indices.map(i => (['A','B','C','D'][i] || i) + ': ' + (r.options[i] || '')).join(', ')
+            : (r.options[r.correct_index] || '');
+          const multiBadge = (r.correct_indices && r.correct_indices.length > 1) ? ' <span class="text-xs text-purple-400 font-bold">(' + r.correct_indices.length + ' Richtige)</span>' : '';
+          return '<tr class="border-b border-gray-800/50"><td class="py-2 px-3 text-brand-400 font-bold">' + r.category + '</td><td class="py-2 px-3 text-gray-200">' + r.text + '</td><td class="py-2 px-3 text-brand-300 font-semibold">' + escapeHtml(optLabels) + multiBadge + '</td></tr>';
+        }).join('') +
         '</tbody>';
     }
     document.getElementById('csvPreviewArea').classList.remove('hidden');
@@ -5113,6 +5192,7 @@ window.commitCsvImport = async function() {
           text: r.text,
           options: r.options,
           correct_index: r.correct_index,
+          correct_indices: r.correct_indices || [r.correct_index],
           explanation: r.explanation,
           is_verified: isVerified
         };
@@ -5124,6 +5204,7 @@ window.commitCsvImport = async function() {
           text: r.text,
           options: r.options,
           correct_index: r.correct_index,
+          correct_indices: r.correct_indices || [r.correct_index],
           explanation: r.explanation,
           is_verified: isVerified
         };
@@ -5131,12 +5212,30 @@ window.commitCsvImport = async function() {
     });
 
     try {
-      const res = await fetch(SUPABASE_URL + '/rest/v1/quiz_questions', {
+      let res = await fetch(SUPABASE_URL + '/rest/v1/quiz_questions', {
         method: 'POST',
         headers: { ...restHeaders, 'Prefer': 'resolution=merge-duplicates' },
         body: JSON.stringify(toInsert)
       });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        const errText = await res.text();
+        if (errText.includes('correct_indices')) {
+          // Fallback falls die Spalte noch nicht angelegt ist
+          const fallbackInsert = toInsert.map(item => {
+            const copy = { ...item };
+            delete copy.correct_indices;
+            return copy;
+          });
+          res = await fetch(SUPABASE_URL + '/rest/v1/quiz_questions', {
+            method: 'POST',
+            headers: { ...restHeaders, 'Prefer': 'resolution=merge-duplicates' },
+            body: JSON.stringify(fallbackInsert)
+          });
+          if (!res.ok) throw new Error(await res.text());
+        } else {
+          throw new Error(errText);
+        }
+      }
       if (isVerified) {
         toInsert.forEach(q => verifiedQuestionIds.add(q.id));
         saveVerifiedQuestions();
@@ -5156,8 +5255,9 @@ window.commitCsvImport = async function() {
 
 window.downloadQuestionsTemplate = function() {
   const bom = '\uFEFF';
-  const csv = bom + 'Kategorie;Fragentext;Antwort_A;Antwort_B;Antwort_C;Antwort_D;Index_Richtige_Antwort_0_bis_3;Erklaerung\n' +
+  const csv = bom + 'Kategorie;Fragentext;Antwort_A;Antwort_B;Antwort_C;Antwort_D;Index_Richtige_Antwort_0_bis_3_oder_Mehrfachauswahl_zB_0,1;Erklaerung\n' +
     'Signale;Welche Bedeutung hat das Signal Zs 1 (Ersatzsignal)?;Fahrt mit 40 km/h;Halt vor dem Signal;Am Signal Hp 0 oder am gestörten Lichthauptsignal ohne schriftlichen Befehl vorbeifahren;Halt erwarten;2;Das Signal Zs 1 (drei weiße Lichter in Dreiecksform) erlaubt die Vorbeifahrt an einem Halt zeigenden oder gestörten Hauptsignal ohne schriftlichen Befehl.\n' +
+    'Signale;Welche dieser Signale sind Hauptsignale?;Signal Hp 0 (Halt);Signal Hp 1 (Fahrt);Signal Zs 1 (Ersatzsignal);Signal Vr 0 (Halt erwarten);0,1;Hp 0 und Hp 1 sind Hauptsignale. Zs 1 ist ein Zusatzsignal und Vr 0 ist ein Vorsignal.\n' +
     'Bremsprobe;Wann ist zwingend eine Volle Bremsprobe erforderlich?;Bei jedem Lokführerwechsel;Am neu gebildeten Zug sowie bei Unregelmäßigkeiten und vor der ersten Zugfahrt;Nur bei Frost unter -10 Grad;Ausschließlich nach einem Achsbruch;1;Die Volle Bremsprobe (Zustand I) ist gemäß VDV-Schrift 757 und Ril 915 zwingend an neu gebildeten Zügen und vor der ersten Zugfahrt des Tages auszuführen.\n' +
     'Bahnbetrieb;Wie lautet der Regeldruck in der Hauptluftleitung (HL) im gefüllten Zustand?;4,0 bar;5,0 bar;8,5 bar;10,0 bar;1;Der normale Betriebsdruck in der Hauptluftleitung (HL) beträgt bei allen europäischen Eisenbahnen 5,0 bar.\n' +
     'Anlage 5;Wer erteilt im Zugleitbetrieb nach Anlage 5 die Fahrerlaubnis?;Der Fahrdienstleiter des Nachbarbahnhofs;Der Zugleiter;Der Zugführer eigenständig;Die Leitstelle der Werkstatt;1;Im Zugleitbetrieb (Anlage 5 zur FV-NE) ist ausschließlich der Zugleiter für die Erteilung und Rücknahme von Fahraufträgen und Fahrerlaubnissen zuständig.\n' +

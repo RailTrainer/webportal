@@ -116,10 +116,15 @@ window.renderQuestions = function(list) {
   }
   container.innerHTML = list.map(q => {
     const options = Array.isArray(q.options) ? q.options : (typeof q.options === 'string' ? JSON.parse(q.options) : []);
+    const corrIndices = Array.isArray(q.correct_indices) ? q.correct_indices :
+      (Array.isArray(q.correctIndices) ? q.correctIndices :
+      (typeof q.correct_indices === 'string' ? JSON.parse(q.correct_indices) :
+      [typeof q.correct_index === 'number' ? q.correct_index : 0]));
     return '<div class="bg-gray-900 border border-gray-800 hover:border-gray-700 rounded-2xl p-5 shadow-lg transition">' +
       '<div class="flex items-start justify-between gap-4 mb-3">' +
         '<div class="flex items-center gap-2 flex-wrap">' +
           '<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand-500/20 text-brand-400 border border-brand-500/30">#' + (q.category || 'Allgemein') + '</span>' +
+          (corrIndices.length > 1 ? '<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-1"><i data-lucide="check-square" class="w-3 h-3 text-purple-400"></i><span>Mehrfachauswahl (' + corrIndices.length + ')</span></span>' : '') +
           '<span class="text-xs text-gray-500">ID: ' + q.id + '</span>' +
         '</div>' +
         '<div class="flex items-center gap-2">' +
@@ -130,12 +135,15 @@ window.renderQuestions = function(list) {
       '<p class="font-bold text-base text-gray-100 mb-3">' + q.text + '</p>' +
       '<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">' +
         options.map((opt, oIdx) => {
-          const isCorrect = oIdx === q.correct_index;
-          return '<div class="px-3.5 py-2 rounded-xl text-xs flex items-center gap-2.5 border ' +
+          const isCorrect = corrIndices.includes(oIdx);
+          return '<div class="px-3.5 py-2 rounded-xl text-xs flex items-center justify-between gap-2.5 border ' +
             (isCorrect ? 'bg-brand-500/10 border-brand-500/40 text-brand-300 font-semibold' : 'bg-gray-950 border-gray-800 text-gray-400') + '">' +
-            '<span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ' +
-              (isCorrect ? 'bg-brand-500 text-white' : 'bg-gray-800 text-gray-400') + '">' + (['A','B','C','D'][oIdx] || oIdx + 1) + '</span>' +
-            '<span>' + opt + '</span>' +
+            '<div class="flex items-center gap-2.5 min-w-0">' +
+              '<span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ' +
+                (isCorrect ? 'bg-brand-500 text-white' : 'bg-gray-800 text-gray-400') + '">' + (['A','B','C','D'][oIdx] || oIdx + 1) + '</span>' +
+              '<span>' + opt + '</span>' +
+            '</div>' +
+            (isCorrect && corrIndices.length > 1 ? '<span class="text-[10px] font-bold text-brand-400 bg-brand-500/20 px-1.5 py-0.5 rounded shrink-0">Richtig ✓</span>' : '') +
           '</div>';
         }).join('') +
       '</div>' +
@@ -162,7 +170,7 @@ window.handleSaveQuestion = async function(e) {
   const category = document.getElementById('q_category').value;
   const text = document.getElementById('q_text').value.trim();
   const explanation = document.getElementById('q_explanation').value.trim();
-  const imageUrl = document.getElementById('q_image').value.trim() || null;
+  const imageUrl = document.getElementById('q_image')?.value?.trim() || null;
   const is_verified = document.getElementById('q_verified')?.checked ?? true;
   const options = [
     document.getElementById('q_opt_0').value.trim(),
@@ -170,11 +178,42 @@ window.handleSaveQuestion = async function(e) {
     document.getElementById('q_opt_2').value.trim(),
     document.getElementById('q_opt_3').value.trim()
   ];
-  const checkedRadio = document.querySelector('input[name="q_correct"]:checked');
-  const correctIndex = checkedRadio ? parseInt(checkedRadio.value) : 0;
+  const checkedBoxes = Array.from(document.querySelectorAll('input[name="q_correct"]:checked'));
+  const correctIndices = checkedBoxes.map(cb => parseInt(cb.value));
 
-  const { error } = await supabase.from('quiz_questions').upsert({ id, category, text, options, correct_index: correctIndex, explanation, image_url: imageUrl, is_verified });
-  if (error) return alert('Fehler: ' + error.message);
+  if (!category || !text || !options[0] || !options[1] || !options[2] || !options[3]) {
+    alert('Bitte Kategorie, Fragentext und alle 4 Antwortoptionen ausfüllen.');
+    return;
+  }
+  if (correctIndices.length === 0) {
+    alert('Bitte mindestens eine Antwort als richtig markieren.');
+    return;
+  }
+  const correctIndex = correctIndices[0];
+
+  const { error } = await supabase.from('quiz_questions').upsert({
+    id, category, text, options,
+    correct_index: correctIndex,
+    correct_indices: correctIndices,
+    explanation,
+    image_url: imageUrl,
+    is_verified
+  });
+  if (error) {
+    // Retry without correct_indices if column does not exist
+    if (error.message && error.message.includes('correct_indices')) {
+      const { error: fallbackErr } = await supabase.from('quiz_questions').upsert({
+        id, category, text, options,
+        correct_index: correctIndex,
+        explanation,
+        image_url: imageUrl,
+        is_verified
+      });
+      if (fallbackErr) return alert('Fehler: ' + fallbackErr.message);
+    } else {
+      return alert('Fehler: ' + error.message);
+    }
+  }
   closeQuestionModal();
   showToast('Frage in Cloud gespeichert! ✅');
   await loadAllData();
@@ -184,6 +223,14 @@ window.openQuestionModal = function() {
   const form = document.getElementById('questionForm');
   if (form) form.reset();
   document.getElementById('q_id').value = '';
+  if (window.setCorrectOptions) {
+    window.setCorrectOptions([0]);
+  } else {
+    for (let i = 0; i <= 3; i++) {
+      const cb = document.getElementById('opt_radio_' + i);
+      if (cb) cb.checked = (i === 0);
+    }
+  }
   document.getElementById('questionModalTitle').innerHTML = '<i data-lucide="plus-circle" class="w-5 h-5 text-brand-500"></i> Neue Prüfungsfrage anlegen';
   const modal = document.getElementById('questionModal');
   if (modal) {
@@ -206,8 +253,18 @@ window.editQuestion = function(id) {
   document.getElementById('q_opt_1').value = opts[1] || '';
   document.getElementById('q_opt_2').value = opts[2] || '';
   document.getElementById('q_opt_3').value = opts[3] || '';
-  const radio = document.querySelector('input[name="q_correct"][value="' + q.correct_index + '"]');
-  if (radio) radio.checked = true;
+  const corrIndices = Array.isArray(q.correct_indices) ? q.correct_indices :
+    (Array.isArray(q.correctIndices) ? q.correctIndices :
+    (typeof q.correct_indices === 'string' ? JSON.parse(q.correct_indices) :
+    [typeof q.correct_index === 'number' ? q.correct_index : 0]));
+  if (window.setCorrectOptions) {
+    window.setCorrectOptions(corrIndices);
+  } else {
+    for (let i = 0; i <= 3; i++) {
+      const cb = document.getElementById('opt_radio_' + i);
+      if (cb) cb.checked = corrIndices.includes(i);
+    }
+  }
   document.getElementById('questionModalTitle').innerHTML = '<i data-lucide="edit-3" class="w-5 h-5 text-brand-500"></i> Frage bearbeiten';
   const modal = document.getElementById('questionModal');
   if (modal) {
@@ -418,18 +475,40 @@ window.parseCsvFile = function(file) {
     for (let i = 1; i < lines.length; i++) {
       const cols = lines[i].split(delimiter).map(c => c.trim().replace(/^"|"$/g, ''));
       if (cols.length >= 6) {
+        const rawCorrect = (cols[6] || '0').trim();
+        const parsedIndices = [];
+        const parts = rawCorrect.split(/[,;+/| ]+/);
+        for (const p of parts) {
+          const up = p.trim().toUpperCase();
+          if (['A', 'B', 'C', 'D'].includes(up)) {
+            parsedIndices.push(up.charCodeAt(0) - 65);
+          } else {
+            const num = parseInt(up, 10);
+            if (!isNaN(num) && num >= 0 && num <= 3) {
+              parsedIndices.push(num);
+            }
+          }
+        }
+        const validIndices = parsedIndices.length > 0 ? Array.from(new Set(parsedIndices)) : [0];
         parsedCsvRows.push({
           category: cols[0] || 'Allgemein',
           text: cols[1],
           options: [cols[2], cols[3], cols[4], cols[5]],
-          correct_index: parseInt(cols[6] || 0),
+          correct_index: validIndices[0],
+          correct_indices: validIndices,
           explanation: cols[7] || ''
         });
       }
     }
     document.getElementById('csvPreviewCount').textContent = parsedCsvRows.length + ' Fragen erkannt';
-    document.getElementById('csvPreviewTable').innerHTML = '<thead><tr class="text-gray-400 border-b border-gray-800"><th class="py-1 px-2">Kategorie</th><th class="py-1 px-2">Frage</th><th class="py-1 px-2">Antwort</th></tr></thead><tbody>' +
-      parsedCsvRows.slice(0, 10).map(r => '<tr class="border-b border-gray-800/50"><td class="py-1 px-2 text-brand-400 font-bold">' + r.category + '</td><td class="py-1 px-2 text-gray-200">' + r.text + '</td><td class="py-1 px-2 text-brand-300 font-semibold">' + (r.options[r.correct_index] || '') + '</td></tr>').join('') +
+    document.getElementById('csvPreviewTable').innerHTML = '<thead><tr class="text-gray-400 border-b border-gray-800"><th class="py-1 px-2">Kategorie</th><th class="py-1 px-2">Frage</th><th class="py-1 px-2">Antwort(en)</th></tr></thead><tbody>' +
+      parsedCsvRows.slice(0, 10).map(r => {
+        const optLabels = (r.correct_indices && r.correct_indices.length > 0)
+          ? r.correct_indices.map(i => (['A','B','C','D'][i] || i) + ': ' + (r.options[i] || '')).join(', ')
+          : (r.options[r.correct_index] || '');
+        const multiBadge = (r.correct_indices && r.correct_indices.length > 1) ? ' <span class="text-xs text-purple-400 font-bold">(' + r.correct_indices.length + ' Richtige)</span>' : '';
+        return '<tr class="border-b border-gray-800/50"><td class="py-1 px-2 text-brand-400 font-bold">' + r.category + '</td><td class="py-1 px-2 text-gray-200">' + r.text + '</td><td class="py-1 px-2 text-brand-300 font-semibold">' + optLabels + multiBadge + '</td></tr>';
+      }).join('') +
       '</tbody>';
     document.getElementById('csvPreviewArea').classList.remove('hidden');
     if (window.lucide) lucide.createIcons();
@@ -445,9 +524,19 @@ window.commitCsvImport = async function() {
     text: r.text,
     options: r.options,
     correct_index: r.correct_index,
+    correct_indices: r.correct_indices || [r.correct_index],
     explanation: r.explanation
   }));
-  const { error } = await supabase.from('quiz_questions').insert(toInsert);
+  let { error } = await supabase.from('quiz_questions').insert(toInsert);
+  if (error && error.message && error.message.includes('correct_indices')) {
+    const fallback = toInsert.map(item => {
+      const copy = { ...item };
+      delete copy.correct_indices;
+      return copy;
+    });
+    const res = await supabase.from('quiz_questions').insert(fallback);
+    error = res.error;
+  }
   if (error) return alert('Fehler: ' + error.message);
   document.getElementById('csvPreviewArea').classList.add('hidden');
   showToast(toInsert.length + ' Fragen importiert! 🎉');
@@ -456,7 +545,10 @@ window.commitCsvImport = async function() {
 };
 
 window.downloadQuestionsTemplate = function() {
-  const csv = 'Kategorie;Fragentext;Antwort_A;Antwort_B;Antwort_C;Antwort_D;Index_Richtige_Antwort_0_bis_3;Erklaerung\nSignale;Welche Bedeutung hat das Signal Zs 1?;Fahrt mit 40 km/h;Halt;Vorbeifahrt am Halt-Signal erlaubt;Langsamfahrt;2;Signal Zs 1 erlaubt die Vorbeifahrt am gestörten Signal.\nPZB 90;Wie lange dauert die 1000Hz Beeinflussung?;23 Sekunden;15 Sekunden;38 Sekunden;30 Sekunden;0;In der oberen Zugart 23 Sekunden.';
+  const csv = 'Kategorie;Fragentext;Antwort_A;Antwort_B;Antwort_C;Antwort_D;Index_Richtige_Antwort_0_bis_3_oder_Mehrfachauswahl_zB_0,1;Erklaerung\n' +
+    'Signale;Welche Bedeutung hat das Signal Zs 1?;Fahrt mit 40 km/h;Halt;Vorbeifahrt am Halt-Signal erlaubt;Langsamfahrt;2;Signal Zs 1 erlaubt die Vorbeifahrt am gestörten Signal.\n' +
+    'Signale;Welche dieser Signale sind Hauptsignale?;Signal Hp 0;Signal Hp 1;Signal Zs 1;Signal Vr 0;0,1;Hp 0 und Hp 1 sind Hauptsignale.\n' +
+    'PZB 90;Wie lange dauert die 1000Hz Beeinflussung?;23 Sekunden;15 Sekunden;38 Sekunden;30 Sekunden;0;In der oberen Zugart 23 Sekunden.';
   downloadFile(csv, 'RailTrainer_Fragen_Vorlage.csv', 'text/csv;charset=utf-8;');
 };
 
