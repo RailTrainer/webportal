@@ -3895,20 +3895,14 @@ window.markAllQuestionsGlobally = async function(status = false) {
   showToast('Alle ' + count + ' Fragen als ' + (status ? 'geprüft' : 'ungeprüft') + ' markiert! ' + (status ? '✓' : '⏳'));
 
   try {
-    const res = await fetch(SUPABASE_URL + '/rest/v1/quiz_questions?id=neq.00000000-0000-0000-0000-000000000000', {
-      method: 'PATCH',
-      headers: { ...restHeaders, 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ is_verified: status })
-    });
-    if (!res.ok) {
-      for (const q of allQuestions) {
-        fetch(SUPABASE_URL + '/rest/v1/quiz_questions?id=eq.' + q.id, {
-          method: 'PATCH',
-          headers: { ...restHeaders, 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ is_verified: status })
-        }).catch(err => console.error('Supabase update error:', err));
-      }
-    }
+    const updatePromises = allQuestions.map(q =>
+      fetch(SUPABASE_URL + '/rest/v1/quiz_questions?id=eq.' + encodeURIComponent(q.id), {
+        method: 'PATCH',
+        headers: { ...restHeaders, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ is_verified: status })
+      }).catch(err => console.error('Supabase question update error:', err))
+    );
+    await Promise.all(updatePromises);
   } catch (e) {
     console.error('Massen-Update Fehler:', e);
   }
@@ -3942,12 +3936,80 @@ window.renderQuestionReviewStats = function() {
   if (countVer) countVer.textContent = verifiedCount;
   const countUnver = document.getElementById('q-count-unverified');
   if (countUnver) countUnver.textContent = unverifiedCount;
+  const pctEl = document.getElementById('q-verified-percentage');
+  if (pctEl) pctEl.textContent = pct + '%';
+  const barEl = document.getElementById('q-verified-progress-bar');
+  if (barEl) barEl.style.width = pct + '%';
+};
 
-  const statText = document.getElementById('questionVerifiedStatText');
-  if (statText) statText.textContent = verifiedCount + ' von ' + total + ' geprüft (' + pct + '%)';
+window.filterQuestionsByReview = function(filterType) {
+  questionReviewFilter = filterType;
+  const buttons = ['q-filter-btn-all', 'q-filter-btn-verified', 'q-filter-btn-unverified'];
+  buttons.forEach(btnId => {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    if ((filterType === 'all' && btnId.endsWith('-all')) ||
+        (filterType === 'verified' && btnId.endsWith('-verified')) ||
+        (filterType === 'unverified' && btnId.endsWith('-unverified'))) {
+      btn.className = 'px-3 py-1.5 rounded-xl text-xs font-semibold bg-brand-600 text-white shadow-sm border border-brand-500 transition';
+    } else {
+      btn.className = 'px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-900/60 hover:bg-gray-850 text-gray-400 hover:text-gray-200 border border-gray-800 transition';
+    }
+  });
+  filterQuestions();
+};
 
-  const pBar = document.getElementById('questionVerifiedProgressBar');
-  if (pBar) pBar.style.width = pct + '%';
+function getFilteredFlashcardsList() {
+  const search = (document.getElementById('searchFlashcardsInput')?.value || '').toLowerCase();
+  return allFlashcards.filter(fc => {
+    const matchesCat = selectedFlashcardCategories.size === 0 ? false : selectedFlashcardCategories.has(fc.category);
+    const matchesSearch = (fc.title || '').toLowerCase().includes(search) || 
+                          (fc.content || '').toLowerCase().includes(search) || 
+                          (fc.reference || '').toLowerCase().includes(search);
+    const isVerified = (fc.is_verified === true || verifiedFlashcardIds.has(fc.id));
+    const matchesReview = (flashcardReviewFilter === 'all') || 
+                          (flashcardReviewFilter === 'verified' && isVerified) || 
+                          (flashcardReviewFilter === 'unverified' && !isVerified);
+    return matchesCat && matchesSearch && matchesReview;
+  });
+}
+
+window.renderFlashcardReviewStats = function() {
+  const total = allFlashcards.length;
+  let verifiedCount = 0;
+  allFlashcards.forEach(fc => {
+    if (fc.is_verified === true || verifiedFlashcardIds.has(fc.id)) verifiedCount++;
+  });
+  const unverifiedCount = total - verifiedCount;
+  const pct = total > 0 ? Math.round((verifiedCount / total) * 100) : 0;
+
+  const countAll = document.getElementById('fc-count-all');
+  if (countAll) countAll.textContent = total;
+  const countVer = document.getElementById('fc-count-verified');
+  if (countVer) countVer.textContent = verifiedCount;
+  const countUnver = document.getElementById('fc-count-unverified');
+  if (countUnver) countUnver.textContent = unverifiedCount;
+  const pctEl = document.getElementById('fc-verified-percentage');
+  if (pctEl) pctEl.textContent = pct + '%';
+  const barEl = document.getElementById('fc-verified-progress-bar');
+  if (barEl) barEl.style.width = pct + '%';
+};
+
+window.filterFlashcardsByReview = function(filterType) {
+  flashcardReviewFilter = filterType;
+  const buttons = ['fc-filter-btn-all', 'fc-filter-btn-verified', 'fc-filter-btn-unverified'];
+  buttons.forEach(btnId => {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    if ((filterType === 'all' && btnId.endsWith('-all')) ||
+        (filterType === 'verified' && btnId.endsWith('-verified')) ||
+        (filterType === 'unverified' && btnId.endsWith('-unverified'))) {
+      btn.className = 'px-3 py-1.5 rounded-xl text-xs font-semibold bg-brand-600 text-white shadow-sm border border-brand-500 transition';
+    } else {
+      btn.className = 'px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-900/60 hover:bg-gray-850 text-gray-400 hover:text-gray-200 border border-gray-800 transition';
+    }
+  });
+  filterFlashcards();
 };
 
 // 2. FLASHCARD VERIFICATION
@@ -4051,20 +4113,14 @@ window.markAllFlashcardsGlobally = async function(status = false) {
   showToast('Alle ' + count + ' Lernkarten als ' + (status ? 'geprüft' : 'ungeprüft') + ' markiert! ' + (status ? '✓' : '⏳'));
 
   try {
-    const res = await fetch(SUPABASE_URL + '/rest/v1/flashcards?id=neq.00000000-0000-0000-0000-000000000000', {
-      method: 'PATCH',
-      headers: { ...restHeaders, 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ is_verified: status })
-    });
-    if (!res.ok) {
-      for (const fc of allFlashcards) {
-        fetch(SUPABASE_URL + '/rest/v1/flashcards?id=eq.' + fc.id, {
-          method: 'PATCH',
-          headers: { ...restHeaders, 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ is_verified: status })
-        }).catch(err => console.error('Supabase update error:', err));
-      }
-    }
+    const updatePromises = allFlashcards.map(fc =>
+      fetch(SUPABASE_URL + '/rest/v1/flashcards?id=eq.' + encodeURIComponent(fc.id), {
+        method: 'PATCH',
+        headers: { ...restHeaders, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ is_verified: status })
+      }).catch(err => console.error('Supabase flashcard update error:', err))
+    );
+    await Promise.all(updatePromises);
   } catch (e) {
     console.error('Massen-Update Fehler:', e);
   }
@@ -4101,12 +4157,11 @@ window.loadAllData = async function() {
     allQuestions = await qRes.json();
     if (!Array.isArray(allQuestions)) allQuestions = [];
     allQuestions.forEach(q => {
-      if (q.is_verified === true) {
+      q.is_verified = (q.is_verified === true);
+      if (q.is_verified) {
         verifiedQuestionIds.add(q.id);
-      } else if (q.is_verified === false) {
+      } else {
         verifiedQuestionIds.delete(q.id);
-      } else if (verifiedQuestionIds.has(q.id)) {
-        q.is_verified = true;
       }
     });
     saveVerifiedQuestions();
@@ -4117,12 +4172,11 @@ window.loadAllData = async function() {
     allFlashcards = await fcRes.json();
     if (!Array.isArray(allFlashcards)) allFlashcards = [];
     allFlashcards.forEach(fc => {
-      if (fc.is_verified === true) {
+      fc.is_verified = (fc.is_verified === true);
+      if (fc.is_verified) {
         verifiedFlashcardIds.add(fc.id);
-      } else if (fc.is_verified === false) {
+      } else {
         verifiedFlashcardIds.delete(fc.id);
-      } else if (verifiedFlashcardIds.has(fc.id)) {
-        fc.is_verified = true;
       }
     });
     saveVerifiedFlashcards();
