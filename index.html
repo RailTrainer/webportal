@@ -1495,9 +1495,9 @@
             <span class="text-[11px] text-brand-400 font-semibold" id="correctAnswerIndicatorText">Korrekt: Antwort A</span>
           </div>
 
-          <div id="opt_row_0" onclick="toggleCorrectOption(0)" class="flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-brand-500/50 bg-brand-500/5 transition cursor-pointer">
-            <input type="checkbox" name="q_correct" value="0" id="opt_radio_0" checked class="w-4 h-4 rounded accent-brand-500 cursor-pointer" onclick="event.stopPropagation(); toggleCorrectOption(0)">
-            <span class="w-5 h-5 rounded-md bg-brand-600 text-white flex items-center justify-center font-bold text-[11px]">A</span>
+          <div id="opt_row_0" onclick="window.toggleCorrectOption(0, event)" class="flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-brand-500/50 bg-brand-500/5 transition cursor-pointer select-none">
+            <input type="checkbox" name="q_correct" value="0" id="opt_radio_0" checked class="w-4 h-4 rounded accent-brand-500 cursor-pointer" onclick="event.stopPropagation()" onchange="window.handleCorrectCheckboxChange(0, this)">
+            <span id="opt_badge_0" class="w-5 h-5 rounded-md bg-brand-600 text-white flex items-center justify-center font-bold text-[11px] shrink-0">A</span>
             <input type="text" id="q_opt_0" required placeholder="Antwort A" class="flex-1 bg-transparent text-sm text-gray-100 focus:outline-none" onclick="event.stopPropagation()">
             <button type="button" onclick="event.stopPropagation(); toggleDangerOption(0)" id="q_bg_btn_0" class="px-2.5 py-1 rounded-lg border border-gray-800 bg-gray-900 text-gray-400 hover:text-red-400 hover:border-red-500/40 text-xs font-bold transition flex items-center gap-1 shrink-0" title="Als betriebsgefährdend (BG) kennzeichnen">
               <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
@@ -1505,9 +1505,9 @@
             </button>
           </div>
 
-          <div id="opt_row_1" onclick="toggleCorrectOption(1)" class="flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-gray-800 transition cursor-pointer">
-            <input type="checkbox" name="q_correct" value="1" id="opt_radio_1" class="w-4 h-4 rounded accent-brand-500 cursor-pointer" onclick="event.stopPropagation(); toggleCorrectOption(1)">
-            <span class="w-5 h-5 rounded-md bg-gray-800 text-gray-300 flex items-center justify-center font-bold text-[11px]">B</span>
+          <div id="opt_row_1" onclick="window.toggleCorrectOption(1, event)" class="flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-gray-800 transition cursor-pointer select-none">
+            <input type="checkbox" name="q_correct" value="1" id="opt_radio_1" class="w-4 h-4 rounded accent-brand-500 cursor-pointer" onclick="event.stopPropagation()" onchange="window.handleCorrectCheckboxChange(1, this)">
+            <span id="opt_badge_1" class="w-5 h-5 rounded-md bg-gray-800 text-gray-300 flex items-center justify-center font-bold text-[11px] shrink-0">B</span>
             <input type="text" id="q_opt_1" required placeholder="Antwort B" class="flex-1 bg-transparent text-sm text-gray-100 focus:outline-none" onclick="event.stopPropagation()">
             <button type="button" onclick="event.stopPropagation(); toggleDangerOption(1)" id="q_bg_btn_1" class="px-2.5 py-1 rounded-lg border border-gray-800 bg-gray-900 text-gray-400 hover:text-red-400 hover:border-red-500/40 text-xs font-bold transition flex items-center gap-1 shrink-0" title="Als betriebsgefährdend (BG) kennzeichnen">
               <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
@@ -1515,9 +1515,9 @@
             </button>
           </div>
 
-          <div id="opt_row_2" onclick="toggleCorrectOption(2)" class="flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-gray-800 transition cursor-pointer">
-            <input type="checkbox" name="q_correct" value="2" id="opt_radio_2" class="w-4 h-4 rounded accent-brand-500 cursor-pointer" onclick="event.stopPropagation(); toggleCorrectOption(2)">
-            <span class="w-5 h-5 rounded-md bg-gray-800 text-gray-300 flex items-center justify-center font-bold text-[11px]">C</span>
+          <div id="opt_row_2" onclick="window.toggleCorrectOption(2, event)" class="flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-gray-800 transition cursor-pointer select-none">
+            <input type="checkbox" name="q_correct" value="2" id="opt_radio_2" class="w-4 h-4 rounded accent-brand-500 cursor-pointer" onclick="event.stopPropagation()" onchange="window.handleCorrectCheckboxChange(2, this)">
+            <span id="opt_badge_2" class="w-5 h-5 rounded-md bg-gray-800 text-gray-300 flex items-center justify-center font-bold text-[11px] shrink-0">C</span>
             <input type="text" id="q_opt_2" required placeholder="Antwort C" class="flex-1 bg-transparent text-sm text-gray-100 focus:outline-none" onclick="event.stopPropagation()">
             <button type="button" onclick="event.stopPropagation(); toggleDangerOption(2)" id="q_bg_btn_2" class="px-2.5 py-1 rounded-lg border border-gray-800 bg-gray-900 text-gray-400 hover:text-red-400 hover:border-red-500/40 text-xs font-bold transition flex items-center gap-1 shrink-0" title="Als betriebsgefährdend (BG) kennzeichnen">
               <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
@@ -1525,9 +1525,9 @@
             </button>
           </div>
 
-          <div id="opt_row_3" onclick="toggleCorrectOption(3)" class="flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-gray-800 transition cursor-pointer">
-            <input type="checkbox" name="q_correct" value="3" id="opt_radio_3" class="w-4 h-4 rounded accent-brand-500 cursor-pointer" onclick="event.stopPropagation(); toggleCorrectOption(3)">
-            <span class="w-5 h-5 rounded-md bg-gray-800 text-gray-300 flex items-center justify-center font-bold text-[11px]">D</span>
+          <div id="opt_row_3" onclick="window.toggleCorrectOption(3, event)" class="flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-gray-800 transition cursor-pointer select-none">
+            <input type="checkbox" name="q_correct" value="3" id="opt_radio_3" class="w-4 h-4 rounded accent-brand-500 cursor-pointer" onclick="event.stopPropagation()" onchange="window.handleCorrectCheckboxChange(3, this)">
+            <span id="opt_badge_3" class="w-5 h-5 rounded-md bg-gray-800 text-gray-300 flex items-center justify-center font-bold text-[11px] shrink-0">D</span>
             <input type="text" id="q_opt_3" required placeholder="Antwort D" class="flex-1 bg-transparent text-sm text-gray-100 focus:outline-none" onclick="event.stopPropagation()">
             <button type="button" onclick="event.stopPropagation(); toggleDangerOption(3)" id="q_bg_btn_3" class="px-2.5 py-1 rounded-lg border border-gray-800 bg-gray-900 text-gray-400 hover:text-red-400 hover:border-red-500/40 text-xs font-bold transition flex items-center gap-1 shrink-0" title="Als betriebsgefährdend (BG) kennzeichnen">
               <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
@@ -4126,17 +4126,31 @@ window.markAllFlashcardsGlobally = async function(status = false) {
   }
 };
 
-window.toggleCorrectOption = function(idx) {
-  const cb = document.getElementById('opt_radio_' + idx);
-  if (cb) {
-    cb.checked = !cb.checked;
-  }
+window.handleCorrectCheckboxChange = function(idx, cb) {
   const checked = Array.from(document.querySelectorAll('input[name="q_correct"]:checked'));
   if (checked.length === 0) {
     if (cb) cb.checked = true;
     if (window.showToast) window.showToast('Mindestens eine Antwort muss richtig sein! ⚠️');
   }
   window.updateCorrectOptionsUI();
+};
+
+window.toggleCorrectOption = function(idx, event) {
+  if (event && event.target) {
+    if (event.target.tagName === 'INPUT' || event.target.tagName === 'BUTTON' || event.target.closest('button')) {
+      return;
+    }
+  }
+  const cb = document.getElementById('opt_radio_' + idx);
+  if (cb) {
+    cb.checked = !cb.checked;
+    const checked = Array.from(document.querySelectorAll('input[name="q_correct"]:checked'));
+    if (checked.length === 0) {
+      cb.checked = true;
+      if (window.showToast) window.showToast('Mindestens eine Antwort muss richtig sein! ⚠️');
+    }
+    window.updateCorrectOptionsUI();
+  }
 };
 
 window.setCorrectOptions = function(indices) {
@@ -4156,22 +4170,22 @@ window.updateCorrectOptionsUI = function() {
   for (let i = 0; i <= 3; i++) {
     const cb = document.getElementById('opt_radio_' + i);
     const row = document.getElementById('opt_row_' + i);
-    const badge = row ? row.querySelector('span') : null;
+    const badge = document.getElementById('opt_badge_' + i) || (row ? row.querySelector('span') : null);
     const isChecked = cb ? cb.checked : false;
     if (isChecked) checkedIndices.push(i);
 
     if (row) {
       if (isChecked) {
-        row.className = 'flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-brand-500/60 bg-brand-500/10 shadow-sm transition cursor-pointer';
+        row.className = 'flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-brand-500/60 bg-brand-500/10 shadow-sm transition cursor-pointer select-none';
       } else {
-        row.className = 'flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-gray-800 hover:border-gray-700 transition cursor-pointer';
+        row.className = 'flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-gray-800 hover:border-gray-700 transition cursor-pointer select-none';
       }
     }
     if (badge) {
       if (isChecked) {
-        badge.className = 'w-5 h-5 rounded-md bg-brand-600 text-white flex items-center justify-center font-bold text-[11px]';
+        badge.className = 'w-5 h-5 rounded-md bg-brand-600 text-white flex items-center justify-center font-bold text-[11px] shrink-0';
       } else {
-        badge.className = 'w-5 h-5 rounded-md bg-gray-800 text-gray-400 flex items-center justify-center font-bold text-[11px]';
+        badge.className = 'w-5 h-5 rounded-md bg-gray-800 text-gray-400 flex items-center justify-center font-bold text-[11px] shrink-0';
       }
     }
   }
@@ -4189,7 +4203,7 @@ window.updateCorrectOptionsUI = function() {
 };
 
 window.selectCorrectOption = function(idx) {
-  window.toggleCorrectOption(idx);
+  window.setCorrectOptions([idx]);
 };
 
 window.loadAllData = async function() {

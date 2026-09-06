@@ -219,6 +219,82 @@ window.handleSaveQuestion = async function(e) {
   await loadAllData();
 };
 
+window.handleCorrectCheckboxChange = function(idx, cb) {
+  const checked = Array.from(document.querySelectorAll('input[name="q_correct"]:checked'));
+  if (checked.length === 0) {
+    if (cb) cb.checked = true;
+    if (window.showToast) window.showToast('Mindestens eine Antwort muss richtig sein! ⚠️');
+  }
+  window.updateCorrectOptionsUI();
+};
+
+window.toggleCorrectOption = function(idx, event) {
+  if (event && event.target) {
+    if (event.target.tagName === 'INPUT' || event.target.tagName === 'BUTTON' || event.target.closest('button')) {
+      return;
+    }
+  }
+  const cb = document.getElementById('opt_radio_' + idx);
+  if (cb) {
+    cb.checked = !cb.checked;
+    const checked = Array.from(document.querySelectorAll('input[name="q_correct"]:checked'));
+    if (checked.length === 0) {
+      cb.checked = true;
+      if (window.showToast) window.showToast('Mindestens eine Antwort muss richtig sein! ⚠️');
+    }
+    window.updateCorrectOptionsUI();
+  }
+};
+
+window.setCorrectOptions = function(indices) {
+  const arr = (Array.isArray(indices) && indices.length > 0) ? indices.map(n => parseInt(n)) : [0];
+  for (let i = 0; i <= 3; i++) {
+    const cb = document.getElementById('opt_radio_' + i);
+    if (cb) {
+      cb.checked = arr.includes(i);
+    }
+  }
+  window.updateCorrectOptionsUI();
+};
+
+window.updateCorrectOptionsUI = function() {
+  const optLetters = ['A', 'B', 'C', 'D'];
+  const checkedIndices = [];
+  for (let i = 0; i <= 3; i++) {
+    const cb = document.getElementById('opt_radio_' + i);
+    const row = document.getElementById('opt_row_' + i);
+    const badge = document.getElementById('opt_badge_' + i) || (row ? row.querySelector('span') : null);
+    const isChecked = cb ? cb.checked : false;
+    if (isChecked) checkedIndices.push(i);
+
+    if (row) {
+      if (isChecked) {
+        row.className = 'flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-brand-500/60 bg-brand-500/10 shadow-sm transition cursor-pointer select-none';
+      } else {
+        row.className = 'flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-gray-800 hover:border-gray-700 transition cursor-pointer select-none';
+      }
+    }
+    if (badge) {
+      if (isChecked) {
+        badge.className = 'w-5 h-5 rounded-md bg-brand-600 text-white flex items-center justify-center font-bold text-[11px] shrink-0';
+      } else {
+        badge.className = 'w-5 h-5 rounded-md bg-gray-800 text-gray-400 flex items-center justify-center font-bold text-[11px] shrink-0';
+      }
+    }
+  }
+
+  const ind = document.getElementById('correctAnswerIndicatorText');
+  if (ind) {
+    if (checkedIndices.length === 1) {
+      ind.textContent = 'Korrekt: Antwort ' + optLetters[checkedIndices[0]];
+    } else if (checkedIndices.length > 1) {
+      ind.textContent = 'Korrekt: Antworten ' + checkedIndices.map(i => optLetters[i]).join(', ') + ' (' + checkedIndices.length + ' richtig)';
+    } else {
+      ind.textContent = 'Bitte mindestens eine Antwort als richtig markieren';
+    }
+  }
+};
+
 window.openQuestionModal = function() {
   const form = document.getElementById('questionForm');
   if (form) form.reset();
