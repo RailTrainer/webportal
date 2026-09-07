@@ -140,7 +140,7 @@ window.renderQuestions = function(list) {
             (isCorrect ? 'bg-brand-500/10 border-brand-500/40 text-brand-300 font-semibold' : 'bg-gray-950 border-gray-800 text-gray-400') + '">' +
             '<div class="flex items-center gap-2.5 min-w-0">' +
               '<span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ' +
-                (isCorrect ? 'bg-brand-500 text-white' : 'bg-gray-800 text-gray-400') + '">' + (['A','B','C','D'][oIdx] || oIdx + 1) + '</span>' +
+                (isCorrect ? 'bg-brand-500 text-white' : 'bg-gray-800 text-gray-400') + '">' + (['A','B','C','D','E','F'][oIdx] || oIdx + 1) + '</span>' +
               '<span>' + opt + '</span>' +
             '</div>' +
             (isCorrect && corrIndices.length > 1 ? '<span class="text-[10px] font-bold text-brand-400 bg-brand-500/20 px-1.5 py-0.5 rounded shrink-0">Richtig ✓</span>' : '') +
@@ -168,9 +168,9 @@ window.currentQuestionOptionsCount = 4;
 
 window.setQuestionOptionsCount = function(count) {
   const c = parseInt(count) || 4;
-  window.currentQuestionOptionsCount = Math.min(5, Math.max(3, c));
+  window.currentQuestionOptionsCount = Math.min(6, Math.max(3, c));
 
-  [3, 4, 5].forEach(num => {
+  [3, 4, 5, 6].forEach(num => {
     const btn = document.getElementById('btn_opt_count_' + num);
     if (btn) {
       if (num === window.currentQuestionOptionsCount) {
@@ -183,6 +183,7 @@ window.setQuestionOptionsCount = function(count) {
 
   const row3 = document.getElementById('opt_row_3');
   const row4 = document.getElementById('opt_row_4');
+  const row5 = document.getElementById('opt_row_5');
   if (row3) {
     if (window.currentQuestionOptionsCount >= 4) {
       row3.classList.remove('hidden');
@@ -203,6 +204,17 @@ window.setQuestionOptionsCount = function(count) {
       row4.classList.remove('flex');
       const cb4 = document.getElementById('opt_radio_4');
       if (cb4) cb4.checked = false;
+    }
+  }
+  if (row5) {
+    if (window.currentQuestionOptionsCount >= 6) {
+      row5.classList.remove('hidden');
+      row5.classList.add('flex');
+    } else {
+      row5.classList.add('hidden');
+      row5.classList.remove('flex');
+      const cb5 = document.getElementById('opt_radio_5');
+      if (cb5) cb5.checked = false;
     }
   }
 
@@ -353,7 +365,7 @@ window.toggleCorrectOption = function(idx, event) {
 window.setCorrectOptions = function(indices) {
   const arr = (Array.isArray(indices) && indices.length > 0) ? indices.map(n => parseInt(n)) : [0];
   const maxOpts = window.currentQuestionOptionsCount || 4;
-  for (let i = 0; i <= 4; i++) {
+  for (let i = 0; i <= 5; i++) {
     const cb = document.getElementById('opt_radio_' + i);
     if (cb) {
       cb.checked = (i < maxOpts && arr.includes(i));
@@ -363,10 +375,10 @@ window.setCorrectOptions = function(indices) {
 };
 
 window.updateCorrectOptionsUI = function() {
-  const optLetters = ['A', 'B', 'C', 'D', 'E'];
+  const optLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
   const checkedIndices = [];
   const maxOpts = window.currentQuestionOptionsCount || 4;
-  for (let i = 0; i <= 4; i++) {
+  for (let i = 0; i <= 5; i++) {
     const cb = document.getElementById('opt_radio_' + i);
     const row = document.getElementById('opt_row_' + i);
     const badge = document.getElementById('opt_badge_' + i) || (row ? row.querySelector('span') : null);
@@ -406,7 +418,7 @@ window.openQuestionModal = function() {
   if (form) form.reset();
   document.getElementById('q_id').value = '';
   window.setQuestionOptionsCount(4);
-  for (let i = 0; i <= 4; i++) {
+  for (let i = 0; i <= 5; i++) {
     const el = document.getElementById('q_opt_' + i);
     if (el) el.value = '';
   }
@@ -437,9 +449,9 @@ window.editQuestion = function(id) {
   document.getElementById('q_explanation').value = q.explanation || '';
   document.getElementById('q_image').value = q.image_url || '';
   const opts = Array.isArray(q.options) ? q.options : (typeof q.options === 'string' ? JSON.parse(q.options) : []);
-  const optCount = opts.length === 3 ? 3 : (opts.length === 5 ? 5 : 4);
+  const optCount = opts.length >= 3 && opts.length <= 6 ? opts.length : (opts.length > 6 ? 6 : 4);
   window.setQuestionOptionsCount(optCount);
-  for (let i = 0; i <= 4; i++) {
+  for (let i = 0; i <= 5; i++) {
     const el = document.getElementById('q_opt_' + i);
     if (el) el.value = opts[i] || '';
   }

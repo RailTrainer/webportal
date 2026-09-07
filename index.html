@@ -951,9 +951,15 @@
             </div>
 
             <!-- Option 4 -->
-            <div id="c_opt_4" onclick="selectClassroomOption(4)" class="hidden p-4 rounded-2xl border-2 border-gray-800 bg-gray-950/80 hover:border-gray-700 hover:bg-gray-950 text-gray-100 transition cursor-pointer flex items-start gap-3.5 shadow md:col-span-2">
+            <div id="c_opt_4" onclick="selectClassroomOption(4)" class="hidden p-4 rounded-2xl border-2 border-gray-800 bg-gray-950/80 hover:border-gray-700 hover:bg-gray-950 text-gray-100 transition cursor-pointer flex items-start gap-3.5 shadow">
               <span id="c_opt_badge_4" class="w-7 h-7 rounded-xl bg-gray-800 text-gray-200 font-extrabold text-sm flex items-center justify-center shrink-0 border border-gray-700">E</span>
               <span id="c_opt_text_4" class="text-sm md:text-base font-semibold leading-relaxed pt-0.5">Antwort E</span>
+            </div>
+
+            <!-- Option 5 -->
+            <div id="c_opt_5" onclick="selectClassroomOption(5)" class="hidden p-4 rounded-2xl border-2 border-gray-800 bg-gray-950/80 hover:border-gray-700 hover:bg-gray-950 text-gray-100 transition cursor-pointer flex items-start gap-3.5 shadow">
+              <span id="c_opt_badge_5" class="w-7 h-7 rounded-xl bg-gray-800 text-gray-200 font-extrabold text-sm flex items-center justify-center shrink-0 border border-gray-700">F</span>
+              <span id="c_opt_text_5" class="text-sm md:text-base font-semibold leading-relaxed pt-0.5">Antwort F</span>
             </div>
           </div>
 
@@ -1234,9 +1240,14 @@
               <div class="text-base font-bold flex-1" id="battle_opt_text_3">Option D</div>
             </div>
 
-            <div id="battle_opt_box_4" class="hidden p-5 rounded-3xl bg-purple-600/90 text-white font-extrabold flex items-center gap-4 shadow-xl border border-purple-500/50 transition md:col-span-2">
+            <div id="battle_opt_box_4" class="hidden p-5 rounded-3xl bg-purple-600/90 text-white font-extrabold flex items-center gap-4 shadow-xl border border-purple-500/50 transition">
               <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-xl shrink-0">★ E</div>
               <div class="text-base font-bold flex-1" id="battle_opt_text_4">Option E</div>
+            </div>
+
+            <div id="battle_opt_box_5" class="hidden p-5 rounded-3xl bg-teal-600/90 text-white font-extrabold flex items-center gap-4 shadow-xl border border-teal-500/50 transition">
+              <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-xl shrink-0">✦ F</div>
+              <div class="text-base font-bold flex-1" id="battle_opt_text_5">Option F</div>
             </div>
           </div>
 
@@ -1509,6 +1520,7 @@
               <button type="button" onclick="window.setQuestionOptionsCount(3)" id="btn_opt_count_3" class="px-2.5 py-1 rounded-lg font-bold transition text-gray-400 hover:text-white">3</button>
               <button type="button" onclick="window.setQuestionOptionsCount(4)" id="btn_opt_count_4" class="px-2.5 py-1 rounded-lg font-bold transition bg-brand-600 text-white shadow-sm">4</button>
               <button type="button" onclick="window.setQuestionOptionsCount(5)" id="btn_opt_count_5" class="px-2.5 py-1 rounded-lg font-bold transition text-gray-400 hover:text-white">5</button>
+              <button type="button" onclick="window.setQuestionOptionsCount(6)" id="btn_opt_count_6" class="px-2.5 py-1 rounded-lg font-bold transition text-gray-400 hover:text-white">6</button>
             </div>
           </div>
           <div class="flex items-center justify-end">
@@ -1560,6 +1572,16 @@
             <span id="opt_badge_4" class="w-5 h-5 rounded-md bg-gray-800 text-gray-300 flex items-center justify-center font-bold text-[11px] shrink-0">E</span>
             <textarea id="q_opt_4" rows="1" placeholder="Antwort E" oninput="window.autoResizeTextarea(this, 38)" class="flex-1 bg-transparent text-sm text-gray-100 placeholder-gray-500 focus:outline-none resize-none overflow-hidden leading-relaxed py-0.5" onclick="event.stopPropagation()"></textarea>
             <button type="button" onclick="event.stopPropagation(); toggleDangerOption(4)" id="q_bg_btn_4" class="px-2.5 py-1 rounded-lg border border-gray-800 bg-gray-900 text-gray-400 hover:text-red-400 hover:border-red-500/40 text-xs font-bold transition flex items-center gap-1 shrink-0" title="Als betriebsgefährdend (BG) kennzeichnen">
+              <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
+              <span>BG</span>
+            </button>
+          </div>
+
+          <div id="opt_row_5" onclick="window.toggleCorrectOption(5, event)" class="hidden items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-gray-800 transition cursor-pointer select-none">
+            <input type="checkbox" name="q_correct" value="5" id="opt_radio_5" class="w-4 h-4 rounded accent-brand-500 cursor-pointer" onclick="event.stopPropagation()" onchange="window.handleCorrectCheckboxChange(5, this)">
+            <span id="opt_badge_5" class="w-5 h-5 rounded-md bg-gray-800 text-gray-300 flex items-center justify-center font-bold text-[11px] shrink-0">F</span>
+            <textarea id="q_opt_5" rows="1" placeholder="Antwort F" oninput="window.autoResizeTextarea(this, 38)" class="flex-1 bg-transparent text-sm text-gray-100 placeholder-gray-500 focus:outline-none resize-none overflow-hidden leading-relaxed py-0.5" onclick="event.stopPropagation()"></textarea>
+            <button type="button" onclick="event.stopPropagation(); toggleDangerOption(5)" id="q_bg_btn_5" class="px-2.5 py-1 rounded-lg border border-gray-800 bg-gray-900 text-gray-400 hover:text-red-400 hover:border-red-500/40 text-xs font-bold transition flex items-center gap-1 shrink-0" title="Als betriebsgefährdend (BG) kennzeichnen">
               <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
               <span>BG</span>
             </button>
@@ -2811,9 +2833,9 @@ async function presentBattleQuestion(qIdx) {
     }
   }
 
-  // Antwortboxen (3, 4 oder 5)
+  // Antwortboxen (3, 4, 5 oder 6)
   const options = q.options || [];
-  for (let i = 0; i <= 4; i++) {
+  for (let i = 0; i <= 5; i++) {
     const box = document.getElementById('battle_opt_box_' + i);
     const txt = document.getElementById('battle_opt_text_' + i);
     if (box && txt) {
@@ -3214,11 +3236,11 @@ window.renderClassroomQuestion = function() {
   classroomSelectedOption = selectedIdx;
   classroomIsRevealed = hasAnswered;
 
-  // Antwortoptionen rendern (3, 4 oder 5)
+  // Antwortoptionen rendern (3, 4, 5 oder 6)
   const options = Array.isArray(q.options) ? q.options : (typeof q.options === 'string' ? JSON.parse(q.options) : []);
-  const optLetters = ['A', 'B', 'C', 'D', 'E'];
+  const optLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
 
-  for (let i = 0; i <= 4; i++) {
+  for (let i = 0; i <= 5; i++) {
     const optDiv = document.getElementById('c_opt_' + i);
     const badgeEl = document.getElementById('c_opt_badge_' + i);
     const optTextEl = document.getElementById('c_opt_text_' + i);
@@ -3297,10 +3319,10 @@ window.selectClassroomOption = function(idx) {
   const correctIdx = (q.correct_index !== undefined) ? q.correct_index : 0;
   const isCorrect = (idx === correctIdx);
   const isDanger = (q.danger_indices || q.dangerIndices || []).includes(idx);
-  const optLetters = ['A', 'B', 'C', 'D', 'E'];
+  const optLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
 
-  // Direktes visuelles Feedback anzeigen (3, 4 oder 5 Optionen)
-  for (let i = 0; i <= 4; i++) {
+  // Direktes visuelles Feedback anzeigen (3, 4, 5 oder 6 Optionen)
+  for (let i = 0; i <= 5; i++) {
     const optDiv = document.getElementById('c_opt_' + i);
     const badgeEl = document.getElementById('c_opt_badge_' + i);
     if (!optDiv) continue;
@@ -4177,9 +4199,9 @@ window.currentQuestionOptionsCount = 4;
 
 window.setQuestionOptionsCount = function(count) {
   const c = parseInt(count) || 4;
-  window.currentQuestionOptionsCount = Math.min(5, Math.max(3, c));
+  window.currentQuestionOptionsCount = Math.min(6, Math.max(3, c));
 
-  [3, 4, 5].forEach(num => {
+  [3, 4, 5, 6].forEach(num => {
     const btn = document.getElementById('btn_opt_count_' + num);
     if (btn) {
       if (num === window.currentQuestionOptionsCount) {
@@ -4192,6 +4214,7 @@ window.setQuestionOptionsCount = function(count) {
 
   const row3 = document.getElementById('opt_row_3');
   const row4 = document.getElementById('opt_row_4');
+  const row5 = document.getElementById('opt_row_5');
   if (row3) {
     if (window.currentQuestionOptionsCount >= 4) {
       row3.classList.remove('hidden');
@@ -4212,6 +4235,17 @@ window.setQuestionOptionsCount = function(count) {
       row4.classList.remove('flex');
       const cb4 = document.getElementById('opt_radio_4');
       if (cb4) cb4.checked = false;
+    }
+  }
+  if (row5) {
+    if (window.currentQuestionOptionsCount >= 6) {
+      row5.classList.remove('hidden');
+      row5.classList.add('flex');
+    } else {
+      row5.classList.add('hidden');
+      row5.classList.remove('flex');
+      const cb5 = document.getElementById('opt_radio_5');
+      if (cb5) cb5.checked = false;
     }
   }
 
@@ -4263,7 +4297,7 @@ window.toggleCorrectOption = function(idx, event) {
 window.setCorrectOptions = function(indices) {
   const arr = (Array.isArray(indices) && indices.length > 0) ? indices.map(n => parseInt(n)) : [0];
   const maxOpts = window.currentQuestionOptionsCount || 4;
-  for (let i = 0; i <= 4; i++) {
+  for (let i = 0; i <= 5; i++) {
     const cb = document.getElementById('opt_radio_' + i);
     if (cb) {
       cb.checked = (i < maxOpts && arr.includes(i));
@@ -4273,11 +4307,11 @@ window.setCorrectOptions = function(indices) {
 };
 
 window.updateCorrectOptionsUI = function() {
-  const optLetters = ['A', 'B', 'C', 'D', 'E'];
+  const optLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
   const checkedIndices = [];
   const maxOpts = window.currentQuestionOptionsCount || 4;
 
-  for (let i = 0; i <= 4; i++) {
+  for (let i = 0; i <= 5; i++) {
     const cb = document.getElementById('opt_radio_' + i);
     const row = document.getElementById('opt_row_' + i);
     const badge = document.getElementById('opt_badge_' + i) || (row ? row.querySelector('span') : null);
@@ -4574,7 +4608,7 @@ let currentDangerIndices = [];
 
 window.updateDangerOptionButtons = function() {
   const maxOpts = window.currentQuestionOptionsCount || 4;
-  for (let i = 0; i <= 4; i++) {
+  for (let i = 0; i <= 5; i++) {
     const btn = document.getElementById('q_bg_btn_' + i);
     if (!btn) continue;
     const isDanger = (i < maxOpts) && currentDangerIndices.includes(i);
@@ -4609,7 +4643,7 @@ window.openQuestionModal = function() {
   if (qVer) qVer.checked = true;
 
   window.setQuestionOptionsCount(4);
-  for (let i = 0; i <= 4; i++) {
+  for (let i = 0; i <= 5; i++) {
     const el = document.getElementById('q_opt_' + i);
     if (el) el.value = '';
   }
@@ -4652,10 +4686,10 @@ window.editQuestion = function(id) {
   if (qVer) qVer.checked = (q.is_verified === true || verifiedQuestionIds.has(q.id));
 
   const opts = Array.isArray(q.options) ? q.options : (typeof q.options === 'string' ? JSON.parse(q.options) : []);
-  const optCount = opts.length === 3 ? 3 : (opts.length === 5 ? 5 : 4);
+  const optCount = opts.length >= 3 && opts.length <= 6 ? opts.length : (opts.length > 6 ? 6 : 4);
   window.setQuestionOptionsCount(optCount);
 
-  for (let i = 0; i <= 4; i++) {
+  for (let i = 0; i <= 5; i++) {
     const el = document.getElementById('q_opt_' + i);
     if (el) el.value = opts[i] || '';
   }
@@ -4837,7 +4871,7 @@ window.handleSaveQuestion = async function(e, andNext = false) {
     if (andNext) {
       document.getElementById('q_id').value = '';
       document.getElementById('q_text').value = '';
-      for (let i = 0; i <= 4; i++) {
+      for (let i = 0; i <= 5; i++) {
         const el = document.getElementById('q_opt_' + i);
         if (el) el.value = '';
       }
@@ -6343,6 +6377,8 @@ function initDashboard() {
         if (e.key === '2' || e.key.toLowerCase() === 'b') { window.selectClassroomOption(1); return; }
         if (e.key === '3' || e.key.toLowerCase() === 'c') { window.selectClassroomOption(2); return; }
         if (e.key === '4' || e.key.toLowerCase() === 'd') { window.selectClassroomOption(3); return; }
+        if (e.key === '5' || e.key.toLowerCase() === 'e') { window.selectClassroomOption(4); return; }
+        if (e.key === '6' || e.key.toLowerCase() === 'f') { window.selectClassroomOption(5); return; }
       }
     }
 
