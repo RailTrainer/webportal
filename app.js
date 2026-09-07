@@ -164,25 +164,88 @@ window.filterQuestions = function() {
   renderQuestions(filtered);
 };
 
+window.currentQuestionOptionsCount = 4;
+
+window.setQuestionOptionsCount = function(count) {
+  const c = parseInt(count) || 4;
+  window.currentQuestionOptionsCount = Math.min(5, Math.max(3, c));
+
+  [3, 4, 5].forEach(num => {
+    const btn = document.getElementById('btn_opt_count_' + num);
+    if (btn) {
+      if (num === window.currentQuestionOptionsCount) {
+        btn.className = 'px-2.5 py-1 rounded-lg font-bold transition bg-brand-600 text-white shadow-sm';
+      } else {
+        btn.className = 'px-2.5 py-1 rounded-lg font-bold transition text-gray-400 hover:text-white';
+      }
+    }
+  });
+
+  const row3 = document.getElementById('opt_row_3');
+  const row4 = document.getElementById('opt_row_4');
+  if (row3) {
+    if (window.currentQuestionOptionsCount >= 4) {
+      row3.classList.remove('hidden');
+      row3.classList.add('flex');
+    } else {
+      row3.classList.add('hidden');
+      row3.classList.remove('flex');
+      const cb3 = document.getElementById('opt_radio_3');
+      if (cb3) cb3.checked = false;
+    }
+  }
+  if (row4) {
+    if (window.currentQuestionOptionsCount >= 5) {
+      row4.classList.remove('hidden');
+      row4.classList.add('flex');
+    } else {
+      row4.classList.add('hidden');
+      row4.classList.remove('flex');
+      const cb4 = document.getElementById('opt_radio_4');
+      if (cb4) cb4.checked = false;
+    }
+  }
+
+  const checked = Array.from(document.querySelectorAll('input[name="q_correct"]:checked'))
+    .filter(cb => parseInt(cb.value) < window.currentQuestionOptionsCount);
+  if (checked.length === 0) {
+    const cb0 = document.getElementById('opt_radio_0');
+    if (cb0) cb0.checked = true;
+  }
+
+  window.updateCorrectOptionsUI();
+  if (window.resizeAllModalTextareas) window.resizeAllModalTextareas('questionModal');
+};
+
 window.handleSaveQuestion = async function(e) {
   if (e) e.preventDefault();
   const id = document.getElementById('q_id').value || ('q_' + Math.random().toString(36).substr(2, 9));
+  const isNew = !document.getElementById('q_id').value;
   const category = document.getElementById('q_category').value;
   const text = document.getElementById('q_text').value.trim();
   const explanation = document.getElementById('q_explanation').value.trim();
   const imageUrl = document.getElementById('q_image')?.value?.trim() || null;
   const is_verified = document.getElementById('q_verified')?.checked ?? true;
-  const options = [
-    document.getElementById('q_opt_0').value.trim(),
-    document.getElementById('q_opt_1').value.trim(),
-    document.getElementById('q_opt_2').value.trim(),
-    document.getElementById('q_opt_3').value.trim()
-  ];
-  const checkedBoxes = Array.from(document.querySelectorAll('input[name="q_correct"]:checked'));
+
+  const optCount = window.currentQuestionOptionsCount || 4;
+  const options = [];
+  for (let i = 0; i < optCount; i++) {
+    const el = document.getElementById('q_opt_' + i);
+    const val = el ? el.value.trim() : '';
+    if (!val) {
+      alert('Bitte Kategorie, Fragentext und alle ' + optCount + ' Antwortoptionen ausfüllen.');
+      if (el) el.focus();
+      return;
+    }
+    options.push(val);
+  }
+
+  const checkedBoxes = Array.from(document.querySelectorAll('input[name="q_correct"]:checked'))
+    .filter(cb => parseInt(cb.value) < optCount);
   const correctIndices = checkedBoxes.map(cb => parseInt(cb.value));
 
-  if (!category || !text || !options[0] || !options[1] || !options[2] || !options[3]) {
-    alert('Bitte Kategorie, Fragentext und alle 4 Antwortoptionen ausfüllen.');
+  if (!category || !text) {
+    alert('Bitte Kategorie und Fragentext ausfüllen.');
     return;
   }
   if (correctIndices.length === 0) {
@@ -191,28 +254,63 @@ window.handleSaveQuestion = async function(e) {
   }
   const correctIndex = correctIndices[0];
 
-  const { error } = await supabase.from('quiz_questions').upsert({
+  const authorName = (window.currentPortalUser && (window.currentPortalUser.name || window.currentPortalUser.email)) || 'Ausbilder';
+  const authorId = window.currentPortalUser ? window.currentPortalUser.id : null;
+  const authorRole = (window.currentPortalUser && window.currentPortalUser.role) || 'moderator';
+  const existingQ = isNew ? null : allQuestions.find(item => item.id === id);
+  const createdBy = isNew ? authorId : (existingQ?.created_by || authorId);
+  const createdByName = isNew ? authorName : (existingQ?.created_by_name || existingQ?.createdByName || authorName);
+  const creatorRole = isNew ? authorRole : (existingQ?.creator_role || existingQ?.creatorRole || authorRole);
+  const createdAt = isNew ? new Date().toISOString() : (existingQ?.created_at || existingQ?.createdAt || new Date().toISOString());
+  const updatedBy = authorId;
+  const updatedByName = authorName;
+  const updatedAt = new Date().toISOString();
+
+  try {
+    const raw = localStorage.getItem('railtrainer_question_authors') || '{}';
+    const store = JSON.parse(raw);
+    store[id] = {
+      created_by: createdBy,
+      created_by_name: createdByName,
+      creator_role: creatorRole,
+      created_at: createdAt,
+      updated_by: updatedBy,
+      updated_by_name: updatedByName,
+      updated_at: updatedAt
+    };
+    localStorage.setItem('railtrainer_question_authors', JSON.stringify(store));
+  } catch(e) {}
+
+  const payload = {
     id, category, text, options,
     correct_index: correctIndex,
     correct_indices: correctIndices,
     explanation,
     image_url: imageUrl,
-    is_verified
-  });
+    is_verified,
+    created_by: createdBy,
+    created_by_name: createdByName,
+    creator_role: creatorRole,
+    created_at: createdAt,
+    updated_by: updatedBy,
+    updated_by_name: updatedByName,
+    updated_at: updatedAt
+  };
+
+  const { error } = await supabase.from('quiz_questions').upsert(payload);
   if (error) {
-    // Retry without correct_indices if column does not exist
-    if (error.message && error.message.includes('correct_indices')) {
-      const { error: fallbackErr } = await supabase.from('quiz_questions').upsert({
-        id, category, text, options,
-        correct_index: correctIndex,
-        explanation,
-        image_url: imageUrl,
-        is_verified
-      });
-      if (fallbackErr) return alert('Fehler: ' + fallbackErr.message);
-    } else {
-      return alert('Fehler: ' + error.message);
+    const fallbackPayload = {
+      id, category, text, options,
+      correct_index: correctIndex,
+      explanation,
+      image_url: imageUrl,
+      is_verified
+    };
+    if (!error.message || !error.message.includes('correct_indices')) {
+      fallbackPayload.correct_indices = correctIndices;
     }
+    const { error: fallbackErr } = await supabase.from('quiz_questions').upsert(fallbackPayload);
+    if (fallbackErr) return alert('Fehler: ' + fallbackErr.message);
   }
   closeQuestionModal();
   showToast('Frage in Cloud gespeichert! ✅');
@@ -220,7 +318,9 @@ window.handleSaveQuestion = async function(e) {
 };
 
 window.handleCorrectCheckboxChange = function(idx, cb) {
-  const checked = Array.from(document.querySelectorAll('input[name="q_correct"]:checked'));
+  const maxOpts = window.currentQuestionOptionsCount || 4;
+  const checked = Array.from(document.querySelectorAll('input[name="q_correct"]:checked'))
+    .filter(c => parseInt(c.value) < maxOpts);
   if (checked.length === 0) {
     if (cb) cb.checked = true;
     if (window.showToast) window.showToast('Mindestens eine Antwort muss richtig sein! ⚠️');
@@ -230,14 +330,18 @@ window.handleCorrectCheckboxChange = function(idx, cb) {
 
 window.toggleCorrectOption = function(idx, event) {
   if (event && event.target) {
-    if (event.target.tagName === 'INPUT' || event.target.tagName === 'BUTTON' || event.target.closest('button')) {
+    if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.tagName === 'BUTTON' || event.target.closest('button')) {
       return;
     }
   }
+  const maxOpts = window.currentQuestionOptionsCount || 4;
+  if (idx >= maxOpts) return;
+
   const cb = document.getElementById('opt_radio_' + idx);
   if (cb) {
     cb.checked = !cb.checked;
-    const checked = Array.from(document.querySelectorAll('input[name="q_correct"]:checked'));
+    const checked = Array.from(document.querySelectorAll('input[name="q_correct"]:checked'))
+      .filter(c => parseInt(c.value) < maxOpts);
     if (checked.length === 0) {
       cb.checked = true;
       if (window.showToast) window.showToast('Mindestens eine Antwort muss richtig sein! ⚠️');
@@ -248,26 +352,28 @@ window.toggleCorrectOption = function(idx, event) {
 
 window.setCorrectOptions = function(indices) {
   const arr = (Array.isArray(indices) && indices.length > 0) ? indices.map(n => parseInt(n)) : [0];
-  for (let i = 0; i <= 3; i++) {
+  const maxOpts = window.currentQuestionOptionsCount || 4;
+  for (let i = 0; i <= 4; i++) {
     const cb = document.getElementById('opt_radio_' + i);
     if (cb) {
-      cb.checked = arr.includes(i);
+      cb.checked = (i < maxOpts && arr.includes(i));
     }
   }
   window.updateCorrectOptionsUI();
 };
 
 window.updateCorrectOptionsUI = function() {
-  const optLetters = ['A', 'B', 'C', 'D'];
+  const optLetters = ['A', 'B', 'C', 'D', 'E'];
   const checkedIndices = [];
-  for (let i = 0; i <= 3; i++) {
+  const maxOpts = window.currentQuestionOptionsCount || 4;
+  for (let i = 0; i <= 4; i++) {
     const cb = document.getElementById('opt_radio_' + i);
     const row = document.getElementById('opt_row_' + i);
     const badge = document.getElementById('opt_badge_' + i) || (row ? row.querySelector('span') : null);
-    const isChecked = cb ? cb.checked : false;
+    const isChecked = (cb && i < maxOpts) ? cb.checked : false;
     if (isChecked) checkedIndices.push(i);
 
-    if (row) {
+    if (row && i < maxOpts) {
       if (isChecked) {
         row.className = 'flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-brand-500/60 bg-brand-500/10 shadow-sm transition cursor-pointer select-none';
       } else {
@@ -299,13 +405,18 @@ window.openQuestionModal = function() {
   const form = document.getElementById('questionForm');
   if (form) form.reset();
   document.getElementById('q_id').value = '';
+  window.setQuestionOptionsCount(4);
+  for (let i = 0; i <= 4; i++) {
+    const el = document.getElementById('q_opt_' + i);
+    if (el) el.value = '';
+  }
   if (window.setCorrectOptions) {
     window.setCorrectOptions([0]);
-  } else {
-    for (let i = 0; i <= 3; i++) {
-      const cb = document.getElementById('opt_radio_' + i);
-      if (cb) cb.checked = (i === 0);
-    }
+  }
+  const metaBox = document.getElementById('questionModalMetaInfo');
+  if (metaBox) {
+    metaBox.classList.add('hidden');
+    metaBox.innerHTML = '';
   }
   document.getElementById('questionModalTitle').innerHTML = '<i data-lucide="plus-circle" class="w-5 h-5 text-brand-500"></i> Neue Prüfungsfrage anlegen';
   const modal = document.getElementById('questionModal');
@@ -313,6 +424,7 @@ window.openQuestionModal = function() {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
   }
+  if (window.resizeAllModalTextareas) window.resizeAllModalTextareas('questionModal');
   if (window.lucide) lucide.createIcons();
 };
 
@@ -325,21 +437,29 @@ window.editQuestion = function(id) {
   document.getElementById('q_explanation').value = q.explanation || '';
   document.getElementById('q_image').value = q.image_url || '';
   const opts = Array.isArray(q.options) ? q.options : (typeof q.options === 'string' ? JSON.parse(q.options) : []);
-  document.getElementById('q_opt_0').value = opts[0] || '';
-  document.getElementById('q_opt_1').value = opts[1] || '';
-  document.getElementById('q_opt_2').value = opts[2] || '';
-  document.getElementById('q_opt_3').value = opts[3] || '';
+  const optCount = opts.length === 3 ? 3 : (opts.length === 5 ? 5 : 4);
+  window.setQuestionOptionsCount(optCount);
+  for (let i = 0; i <= 4; i++) {
+    const el = document.getElementById('q_opt_' + i);
+    if (el) el.value = opts[i] || '';
+  }
   const corrIndices = Array.isArray(q.correct_indices) ? q.correct_indices :
     (Array.isArray(q.correctIndices) ? q.correctIndices :
     (typeof q.correct_indices === 'string' ? JSON.parse(q.correct_indices) :
     [typeof q.correct_index === 'number' ? q.correct_index : 0]));
   if (window.setCorrectOptions) {
     window.setCorrectOptions(corrIndices);
-  } else {
-    for (let i = 0; i <= 3; i++) {
-      const cb = document.getElementById('opt_radio_' + i);
-      if (cb) cb.checked = corrIndices.includes(i);
+  }
+  const metaBox = document.getElementById('questionModalMetaInfo');
+  if (metaBox) {
+    const authorCreated = q.created_by_name || q.created_by || 'Ausbilder / Dozent';
+    const authorUpdated = q.updated_by_name || q.updated_by;
+    let metaHtml = '<span class="flex items-center gap-1.5"><i data-lucide="user" class="w-3.5 h-3.5 text-brand-400"></i><span>Erstellt von: <strong class="text-gray-200">' + (authorCreated) + '</strong></span></span>';
+    if (authorUpdated) {
+      metaHtml += '<span class="text-gray-600">•</span><span class="flex items-center gap-1.5"><i data-lucide="edit-2" class="w-3.5 h-3.5 text-amber-400"></i><span>Bearbeitet: <strong class="text-gray-200">' + (authorUpdated) + '</strong></span></span>';
     }
+    metaBox.innerHTML = metaHtml;
+    metaBox.classList.remove('hidden');
   }
   document.getElementById('questionModalTitle').innerHTML = '<i data-lucide="edit-3" class="w-5 h-5 text-brand-500"></i> Frage bearbeiten';
   const modal = document.getElementById('questionModal');
@@ -347,6 +467,7 @@ window.editQuestion = function(id) {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
   }
+  if (window.resizeAllModalTextareas) window.resizeAllModalTextareas('questionModal');
   if (window.lucide) lucide.createIcons();
 };
 

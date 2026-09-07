@@ -949,6 +949,12 @@
               <span id="c_opt_badge_3" class="w-7 h-7 rounded-xl bg-gray-800 text-gray-200 font-extrabold text-sm flex items-center justify-center shrink-0 border border-gray-700">D</span>
               <span id="c_opt_text_3" class="text-sm md:text-base font-semibold leading-relaxed pt-0.5">Antwort D</span>
             </div>
+
+            <!-- Option 4 -->
+            <div id="c_opt_4" onclick="selectClassroomOption(4)" class="hidden p-4 rounded-2xl border-2 border-gray-800 bg-gray-950/80 hover:border-gray-700 hover:bg-gray-950 text-gray-100 transition cursor-pointer flex items-start gap-3.5 shadow md:col-span-2">
+              <span id="c_opt_badge_4" class="w-7 h-7 rounded-xl bg-gray-800 text-gray-200 font-extrabold text-sm flex items-center justify-center shrink-0 border border-gray-700">E</span>
+              <span id="c_opt_text_4" class="text-sm md:text-base font-semibold leading-relaxed pt-0.5">Antwort E</span>
+            </div>
           </div>
 
           <!-- ERKLÄRUNGS-BOX (BEIM AUFLÖSEN EINBLENDEN) -->
@@ -1227,6 +1233,11 @@
               <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-xl shrink-0">■ D</div>
               <div class="text-base font-bold flex-1" id="battle_opt_text_3">Option D</div>
             </div>
+
+            <div id="battle_opt_box_4" class="hidden p-5 rounded-3xl bg-purple-600/90 text-white font-extrabold flex items-center gap-4 shadow-xl border border-purple-500/50 transition md:col-span-2">
+              <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-xl shrink-0">★ E</div>
+              <div class="text-base font-bold flex-1" id="battle_opt_text_4">Option E</div>
+            </div>
           </div>
 
           <!-- Host Control Toolbar -->
@@ -1462,6 +1473,7 @@
           <div>
             <h3 id="questionModalTitle" class="text-lg font-bold text-white">Neue Prüfungsfrage anlegen</h3>
             <p class="text-xs text-gray-400">Schnelle Erstellung • <kbd class="text-brand-400 font-mono">Strg + Enter</kbd> für Aufzählungsabsatz (•)</p>
+            <div id="questionModalMetaInfo" class="hidden text-xs text-gray-400 mt-1.5 flex items-center gap-2 flex-wrap bg-gray-950/60 px-3 py-1.5 rounded-xl border border-gray-800"></div>
           </div>
         </div>
         <button onclick="closeQuestionModal()" class="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -1486,19 +1498,27 @@
               <button type="button" onclick="insertFormat('q_text', 'arrow')" class="px-2 py-0.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-[11px] font-semibold rounded border border-gray-700 transition" title="Pfeil">➔</button>
             </div>
           </div>
-          <textarea id="q_text" required rows="2" oninput="window.autoResizeTextarea(this)" placeholder="z.B. Welche Bedeutung hat das Signal Zs 1?" class="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-brand-500 leading-relaxed overflow-hidden resize-none transition-all duration-100"></textarea>
+          <textarea id="q_text" required rows="2" oninput="window.autoResizeTextarea(this, 64)" placeholder="z.B. Welche Bedeutung hat das Signal Zs 1?" class="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-brand-500 leading-relaxed overflow-hidden resize-none transition-colors duration-150"></textarea>
         </div>
 
         <div class="space-y-2.5 pt-2">
-          <div class="flex items-center justify-between">
-            <label class="block text-xs font-bold text-gray-300 uppercase">4 Antwortoptionen * (Kästchen = Richtig (1 oder mehrere) • Button = Betriebsgefährdend BG)</label>
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <label class="block text-xs font-bold text-gray-300 uppercase">Antwortoptionen * (Kästchen = Richtig • Button = BG)</label>
+            <div class="flex items-center gap-1 bg-gray-950 p-1 rounded-xl border border-gray-800 text-xs">
+              <span class="text-gray-400 text-[11px] px-1.5 font-medium">Anzahl:</span>
+              <button type="button" onclick="window.setQuestionOptionsCount(3)" id="btn_opt_count_3" class="px-2.5 py-1 rounded-lg font-bold transition text-gray-400 hover:text-white">3</button>
+              <button type="button" onclick="window.setQuestionOptionsCount(4)" id="btn_opt_count_4" class="px-2.5 py-1 rounded-lg font-bold transition bg-brand-600 text-white shadow-sm">4</button>
+              <button type="button" onclick="window.setQuestionOptionsCount(5)" id="btn_opt_count_5" class="px-2.5 py-1 rounded-lg font-bold transition text-gray-400 hover:text-white">5</button>
+            </div>
+          </div>
+          <div class="flex items-center justify-end">
             <span class="text-[11px] text-brand-400 font-semibold" id="correctAnswerIndicatorText">Korrekt: Antwort A</span>
           </div>
 
           <div id="opt_row_0" onclick="window.toggleCorrectOption(0, event)" class="flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-brand-500/50 bg-brand-500/5 transition cursor-pointer select-none">
             <input type="checkbox" name="q_correct" value="0" id="opt_radio_0" checked class="w-4 h-4 rounded accent-brand-500 cursor-pointer" onclick="event.stopPropagation()" onchange="window.handleCorrectCheckboxChange(0, this)">
             <span id="opt_badge_0" class="w-5 h-5 rounded-md bg-brand-600 text-white flex items-center justify-center font-bold text-[11px] shrink-0">A</span>
-            <input type="text" id="q_opt_0" required placeholder="Antwort A" class="flex-1 bg-transparent text-sm text-gray-100 focus:outline-none" onclick="event.stopPropagation()">
+            <textarea id="q_opt_0" required rows="1" placeholder="Antwort A" oninput="window.autoResizeTextarea(this, 38)" class="flex-1 bg-transparent text-sm text-gray-100 placeholder-gray-500 focus:outline-none resize-none overflow-hidden leading-relaxed py-0.5" onclick="event.stopPropagation()"></textarea>
             <button type="button" onclick="event.stopPropagation(); toggleDangerOption(0)" id="q_bg_btn_0" class="px-2.5 py-1 rounded-lg border border-gray-800 bg-gray-900 text-gray-400 hover:text-red-400 hover:border-red-500/40 text-xs font-bold transition flex items-center gap-1 shrink-0" title="Als betriebsgefährdend (BG) kennzeichnen">
               <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
               <span>BG</span>
@@ -1508,7 +1528,7 @@
           <div id="opt_row_1" onclick="window.toggleCorrectOption(1, event)" class="flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-gray-800 transition cursor-pointer select-none">
             <input type="checkbox" name="q_correct" value="1" id="opt_radio_1" class="w-4 h-4 rounded accent-brand-500 cursor-pointer" onclick="event.stopPropagation()" onchange="window.handleCorrectCheckboxChange(1, this)">
             <span id="opt_badge_1" class="w-5 h-5 rounded-md bg-gray-800 text-gray-300 flex items-center justify-center font-bold text-[11px] shrink-0">B</span>
-            <input type="text" id="q_opt_1" required placeholder="Antwort B" class="flex-1 bg-transparent text-sm text-gray-100 focus:outline-none" onclick="event.stopPropagation()">
+            <textarea id="q_opt_1" required rows="1" placeholder="Antwort B" oninput="window.autoResizeTextarea(this, 38)" class="flex-1 bg-transparent text-sm text-gray-100 placeholder-gray-500 focus:outline-none resize-none overflow-hidden leading-relaxed py-0.5" onclick="event.stopPropagation()"></textarea>
             <button type="button" onclick="event.stopPropagation(); toggleDangerOption(1)" id="q_bg_btn_1" class="px-2.5 py-1 rounded-lg border border-gray-800 bg-gray-900 text-gray-400 hover:text-red-400 hover:border-red-500/40 text-xs font-bold transition flex items-center gap-1 shrink-0" title="Als betriebsgefährdend (BG) kennzeichnen">
               <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
               <span>BG</span>
@@ -1518,7 +1538,7 @@
           <div id="opt_row_2" onclick="window.toggleCorrectOption(2, event)" class="flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-gray-800 transition cursor-pointer select-none">
             <input type="checkbox" name="q_correct" value="2" id="opt_radio_2" class="w-4 h-4 rounded accent-brand-500 cursor-pointer" onclick="event.stopPropagation()" onchange="window.handleCorrectCheckboxChange(2, this)">
             <span id="opt_badge_2" class="w-5 h-5 rounded-md bg-gray-800 text-gray-300 flex items-center justify-center font-bold text-[11px] shrink-0">C</span>
-            <input type="text" id="q_opt_2" required placeholder="Antwort C" class="flex-1 bg-transparent text-sm text-gray-100 focus:outline-none" onclick="event.stopPropagation()">
+            <textarea id="q_opt_2" required rows="1" placeholder="Antwort C" oninput="window.autoResizeTextarea(this, 38)" class="flex-1 bg-transparent text-sm text-gray-100 placeholder-gray-500 focus:outline-none resize-none overflow-hidden leading-relaxed py-0.5" onclick="event.stopPropagation()"></textarea>
             <button type="button" onclick="event.stopPropagation(); toggleDangerOption(2)" id="q_bg_btn_2" class="px-2.5 py-1 rounded-lg border border-gray-800 bg-gray-900 text-gray-400 hover:text-red-400 hover:border-red-500/40 text-xs font-bold transition flex items-center gap-1 shrink-0" title="Als betriebsgefährdend (BG) kennzeichnen">
               <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
               <span>BG</span>
@@ -1528,8 +1548,18 @@
           <div id="opt_row_3" onclick="window.toggleCorrectOption(3, event)" class="flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-gray-800 transition cursor-pointer select-none">
             <input type="checkbox" name="q_correct" value="3" id="opt_radio_3" class="w-4 h-4 rounded accent-brand-500 cursor-pointer" onclick="event.stopPropagation()" onchange="window.handleCorrectCheckboxChange(3, this)">
             <span id="opt_badge_3" class="w-5 h-5 rounded-md bg-gray-800 text-gray-300 flex items-center justify-center font-bold text-[11px] shrink-0">D</span>
-            <input type="text" id="q_opt_3" required placeholder="Antwort D" class="flex-1 bg-transparent text-sm text-gray-100 focus:outline-none" onclick="event.stopPropagation()">
+            <textarea id="q_opt_3" rows="1" placeholder="Antwort D" oninput="window.autoResizeTextarea(this, 38)" class="flex-1 bg-transparent text-sm text-gray-100 placeholder-gray-500 focus:outline-none resize-none overflow-hidden leading-relaxed py-0.5" onclick="event.stopPropagation()"></textarea>
             <button type="button" onclick="event.stopPropagation(); toggleDangerOption(3)" id="q_bg_btn_3" class="px-2.5 py-1 rounded-lg border border-gray-800 bg-gray-900 text-gray-400 hover:text-red-400 hover:border-red-500/40 text-xs font-bold transition flex items-center gap-1 shrink-0" title="Als betriebsgefährdend (BG) kennzeichnen">
+              <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
+              <span>BG</span>
+            </button>
+          </div>
+
+          <div id="opt_row_4" onclick="window.toggleCorrectOption(4, event)" class="hidden items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-gray-800 transition cursor-pointer select-none">
+            <input type="checkbox" name="q_correct" value="4" id="opt_radio_4" class="w-4 h-4 rounded accent-brand-500 cursor-pointer" onclick="event.stopPropagation()" onchange="window.handleCorrectCheckboxChange(4, this)">
+            <span id="opt_badge_4" class="w-5 h-5 rounded-md bg-gray-800 text-gray-300 flex items-center justify-center font-bold text-[11px] shrink-0">E</span>
+            <textarea id="q_opt_4" rows="1" placeholder="Antwort E" oninput="window.autoResizeTextarea(this, 38)" class="flex-1 bg-transparent text-sm text-gray-100 placeholder-gray-500 focus:outline-none resize-none overflow-hidden leading-relaxed py-0.5" onclick="event.stopPropagation()"></textarea>
+            <button type="button" onclick="event.stopPropagation(); toggleDangerOption(4)" id="q_bg_btn_4" class="px-2.5 py-1 rounded-lg border border-gray-800 bg-gray-900 text-gray-400 hover:text-red-400 hover:border-red-500/40 text-xs font-bold transition flex items-center gap-1 shrink-0" title="Als betriebsgefährdend (BG) kennzeichnen">
               <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
               <span>BG</span>
             </button>
@@ -1548,7 +1578,7 @@
               <button type="button" onclick="insertFormat('q_explanation', 'arrow')" class="px-2 py-0.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-[11px] font-semibold rounded border border-gray-700 transition" title="Pfeil">➔</button>
             </div>
           </div>
-          <textarea id="q_explanation" rows="2" oninput="window.autoResizeTextarea(this)" placeholder="Erklärung nach der Beantwortung..." class="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-brand-500 leading-relaxed overflow-hidden resize-none transition-all duration-100"></textarea>
+          <textarea id="q_explanation" rows="2" oninput="window.autoResizeTextarea(this, 64)" placeholder="Erklärung nach der Beantwortung..." class="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-brand-500 leading-relaxed overflow-hidden resize-none transition-colors duration-150"></textarea>
         </div>
 
         <!-- BILD HINZUFÜGEN (FESTPLATTE ODER LINK) -->
@@ -1669,6 +1699,7 @@
           <div>
             <h3 id="flashcardModalTitle" class="text-lg font-bold text-white">Neue Lernkarte anlegen</h3>
             <p class="text-xs text-gray-400">Schnelleingabe • <kbd class="text-brand-400 font-mono">Strg + Enter</kbd> für Aufzählungsabsatz (•)</p>
+            <div id="flashcardModalMetaInfo" class="hidden text-xs text-gray-400 mt-1.5 flex items-center gap-2 flex-wrap bg-gray-950/60 px-3 py-1.5 rounded-xl border border-gray-800"></div>
           </div>
         </div>
         <button onclick="closeFlashcardModal()" class="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -1683,7 +1714,7 @@
 
         <div>
           <label class="block text-xs font-bold text-gray-300 uppercase mb-1.5">Titel / Signalbegriff *</label>
-          <input type="text" id="fc_title" required placeholder="z.B. Signal Hp 1 - Fahrt" class="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-brand-500">
+          <textarea id="fc_title" required rows="1" oninput="window.autoResizeTextarea(this, 42)" placeholder="z.B. Signal Hp 1 - Fahrt" class="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-brand-500 leading-relaxed overflow-hidden resize-none transition-colors duration-150"></textarea>
         </div>
 
         <div>
@@ -1699,7 +1730,7 @@
               <button type="button" onclick="insertFormat('fc_content', 'arrow')" class="px-2 py-0.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-[11px] font-semibold rounded border border-gray-700 transition" title="Pfeil">➔</button>
             </div>
           </div>
-          <textarea id="fc_content" required rows="3" oninput="window.autoResizeTextarea(this)" placeholder="Ausführliche Erklärung, Bedeutung, Verhaltensregeln..." class="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-brand-500 leading-relaxed overflow-hidden resize-none transition-all duration-100"></textarea>
+          <textarea id="fc_content" required rows="3" oninput="window.autoResizeTextarea(this, 90)" placeholder="Ausführliche Erklärung, Bedeutung, Verhaltensregeln..." class="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-brand-500 leading-relaxed overflow-hidden resize-none transition-colors duration-150"></textarea>
         </div>
 
         <div>
@@ -1876,11 +1907,27 @@ const restHeaders = {
   'Content-Type': 'application/json'
 };
 
-window.autoResizeTextarea = function(el) {
+window.autoResizeTextarea = function(el, minHeight) {
   if (!el || el.tagName !== 'TEXTAREA') return;
   el.style.height = 'auto';
-  const newHeight = Math.max(el.scrollHeight + 4, 72);
+  const defaultMin = (el.rows && el.rows <= 1) ? 38 : (el.id === 'fc_content' ? 88 : 64);
+  const minH = minHeight || defaultMin;
+  const newHeight = Math.max(el.scrollHeight, minH);
   el.style.height = newHeight + 'px';
+};
+
+window.resizeAllModalTextareas = function(modalId) {
+  const modal = document.getElementById(modalId);
+  if (!modal) return;
+  const run = () => {
+    modal.querySelectorAll('textarea').forEach(ta => {
+      window.autoResizeTextarea(ta);
+    });
+  };
+  run();
+  requestAnimationFrame(run);
+  setTimeout(run, 60);
+  setTimeout(run, 180);
 };
 
 window.insertBulletParagraph = function(el) {
@@ -2764,9 +2811,9 @@ async function presentBattleQuestion(qIdx) {
     }
   }
 
-  // 4 Antwortboxen
+  // Antwortboxen (3, 4 oder 5)
   const options = q.options || [];
-  for (let i = 0; i <= 3; i++) {
+  for (let i = 0; i <= 4; i++) {
     const box = document.getElementById('battle_opt_box_' + i);
     const txt = document.getElementById('battle_opt_text_' + i);
     if (box && txt) {
@@ -3109,7 +3156,7 @@ window.renderClassroomQuestion = function() {
     if (imgCont) imgCont.classList.add('hidden');
     if (verBadge) verBadge.classList.add('hidden');
     if (expBox) expBox.classList.add('hidden');
-    for (let i = 0; i <= 3; i++) {
+    for (let i = 0; i <= 4; i++) {
       const optDiv = document.getElementById('c_opt_' + i);
       if (optDiv) optDiv.className = 'hidden';
     }
@@ -3167,11 +3214,11 @@ window.renderClassroomQuestion = function() {
   classroomSelectedOption = selectedIdx;
   classroomIsRevealed = hasAnswered;
 
-  // Antwortoptionen rendern
+  // Antwortoptionen rendern (3, 4 oder 5)
   const options = Array.isArray(q.options) ? q.options : (typeof q.options === 'string' ? JSON.parse(q.options) : []);
-  const optLetters = ['A', 'B', 'C', 'D'];
+  const optLetters = ['A', 'B', 'C', 'D', 'E'];
 
-  for (let i = 0; i <= 3; i++) {
+  for (let i = 0; i <= 4; i++) {
     const optDiv = document.getElementById('c_opt_' + i);
     const badgeEl = document.getElementById('c_opt_badge_' + i);
     const optTextEl = document.getElementById('c_opt_text_' + i);
@@ -3250,10 +3297,10 @@ window.selectClassroomOption = function(idx) {
   const correctIdx = (q.correct_index !== undefined) ? q.correct_index : 0;
   const isCorrect = (idx === correctIdx);
   const isDanger = (q.danger_indices || q.dangerIndices || []).includes(idx);
-  const optLetters = ['A', 'B', 'C', 'D'];
+  const optLetters = ['A', 'B', 'C', 'D', 'E'];
 
-  // Direktes visuelles Feedback anzeigen
-  for (let i = 0; i <= 3; i++) {
+  // Direktes visuelles Feedback anzeigen (3, 4 oder 5 Optionen)
+  for (let i = 0; i <= 4; i++) {
     const optDiv = document.getElementById('c_opt_' + i);
     const badgeEl = document.getElementById('c_opt_badge_' + i);
     if (!optDiv) continue;
@@ -4126,8 +4173,64 @@ window.markAllFlashcardsGlobally = async function(status = false) {
   }
 };
 
+window.currentQuestionOptionsCount = 4;
+
+window.setQuestionOptionsCount = function(count) {
+  const c = parseInt(count) || 4;
+  window.currentQuestionOptionsCount = Math.min(5, Math.max(3, c));
+
+  [3, 4, 5].forEach(num => {
+    const btn = document.getElementById('btn_opt_count_' + num);
+    if (btn) {
+      if (num === window.currentQuestionOptionsCount) {
+        btn.className = 'px-2.5 py-1 rounded-lg font-bold transition bg-brand-600 text-white shadow-sm';
+      } else {
+        btn.className = 'px-2.5 py-1 rounded-lg font-bold transition text-gray-400 hover:text-white';
+      }
+    }
+  });
+
+  const row3 = document.getElementById('opt_row_3');
+  const row4 = document.getElementById('opt_row_4');
+  if (row3) {
+    if (window.currentQuestionOptionsCount >= 4) {
+      row3.classList.remove('hidden');
+      row3.classList.add('flex');
+    } else {
+      row3.classList.add('hidden');
+      row3.classList.remove('flex');
+      const cb3 = document.getElementById('opt_radio_3');
+      if (cb3) cb3.checked = false;
+    }
+  }
+  if (row4) {
+    if (window.currentQuestionOptionsCount >= 5) {
+      row4.classList.remove('hidden');
+      row4.classList.add('flex');
+    } else {
+      row4.classList.add('hidden');
+      row4.classList.remove('flex');
+      const cb4 = document.getElementById('opt_radio_4');
+      if (cb4) cb4.checked = false;
+    }
+  }
+
+  // Sicherstellen, dass mindestens eine sichtbare Option als richtig gewählt ist
+  const checked = Array.from(document.querySelectorAll('input[name="q_correct"]:checked'))
+    .filter(cb => parseInt(cb.value) < window.currentQuestionOptionsCount);
+  if (checked.length === 0) {
+    const cb0 = document.getElementById('opt_radio_0');
+    if (cb0) cb0.checked = true;
+  }
+
+  window.updateCorrectOptionsUI();
+  window.updateDangerOptionButtons();
+  window.resizeAllModalTextareas('questionModal');
+};
+
 window.handleCorrectCheckboxChange = function(idx, cb) {
-  const checked = Array.from(document.querySelectorAll('input[name="q_correct"]:checked'));
+  const checked = Array.from(document.querySelectorAll('input[name="q_correct"]:checked'))
+    .filter(box => parseInt(box.value) < (window.currentQuestionOptionsCount || 4));
   if (checked.length === 0) {
     if (cb) cb.checked = true;
     if (window.showToast) window.showToast('Mindestens eine Antwort muss richtig sein! ⚠️');
@@ -4137,14 +4240,18 @@ window.handleCorrectCheckboxChange = function(idx, cb) {
 
 window.toggleCorrectOption = function(idx, event) {
   if (event && event.target) {
-    if (event.target.tagName === 'INPUT' || event.target.tagName === 'BUTTON' || event.target.closest('button')) {
+    if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.tagName === 'BUTTON' || event.target.closest('button')) {
       return;
     }
   }
+  const maxOpts = window.currentQuestionOptionsCount || 4;
+  if (idx >= maxOpts) return;
+
   const cb = document.getElementById('opt_radio_' + idx);
   if (cb) {
     cb.checked = !cb.checked;
-    const checked = Array.from(document.querySelectorAll('input[name="q_correct"]:checked'));
+    const checked = Array.from(document.querySelectorAll('input[name="q_correct"]:checked'))
+      .filter(box => parseInt(box.value) < maxOpts);
     if (checked.length === 0) {
       cb.checked = true;
       if (window.showToast) window.showToast('Mindestens eine Antwort muss richtig sein! ⚠️');
@@ -4155,26 +4262,29 @@ window.toggleCorrectOption = function(idx, event) {
 
 window.setCorrectOptions = function(indices) {
   const arr = (Array.isArray(indices) && indices.length > 0) ? indices.map(n => parseInt(n)) : [0];
-  for (let i = 0; i <= 3; i++) {
+  const maxOpts = window.currentQuestionOptionsCount || 4;
+  for (let i = 0; i <= 4; i++) {
     const cb = document.getElementById('opt_radio_' + i);
     if (cb) {
-      cb.checked = arr.includes(i);
+      cb.checked = (i < maxOpts && arr.includes(i));
     }
   }
   window.updateCorrectOptionsUI();
 };
 
 window.updateCorrectOptionsUI = function() {
-  const optLetters = ['A', 'B', 'C', 'D'];
+  const optLetters = ['A', 'B', 'C', 'D', 'E'];
   const checkedIndices = [];
-  for (let i = 0; i <= 3; i++) {
+  const maxOpts = window.currentQuestionOptionsCount || 4;
+
+  for (let i = 0; i <= 4; i++) {
     const cb = document.getElementById('opt_radio_' + i);
     const row = document.getElementById('opt_row_' + i);
     const badge = document.getElementById('opt_badge_' + i) || (row ? row.querySelector('span') : null);
-    const isChecked = cb ? cb.checked : false;
+    const isChecked = (cb && i < maxOpts) ? cb.checked : false;
     if (isChecked) checkedIndices.push(i);
 
-    if (row) {
+    if (row && i < maxOpts) {
       if (isChecked) {
         row.className = 'flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-brand-500/60 bg-brand-500/10 shadow-sm transition cursor-pointer select-none';
       } else {
@@ -4218,7 +4328,23 @@ window.loadAllData = async function() {
     const qRes = await fetch(SUPABASE_URL + '/rest/v1/quiz_questions?select=*&order=created_at.desc', { headers: restHeaders });
     allQuestions = await qRes.json();
     if (!Array.isArray(allQuestions)) allQuestions = [];
+
+    // Ersteller- & Bearbeiterdaten mit lokalem Store zusammenführen
+    let localAuthorStore = {};
+    try {
+      localAuthorStore = JSON.parse(localStorage.getItem('railtrainer_question_authors') || '{}');
+    } catch(e) {}
+
     allQuestions.forEach(q => {
+      const localMeta = localAuthorStore[q.id] || {};
+      if (!q.created_by && localMeta.created_by) q.created_by = localMeta.created_by;
+      if (!q.created_by_name && localMeta.created_by_name) q.created_by_name = localMeta.created_by_name;
+      if (!q.creator_role && localMeta.creator_role) q.creator_role = localMeta.creator_role;
+      if (!q.created_at && localMeta.created_at) q.created_at = localMeta.created_at;
+      if (!q.updated_by && localMeta.updated_by) q.updated_by = localMeta.updated_by;
+      if (!q.updated_by_name && localMeta.updated_by_name) q.updated_by_name = localMeta.updated_by_name;
+      if (!q.updated_at && localMeta.updated_at) q.updated_at = localMeta.updated_at;
+
       q.is_verified = (q.is_verified === true);
       if (q.is_verified) {
         verifiedQuestionIds.add(q.id);
@@ -4233,7 +4359,22 @@ window.loadAllData = async function() {
     const fcRes = await fetch(SUPABASE_URL + '/rest/v1/flashcards?select=*&order=created_at.desc', { headers: restHeaders });
     allFlashcards = await fcRes.json();
     if (!Array.isArray(allFlashcards)) allFlashcards = [];
+
+    let localFcAuthorStore = {};
+    try {
+      localFcAuthorStore = JSON.parse(localStorage.getItem('railtrainer_flashcard_authors') || '{}');
+    } catch(e) {}
+
     allFlashcards.forEach(fc => {
+      const localMeta = localFcAuthorStore[fc.id] || {};
+      if (!fc.created_by && localMeta.created_by) fc.created_by = localMeta.created_by;
+      if (!fc.created_by_name && localMeta.created_by_name) fc.created_by_name = localMeta.created_by_name;
+      if (!fc.creator_role && localMeta.creator_role) fc.creator_role = localMeta.creator_role;
+      if (!fc.created_at && localMeta.created_at) fc.created_at = localMeta.created_at;
+      if (!fc.updated_by && localMeta.updated_by) fc.updated_by = localMeta.updated_by;
+      if (!fc.updated_by_name && localMeta.updated_by_name) fc.updated_by_name = localMeta.updated_by_name;
+      if (!fc.updated_at && localMeta.updated_at) fc.updated_at = localMeta.updated_at;
+
       fc.is_verified = (fc.is_verified === true);
       if (fc.is_verified) {
         verifiedFlashcardIds.add(fc.id);
@@ -4343,13 +4484,31 @@ window.renderQuestions = function(list) {
       ? 'border-emerald-500/30 hover:border-emerald-500/60 bg-gray-900/90' 
       : 'border-gray-800 hover:border-gray-700 bg-gray-900';
 
+    const formatDateStr = (dateVal) => {
+      if (!dateVal) return '';
+      try {
+        const d = new Date(dateVal);
+        if (isNaN(d.getTime())) return '';
+        return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      } catch(e) { return ''; }
+    };
+    const authorCreated = q.created_by_name || q.created_by || 'Dozent / System';
+    const createdDateStr = formatDateStr(q.created_at);
+    const authorUpdated = q.updated_by_name || q.updated_by;
+    const updatedDateStr = formatDateStr(q.updated_at);
+    const showUpdated = authorUpdated && (authorUpdated !== authorCreated || (q.updated_at && q.updated_at !== q.created_at));
+
+    const optionsCountBadge = (options.length !== 4)
+      ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">' + options.length + ' Antworten</span>'
+      : '';
+
     return '<div class="border rounded-2xl p-5 shadow-lg transition ' + cardBorder + '">' +
       '<div class="flex items-start justify-between gap-4 mb-3">' +
         '<div class="flex items-center gap-2 flex-wrap">' +
           '<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand-500/20 text-brand-400 border border-brand-500/30">#' + (q.category || 'Allgemein') + '</span>' +
+          optionsCountBadge +
           (corrIndices.length > 1 ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-1"><i data-lucide="check-square" class="w-3 h-3 text-purple-400"></i><span>Mehrfachauswahl (' + corrIndices.length + ')</span></span>' : '') +
           verifiedBtn +
-          '<span class="text-xs text-gray-500">ID: ' + q.id + '</span>' +
         '</div>' +
         '<div class="flex items-center gap-2">' +
           '<button onclick="window.editQuestion(\'' + q.id + '\')" class="p-1.5 text-gray-400 hover:text-brand-400 hover:bg-gray-800 rounded-lg transition" title="Bearbeiten"><i data-lucide="edit-3" class="w-4 h-4"></i></button>' +
@@ -4373,11 +4532,12 @@ window.renderQuestions = function(list) {
         options.map((opt, oIdx) => {
           const isCorrect = corrIndices.includes(oIdx);
           const isDanger = (q.danger_indices || q.dangerIndices || []).includes(oIdx);
+          const optLetter = ['A','B','C','D','E','F'][oIdx] || (oIdx + 1);
           return '<div class="px-3.5 py-2 rounded-xl text-xs flex items-center justify-between gap-2.5 border ' +
             (isCorrect ? 'bg-brand-500/10 border-brand-500/40 text-brand-300 font-semibold' : (isDanger ? 'bg-red-950/20 border-red-500/40 text-gray-200' : 'bg-gray-950 border-gray-800 text-gray-400')) + '">' +
             '<div class="flex items-center gap-2.5 min-w-0">' +
               '<span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ' +
-                (isCorrect ? 'bg-brand-500 text-white' : (isDanger ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400')) + '">' + (['A','B','C','D'][oIdx] || oIdx + 1) + '</span>' +
+                (isCorrect ? 'bg-brand-500 text-white' : (isDanger ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400')) + '">' + optLetter + '</span>' +
               '<span class="truncate">' + escapeHtml(opt) + '</span>' +
             '</div>' +
             (isCorrect && corrIndices.length > 1 ? '<span class="text-[10px] font-bold text-brand-400 bg-brand-500/20 px-1.5 py-0.5 rounded shrink-0">Richtig ✓</span>' : '') +
@@ -4385,7 +4545,21 @@ window.renderQuestions = function(list) {
           '</div>';
         }).join('') +
       '</div>' +
-      (q.explanation ? '<div class="bg-gray-950/70 rounded-xl p-3 border border-gray-800/80 text-xs text-gray-300 whitespace-pre-line leading-relaxed"><span class="font-bold text-brand-400">Erklärung:</span> ' + window.formatRichContent(q.explanation) + '</div>' : '') +
+      (q.explanation ? '<div class="bg-gray-950/70 rounded-xl p-3 border border-gray-800/80 text-xs text-gray-300 whitespace-pre-line leading-relaxed mb-3"><span class="font-bold text-brand-400">Erklärung:</span> ' + window.formatRichContent(q.explanation) + '</div>' : '') +
+      '<div class="mt-3 pt-2.5 border-t border-gray-800/70 flex items-center justify-between gap-3 text-[11px] text-gray-400 flex-wrap">' +
+        '<div class="flex items-center gap-3.5 flex-wrap">' +
+          '<span class="flex items-center gap-1.5" title="Erstellt von">' +
+            '<i data-lucide="user" class="w-3.5 h-3.5 text-brand-400"></i>' +
+            '<span>Erstellt von: <strong class="text-gray-200 font-semibold">' + escapeHtml(authorCreated) + '</strong>' + (createdDateStr ? ' <span class="text-gray-500">(' + createdDateStr + ')</span>' : '') + '</span>' +
+          '</span>' +
+          (showUpdated ? 
+            '<span class="flex items-center gap-1.5" title="Zuletzt bearbeitet">' +
+              '<i data-lucide="edit-2" class="w-3.5 h-3.5 text-amber-400"></i>' +
+              '<span>Bearbeitet: <strong class="text-gray-200 font-semibold">' + escapeHtml(authorUpdated) + '</strong>' + (updatedDateStr ? ' <span class="text-gray-500">(' + updatedDateStr + ')</span>' : '') + '</span>' +
+            '</span>' : '') +
+        '</div>' +
+        '<span class="text-[10px] text-gray-500 font-mono">ID: ' + q.id + '</span>' +
+      '</div>' +
     '</div>';
   }).join('');
   if (window.lucide) lucide.createIcons();
@@ -4399,10 +4573,11 @@ window.filterQuestions = function() {
 let currentDangerIndices = [];
 
 window.updateDangerOptionButtons = function() {
-  for (let i = 0; i <= 3; i++) {
+  const maxOpts = window.currentQuestionOptionsCount || 4;
+  for (let i = 0; i <= 4; i++) {
     const btn = document.getElementById('q_bg_btn_' + i);
     if (!btn) continue;
-    const isDanger = currentDangerIndices.includes(i);
+    const isDanger = (i < maxOpts) && currentDangerIndices.includes(i);
     if (isDanger) {
       btn.className = 'px-2.5 py-1 rounded-lg border border-red-500 bg-red-500/25 text-red-300 text-xs font-bold transition flex items-center gap-1 shrink-0 ring-1 ring-red-500/50 shadow-md shadow-red-500/20';
       btn.innerHTML = '<i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-red-400"></i><span>BG ❗</span>';
@@ -4415,6 +4590,9 @@ window.updateDangerOptionButtons = function() {
 };
 
 window.toggleDangerOption = function(idx) {
+  const maxOpts = window.currentQuestionOptionsCount || 4;
+  if (idx >= maxOpts) return;
+
   if (currentDangerIndices.includes(idx)) {
     currentDangerIndices = currentDangerIndices.filter(i => i !== idx);
   } else {
@@ -4429,19 +4607,31 @@ window.openQuestionModal = function() {
   document.getElementById('q_id').value = '';
   const qVer = document.getElementById('q_verified');
   if (qVer) qVer.checked = true;
+
+  window.setQuestionOptionsCount(4);
+  for (let i = 0; i <= 4; i++) {
+    const el = document.getElementById('q_opt_' + i);
+    if (el) el.value = '';
+  }
   window.setCorrectOptions([0]);
   currentDangerIndices = [];
   window.updateDangerOptionButtons();
   window.clearImage('q');
   window.switchImageTab('q', 'file');
+
+  const metaBox = document.getElementById('questionModalMetaInfo');
+  if (metaBox) {
+    metaBox.classList.add('hidden');
+    metaBox.innerHTML = '';
+  }
+
   document.getElementById('questionModalTitle').textContent = 'Neue Prüfungsfrage anlegen';
   const modal = document.getElementById('questionModal');
   if (modal) {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
   }
-  window.autoResizeTextarea(document.getElementById('q_text'));
-  window.autoResizeTextarea(document.getElementById('q_explanation'));
+  window.resizeAllModalTextareas('questionModal');
   setTimeout(() => { document.getElementById('q_text')?.focus(); }, 50);
   if (window.lucide) lucide.createIcons();
 };
@@ -4460,26 +4650,55 @@ window.editQuestion = function(id) {
   }
   const qVer = document.getElementById('q_verified');
   if (qVer) qVer.checked = (q.is_verified === true || verifiedQuestionIds.has(q.id));
+
   const opts = Array.isArray(q.options) ? q.options : (typeof q.options === 'string' ? JSON.parse(q.options) : []);
-  document.getElementById('q_opt_0').value = opts[0] || '';
-  document.getElementById('q_opt_1').value = opts[1] || '';
-  document.getElementById('q_opt_2').value = opts[2] || '';
-  document.getElementById('q_opt_3').value = opts[3] || '';
+  const optCount = opts.length === 3 ? 3 : (opts.length === 5 ? 5 : 4);
+  window.setQuestionOptionsCount(optCount);
+
+  for (let i = 0; i <= 4; i++) {
+    const el = document.getElementById('q_opt_' + i);
+    if (el) el.value = opts[i] || '';
+  }
+
   const corrIndices = Array.isArray(q.correct_indices) ? q.correct_indices :
     (Array.isArray(q.correctIndices) ? q.correctIndices :
     (typeof q.correct_indices === 'string' ? JSON.parse(q.correct_indices) :
     [typeof q.correct_index === 'number' ? q.correct_index : 0]));
   window.setCorrectOptions(corrIndices);
-  currentDangerIndices = [...(q.danger_indices || q.dangerIndices || [])];
+
+  currentDangerIndices = [...(q.danger_indices || q.dangerIndices || [])].filter(i => i < optCount);
   window.updateDangerOptionButtons();
+
+  const metaBox = document.getElementById('questionModalMetaInfo');
+  if (metaBox) {
+    const formatDateStr = (dateVal) => {
+      if (!dateVal) return '';
+      try {
+        const d = new Date(dateVal);
+        if (isNaN(d.getTime())) return '';
+        return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      } catch(e) { return ''; }
+    };
+    const authorCreated = q.created_by_name || q.created_by || 'Dozent / System';
+    const createdDateStr = formatDateStr(q.created_at);
+    const authorUpdated = q.updated_by_name || q.updated_by;
+    const updatedDateStr = formatDateStr(q.updated_at);
+
+    let metaHtml = '<span class="flex items-center gap-1.5"><i data-lucide="user" class="w-3.5 h-3.5 text-brand-400"></i><span>Erstellt von: <strong class="text-gray-200 font-semibold">' + escapeHtml(authorCreated) + '</strong>' + (createdDateStr ? ' <span class="text-gray-500">(' + createdDateStr + ')</span>' : '') + '</span></span>';
+    if (authorUpdated) {
+      metaHtml += '<span class="text-gray-600">•</span><span class="flex items-center gap-1.5"><i data-lucide="edit-2" class="w-3.5 h-3.5 text-amber-400"></i><span>Zuletzt bearbeitet: <strong class="text-gray-200 font-semibold">' + escapeHtml(authorUpdated) + '</strong>' + (updatedDateStr ? ' <span class="text-gray-500">(' + updatedDateStr + ')</span>' : '') + '</span></span>';
+    }
+    metaBox.innerHTML = metaHtml;
+    metaBox.classList.remove('hidden');
+  }
+
   document.getElementById('questionModalTitle').textContent = 'Frage bearbeiten';
   const modal = document.getElementById('questionModal');
   if (modal) {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
   }
-  window.autoResizeTextarea(document.getElementById('q_text'));
-  window.autoResizeTextarea(document.getElementById('q_explanation'));
+  window.resizeAllModalTextareas('questionModal');
   if (window.lucide) lucide.createIcons();
 };
 
@@ -4494,22 +4713,31 @@ window.closeQuestionModal = function() {
 window.handleSaveQuestion = async function(e, andNext = false) {
   if (e) e.preventDefault();
   const id = document.getElementById('q_id').value || ('q_' + Math.random().toString(36).substr(2, 9));
+  const isNew = !document.getElementById('q_id').value;
   const category = document.getElementById('q_category').value;
   const text = document.getElementById('q_text').value.trim();
   const explanation = document.getElementById('q_explanation').value.trim();
   const imageUrl = document.getElementById('q_image')?.value.trim() || null;
   const isVerified = document.getElementById('q_verified')?.checked || false;
-  const options = [
-    document.getElementById('q_opt_0').value.trim(),
-    document.getElementById('q_opt_1').value.trim(),
-    document.getElementById('q_opt_2').value.trim(),
-    document.getElementById('q_opt_3').value.trim()
-  ];
-  const checkedBoxes = Array.from(document.querySelectorAll('input[name="q_correct"]:checked'));
-  const correctIndices = checkedBoxes.map(cb => parseInt(cb.value));
 
-  if (!category || !text || !options[0] || !options[1] || !options[2] || !options[3]) {
-    alert('Bitte Kategorie, Fragentext und alle 4 Antwortoptionen ausfüllen.');
+  const optCount = window.currentQuestionOptionsCount || 4;
+  const options = [];
+  for (let i = 0; i < optCount; i++) {
+    const val = (document.getElementById('q_opt_' + i)?.value || '').trim();
+    if (!val) {
+      alert('Bitte Antwortoption ' + ['A', 'B', 'C', 'D', 'E'][i] + ' ausfüllen.');
+      return;
+    }
+    options.push(val);
+  }
+
+  const checkedBoxes = Array.from(document.querySelectorAll('input[name="q_correct"]:checked'));
+  const correctIndices = checkedBoxes
+    .map(cb => parseInt(cb.value))
+    .filter(idx => idx < optCount);
+
+  if (!category || !text) {
+    alert('Bitte Kategorie und Fragentext ausfüllen.');
     return;
   }
 
@@ -4519,6 +4747,37 @@ window.handleSaveQuestion = async function(e, andNext = false) {
   }
 
   const correctIndex = correctIndices[0];
+  const dangerIndices = currentDangerIndices.filter(idx => idx < optCount);
+
+  // Ersteller- und Bearbeiter-Daten
+  const authorName = (currentPortalUser && (currentPortalUser.name || currentPortalUser.email)) || 'Ausbilder';
+  const authorId = currentPortalUser ? currentPortalUser.id : null;
+  const authorRole = (currentPortalUser && currentPortalUser.role) || 'moderator';
+
+  const existingQ = isNew ? null : allQuestions.find(item => item.id === id);
+  const createdBy = isNew ? authorId : (existingQ?.created_by || authorId);
+  const createdByName = isNew ? authorName : (existingQ?.created_by_name || existingQ?.createdByName || authorName);
+  const creatorRole = isNew ? authorRole : (existingQ?.creator_role || existingQ?.creatorRole || authorRole);
+  const createdAt = isNew ? new Date().toISOString() : (existingQ?.created_at || existingQ?.createdAt || new Date().toISOString());
+  const updatedBy = authorId;
+  const updatedByName = authorName;
+  const updatedAt = new Date().toISOString();
+
+  // Lokal cachen für sofortige Anzeige ohne Wartezeit auf Datenbank-Migration
+  try {
+    const raw = localStorage.getItem('railtrainer_question_authors') || '{}';
+    const store = JSON.parse(raw);
+    store[id] = {
+      created_by: createdBy,
+      created_by_name: createdByName,
+      creator_role: creatorRole,
+      created_at: createdAt,
+      updated_by: updatedBy,
+      updated_by_name: updatedByName,
+      updated_at: updatedAt
+    };
+    localStorage.setItem('railtrainer_question_authors', JSON.stringify(store));
+  } catch(e) {}
 
   const payload = { 
     id, 
@@ -4530,7 +4789,14 @@ window.handleSaveQuestion = async function(e, andNext = false) {
     explanation, 
     image_url: imageUrl, 
     is_verified: isVerified,
-    danger_indices: currentDangerIndices
+    danger_indices: dangerIndices,
+    created_by: createdBy,
+    created_by_name: createdByName,
+    creator_role: creatorRole,
+    created_at: createdAt,
+    updated_by: updatedBy,
+    updated_by_name: updatedByName,
+    updated_at: updatedAt
   };
 
   try {
@@ -4542,19 +4808,23 @@ window.handleSaveQuestion = async function(e, andNext = false) {
 
     if (!res.ok) {
       const errText = await res.text();
-      if (errText.includes('correct_indices') || errText.includes('danger_indices') || errText.includes('PGRST204')) {
-        const fallbackPayload = { ...payload };
-        if (errText.includes('correct_indices')) delete fallbackPayload.correct_indices;
-        if (errText.includes('danger_indices')) delete fallbackPayload.danger_indices;
-        res = await fetch(SUPABASE_URL + '/rest/v1/quiz_questions', {
-          method: 'POST',
-          headers: { ...restHeaders, 'Prefer': 'resolution=merge-duplicates' },
-          body: JSON.stringify(fallbackPayload)
-        });
-        if (!res.ok) throw new Error(await res.text());
-      } else {
-        throw new Error(errText);
-      }
+      // Falls optionale Spalten in Supabase noch nicht existieren (z.B. PGRST204), ohne diese erneut versuchen
+      const fallbackPayload = { ...payload };
+      delete fallbackPayload.created_by;
+      delete fallbackPayload.created_by_name;
+      delete fallbackPayload.creator_role;
+      delete fallbackPayload.updated_by;
+      delete fallbackPayload.updated_by_name;
+      delete fallbackPayload.updated_at;
+      if (errText.includes('correct_indices')) delete fallbackPayload.correct_indices;
+      if (errText.includes('danger_indices')) delete fallbackPayload.danger_indices;
+
+      res = await fetch(SUPABASE_URL + '/rest/v1/quiz_questions', {
+        method: 'POST',
+        headers: { ...restHeaders, 'Prefer': 'resolution=merge-duplicates' },
+        body: JSON.stringify(fallbackPayload)
+      });
+      if (!res.ok) throw new Error(await res.text());
     }
 
     if (isVerified) {
@@ -4567,15 +4837,17 @@ window.handleSaveQuestion = async function(e, andNext = false) {
     if (andNext) {
       document.getElementById('q_id').value = '';
       document.getElementById('q_text').value = '';
-      document.getElementById('q_opt_0').value = '';
-      document.getElementById('q_opt_1').value = '';
-      document.getElementById('q_opt_2').value = '';
-      document.getElementById('q_opt_3').value = '';
+      for (let i = 0; i <= 4; i++) {
+        const el = document.getElementById('q_opt_' + i);
+        if (el) el.value = '';
+      }
       document.getElementById('q_explanation').value = '';
       currentDangerIndices = [];
+      window.setQuestionOptionsCount(4);
       window.updateDangerOptionButtons();
       window.clearImage('q');
       window.setCorrectOptions([0]);
+      window.resizeAllModalTextareas('questionModal');
       showToast('Frage gespeichert (4-Augen-Prinzip)! Bereit für nächste Frage... ✍️');
       const qInput = document.getElementById('q_text');
       if (qInput) qInput.focus();
@@ -4687,6 +4959,20 @@ window.renderFlashcards = function(list) {
       ? 'border-emerald-500/30 hover:border-emerald-500/60 bg-gray-900/90' 
       : 'border-gray-800 hover:border-gray-700 bg-gray-900';
 
+    const formatDateStr = (dateVal) => {
+      if (!dateVal) return '';
+      try {
+        const d = new Date(dateVal);
+        if (isNaN(d.getTime())) return '';
+        return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      } catch(e) { return ''; }
+    };
+    const authorCreated = fc.created_by_name || fc.created_by || 'Ausbilder / Dozent';
+    const createdDateStr = formatDateStr(fc.created_at);
+    const authorUpdated = fc.updated_by_name || fc.updated_by;
+    const updatedDateStr = formatDateStr(fc.updated_at);
+    const showUpdated = authorUpdated && (authorUpdated !== authorCreated || updatedDateStr !== createdDateStr);
+
     return '<div class="border rounded-2xl p-5 shadow-lg flex flex-col justify-between transition ' + cardBorder + '">' +
       '<div>' +
         '<div class="flex items-center justify-between gap-2 mb-3">' +
@@ -4714,7 +5000,23 @@ window.renderFlashcards = function(list) {
           '</div>' : '') +
         '<div class="text-xs text-gray-300 leading-relaxed mb-4 whitespace-pre-line">' + window.formatRichContent(fc.content) + '</div>' +
       '</div>' +
-      (fc.reference ? '<div class="pt-3 border-t border-gray-800/80 text-[11px] text-gray-400 flex items-center gap-1.5"><i data-lucide="book" class="w-3.5 h-3.5 text-brand-500"></i><span>' + fc.reference + '</span></div>' : '') +
+      '<div>' +
+        (fc.reference ? '<div class="pt-3 border-t border-gray-800/80 text-[11px] text-gray-400 flex items-center gap-1.5 mb-2.5"><i data-lucide="book" class="w-3.5 h-3.5 text-brand-500"></i><span>' + fc.reference + '</span></div>' : '') +
+        '<div class="pt-2.5 border-t border-gray-800/70 flex items-center justify-between gap-3 text-[11px] text-gray-400 flex-wrap">' +
+          '<div class="flex items-center gap-3.5 flex-wrap">' +
+            '<span class="flex items-center gap-1.5" title="Erstellt von">' +
+              '<i data-lucide="user" class="w-3.5 h-3.5 text-brand-400"></i>' +
+              '<span>Erstellt von: <strong class="text-gray-200 font-semibold">' + escapeHtml(authorCreated) + '</strong>' + (createdDateStr ? ' <span class="text-gray-500">(' + createdDateStr + ')</span>' : '') + '</span>' +
+            '</span>' +
+            (showUpdated ? 
+              '<span class="flex items-center gap-1.5" title="Zuletzt bearbeitet">' +
+                '<i data-lucide="edit-2" class="w-3.5 h-3.5 text-amber-400"></i>' +
+                '<span>Bearbeitet: <strong class="text-gray-200 font-semibold">' + escapeHtml(authorUpdated) + '</strong>' + (updatedDateStr ? ' <span class="text-gray-500">(' + updatedDateStr + ')</span>' : '') + '</span>' +
+              '</span>' : '') +
+          '</div>' +
+          '<span class="text-[10px] text-gray-500 font-mono">ID: ' + fc.id + '</span>' +
+        '</div>' +
+      '</div>' +
     '</div>';
   }).join('');
   if (window.lucide) lucide.createIcons();
@@ -4733,13 +5035,20 @@ window.openFlashcardModal = function() {
   if (fcVer) fcVer.checked = true;
   window.clearImage('fc');
   window.switchImageTab('fc', 'file');
+
+  const metaEl = document.getElementById('flashcardModalMetaInfo');
+  if (metaEl) {
+    metaEl.classList.add('hidden');
+    metaEl.innerHTML = '';
+  }
+
   document.getElementById('flashcardModalTitle').textContent = 'Neue Lernkarte anlegen';
   const modal = document.getElementById('flashcardModal');
   if (modal) {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
   }
-  window.autoResizeTextarea(document.getElementById('fc_content'));
+  window.resizeAllModalTextareas('flashcardModal');
   setTimeout(() => { document.getElementById('fc_title')?.focus(); }, 50);
   if (window.lucide) lucide.createIcons();
 };
@@ -4759,13 +5068,37 @@ window.editFlashcard = function(id) {
   }
   const fcVer = document.getElementById('fc_verified');
   if (fcVer) fcVer.checked = verifiedFlashcardIds.has(fc.id);
+
+  const metaEl = document.getElementById('flashcardModalMetaInfo');
+  if (metaEl) {
+    const formatDateStr = (dateVal) => {
+      if (!dateVal) return '';
+      try {
+        const d = new Date(dateVal);
+        if (isNaN(d.getTime())) return '';
+        return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      } catch(e) { return ''; }
+    };
+    const authorCreated = fc.created_by_name || fc.created_by || 'Ausbilder / Dozent';
+    const createdDateStr = formatDateStr(fc.created_at);
+    const authorUpdated = fc.updated_by_name || fc.updated_by;
+    const updatedDateStr = formatDateStr(fc.updated_at);
+
+    let metaHtml = '<span class="flex items-center gap-1.5"><i data-lucide="user" class="w-3.5 h-3.5 text-brand-400"></i><span>Erstellt von: <strong class="text-gray-200 font-semibold">' + escapeHtml(authorCreated) + '</strong>' + (createdDateStr ? ' <span class="text-gray-500">(' + createdDateStr + ')</span>' : '') + '</span></span>';
+    if (authorUpdated) {
+      metaHtml += '<span class="text-gray-600">•</span><span class="flex items-center gap-1.5"><i data-lucide="edit-2" class="w-3.5 h-3.5 text-amber-400"></i><span>Zuletzt bearbeitet: <strong class="text-gray-200 font-semibold">' + escapeHtml(authorUpdated) + '</strong>' + (updatedDateStr ? ' <span class="text-gray-500">(' + updatedDateStr + ')</span>' : '') + '</span></span>';
+    }
+    metaEl.innerHTML = metaHtml;
+    metaEl.classList.remove('hidden');
+  }
+
   document.getElementById('flashcardModalTitle').textContent = 'Lernkarte bearbeiten';
   const modal = document.getElementById('flashcardModal');
   if (modal) {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
   }
-  window.autoResizeTextarea(document.getElementById('fc_content'));
+  window.resizeAllModalTextareas('flashcardModal');
   if (window.lucide) lucide.createIcons();
 };
 
@@ -4779,7 +5112,9 @@ window.closeFlashcardModal = function() {
 
 window.handleSaveFlashcard = async function(e, andNext = false) {
   if (e) e.preventDefault();
-  const id = document.getElementById('fc_id').value || ('fact_' + Math.random().toString(36).substr(2, 9));
+  const rawId = document.getElementById('fc_id').value;
+  const isNew = !rawId;
+  const id = rawId || ('fact_' + Math.random().toString(36).substr(2, 9));
   const category = document.getElementById('fc_category').value;
   const title = document.getElementById('fc_title').value.trim();
   const content = document.getElementById('fc_content').value.trim();
@@ -4792,15 +5127,69 @@ window.handleSaveFlashcard = async function(e, andNext = false) {
     return;
   }
 
-  const payload = { id, category, title, content, reference, image_url: imageUrl, is_verified: isVerified };
+  // Ersteller- und Bearbeiter-Daten
+  const authorName = (currentPortalUser && (currentPortalUser.name || currentPortalUser.email)) || 'Ausbilder';
+  const authorId = currentPortalUser ? currentPortalUser.id : null;
+  const authorRole = (currentPortalUser && currentPortalUser.role) || 'moderator';
+
+  const existingFc = isNew ? null : allFlashcards.find(item => item.id === id);
+  const createdBy = isNew ? authorId : (existingFc?.created_by || authorId);
+  const createdByName = isNew ? authorName : (existingFc?.created_by_name || existingFc?.createdByName || authorName);
+  const creatorRole = isNew ? authorRole : (existingFc?.creator_role || existingFc?.creatorRole || authorRole);
+  const createdAt = isNew ? new Date().toISOString() : (existingFc?.created_at || existingFc?.createdAt || new Date().toISOString());
+  const updatedBy = authorId;
+  const updatedByName = authorName;
+  const updatedAt = new Date().toISOString();
+
+  // Lokal cachen für sofortige Anzeige ohne Wartezeit
+  try {
+    const raw = localStorage.getItem('railtrainer_flashcard_authors') || '{}';
+    const store = JSON.parse(raw);
+    store[id] = {
+      created_by: createdBy,
+      created_by_name: createdByName,
+      creator_role: creatorRole,
+      created_at: createdAt,
+      updated_by: updatedBy,
+      updated_by_name: updatedByName,
+      updated_at: updatedAt
+    };
+    localStorage.setItem('railtrainer_flashcard_authors', JSON.stringify(store));
+  } catch(e) {}
+
+  const payload = { 
+    id, 
+    category, 
+    title, 
+    content, 
+    reference, 
+    image_url: imageUrl, 
+    is_verified: isVerified,
+    created_by: createdBy,
+    created_by_name: createdByName,
+    creator_role: creatorRole,
+    created_at: createdAt,
+    updated_by: updatedBy,
+    updated_by_name: updatedByName,
+    updated_at: updatedAt
+  };
 
   try {
-    const res = await fetch(SUPABASE_URL + '/rest/v1/flashcards', {
+    let res = await fetch(SUPABASE_URL + '/rest/v1/flashcards', {
       method: 'POST',
       headers: { ...restHeaders, 'Prefer': 'resolution=merge-duplicates' },
       body: JSON.stringify(payload)
     });
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      // Fallback falls Spalten in Supabase noch nicht existieren
+      const fallbackPayload = { id, category, title, content, reference, image_url: imageUrl, is_verified: isVerified };
+      res = await fetch(SUPABASE_URL + '/rest/v1/flashcards', {
+        method: 'POST',
+        headers: { ...restHeaders, 'Prefer': 'resolution=merge-duplicates' },
+        body: JSON.stringify(fallbackPayload)
+      });
+      if (!res.ok) throw new Error(await res.text());
+    }
 
     if (isVerified) {
       verifiedFlashcardIds.add(id);
@@ -4815,6 +5204,7 @@ window.handleSaveFlashcard = async function(e, andNext = false) {
       document.getElementById('fc_content').value = '';
       document.getElementById('fc_reference').value = '';
       window.clearImage('fc');
+      window.resizeAllModalTextareas('flashcardModal');
       showToast('Lernkarte gespeichert (4-Augen-Prinzip)! Bereit für nächste Karte... 🃏');
       const tInput = document.getElementById('fc_title');
       if (tInput) tInput.focus();

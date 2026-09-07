@@ -162,6 +162,11 @@
           <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-lg mb-2 shadow">■ D</div>
           <span class="text-xs font-extrabold line-clamp-3 leading-tight" id="opt_text_3">Option D</span>
         </button>
+
+        <button onclick="handleSelectOption(4)" id="btn_opt_4" class="hidden touch-btn p-4 rounded-3xl bg-purple-600 active:bg-purple-700 text-white font-black flex flex-col items-center justify-center text-center shadow-xl shadow-purple-600/30 border border-purple-500/50 col-span-2">
+          <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-lg mb-2 shadow">★ E</div>
+          <span class="text-xs font-extrabold line-clamp-3 leading-tight" id="opt_text_4">Option E</span>
+        </button>
       </div>
     </section>
 
@@ -496,7 +501,7 @@
       document.getElementById('questionTextMobile').innerHTML = q.text || 'Frage auf dem Beamer beachten!';
 
       const options = Array.isArray(q.options) ? q.options : [];
-      for (let i = 0; i <= 3; i++) {
+      for (let i = 0; i <= 4; i++) {
         const btn = document.getElementById('btn_opt_' + i);
         const txt = document.getElementById('opt_text_' + i);
         if (btn && txt) {
@@ -514,9 +519,9 @@
       if (hasAnsweredCurrentQ || !currentSession) return;
       hasAnsweredCurrentQ = true;
 
-      const optLetters = ['A', 'B', 'C', 'D'];
+      const optLetters = ['A', 'B', 'C', 'D', 'E'];
       const subChoice = document.getElementById('submittedChoiceText');
-      if (subChoice) subChoice.textContent = 'Antwort ' + optLetters[idx];
+      if (subChoice) subChoice.textContent = 'Antwort ' + (optLetters[idx] || (idx + 1));
       showScreen('screen-submitted');
 
       const answerTime = Date.now();
