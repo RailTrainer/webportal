@@ -5066,7 +5066,6 @@ window.handleSaveQuestion = async function(e, andNext = false) {
     options, 
     correct_index: correctIndex, 
     correct_indices: correctIndices,
-    question_type: isOrder ? 'order' : (correctIndices.length > 1 ? 'multiple' : 'single'),
     explanation: finalExplanation, 
     image_url: imageUrl, 
     is_verified: isVerified,
@@ -5099,6 +5098,7 @@ window.handleSaveQuestion = async function(e, andNext = false) {
       delete fallbackPayload.updated_at;
       if (errText.includes('correct_indices')) delete fallbackPayload.correct_indices;
       if (errText.includes('danger_indices')) delete fallbackPayload.danger_indices;
+      if (errText.includes('question_type')) delete fallbackPayload.question_type;
 
       res = await fetch(SUPABASE_URL + '/rest/v1/quiz_questions', {
         method: 'POST',
