@@ -4753,7 +4753,17 @@ window.renderOrderSteps = function() {
     const isLast = idx === window.orderSteps.length - 1;
     const canDelete = window.orderSteps.length > 2;
 
-    return '<div class="flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-cyan-500/30 bg-cyan-950/10 transition">' +
+    return '<div class="flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-cyan-500/30 bg-cyan-950/10 transition group" ' +
+      'id="order_step_row_' + idx + '" ' +
+      'draggable="true" ' +
+      'ondragstart="window.handleOrderStepDragStart(event, ' + idx + ')" ' +
+      'ondragover="window.handleOrderStepDragOver(event, ' + idx + ')" ' +
+      'ondragleave="window.handleOrderStepDragLeave(event, ' + idx + ')" ' +
+      'ondrop="window.handleOrderStepDrop(event, ' + idx + ')" ' +
+      'ondragend="window.handleOrderStepDragEnd(event)">' +
+      '<div class="cursor-grab active:cursor-grabbing text-gray-500 hover:text-cyan-400 transition shrink-0 p-0.5" title="Gedrückt halten & ziehen zum Sortieren">' +
+        '<i data-lucide="grip-vertical" class="w-4 h-4"></i>' +
+      '</div>' +
       '<span class="w-6 h-6 rounded-lg bg-cyan-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm">' + (idx + 1) + '</span>' +
       '<textarea rows="1" placeholder="Schritt ' + (idx + 1) + ' eingeben..." oninput="window.updateOrderStepText(' + idx + ', this.value); window.autoResizeTextarea(this, 38);" class="flex-1 bg-transparent text-sm text-gray-100 placeholder-gray-500 focus:outline-none resize-none overflow-hidden leading-relaxed py-0.5">' + escapeHtml(stepText) + '</textarea>' +
       '<div class="flex items-center gap-1 shrink-0">' +
@@ -4776,6 +4786,56 @@ window.renderOrderSteps = function() {
   }
 
   if (window.lucide) lucide.createIcons();
+};
+
+window.draggedOrderStepIdx = null;
+
+window.handleOrderStepDragStart = function(e, idx) {
+  window.draggedOrderStepIdx = idx;
+  if (e.dataTransfer) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', String(idx));
+  }
+  const row = document.getElementById('order_step_row_' + idx);
+  if (row) {
+    setTimeout(() => {
+      row.classList.add('opacity-40', 'border-dashed', 'border-cyan-400');
+    }, 0);
+  }
+};
+
+window.handleOrderStepDragOver = function(e, idx) {
+  e.preventDefault();
+  if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+  if (window.draggedOrderStepIdx !== null && window.draggedOrderStepIdx !== idx) {
+    const row = document.getElementById('order_step_row_' + idx);
+    if (row) {
+      row.classList.add('ring-2', 'ring-cyan-400', 'bg-cyan-900/40');
+    }
+  }
+};
+
+window.handleOrderStepDragLeave = function(e, idx) {
+  const row = document.getElementById('order_step_row_' + idx);
+  if (row) {
+    row.classList.remove('ring-2', 'ring-cyan-400', 'bg-cyan-900/40');
+  }
+};
+
+window.handleOrderStepDrop = function(e, targetIdx) {
+  e.preventDefault();
+  const sourceIdx = window.draggedOrderStepIdx;
+  if (sourceIdx !== null && sourceIdx !== targetIdx && window.orderSteps[sourceIdx] !== undefined) {
+    const [moved] = window.orderSteps.splice(sourceIdx, 1);
+    window.orderSteps.splice(targetIdx, 0, moved);
+  }
+  window.draggedOrderStepIdx = null;
+  window.renderOrderSteps();
+};
+
+window.handleOrderStepDragEnd = function(e) {
+  window.draggedOrderStepIdx = null;
+  window.renderOrderSteps();
 };
 
 window.updateOrderStepText = function(idx, val) {
