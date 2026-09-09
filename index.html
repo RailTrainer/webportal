@@ -1492,6 +1492,23 @@
 
       <form id="questionForm" onsubmit="handleSaveQuestion(event, false)" class="space-y-4">
         <input type="hidden" id="q_id">
+        <input type="hidden" id="q_type" value="classic">
+
+        <!-- FRAGENTYP / MODUS-UMSCHALTER -->
+        <div>
+          <label class="block text-xs font-bold text-gray-300 uppercase mb-1.5">Fragentyp / Prüfungsmodus *</label>
+          <div class="grid grid-cols-2 gap-2 bg-gray-950 p-1.5 rounded-xl border border-gray-800">
+            <button type="button" id="btn_qmode_classic" onclick="window.setQuestionMode('classic')" class="py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-brand-600 text-white shadow-sm">
+              <i data-lucide="list-checks" class="w-4 h-4"></i>
+              <span>Klassische Multiple-Choice</span>
+            </button>
+            <button type="button" id="btn_qmode_order" onclick="window.setQuestionMode('order')" class="py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-transparent text-gray-400 hover:text-white">
+              <i data-lucide="arrow-up-down" class="w-4 h-4 text-cyan-400"></i>
+              <span>🔀 Reihenfolge-Modus</span>
+            </button>
+          </div>
+        </div>
+
         <div>
           <label class="block text-xs font-bold text-gray-300 uppercase mb-1.5">Kategorie / Fachbereich *</label>
           <select id="q_category" required class="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 focus:outline-none focus:border-brand-500"></select>
@@ -1509,10 +1526,20 @@
               <button type="button" onclick="insertFormat('q_text', 'arrow')" class="px-2 py-0.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-[11px] font-semibold rounded border border-gray-700 transition" title="Pfeil">➔</button>
             </div>
           </div>
-          <textarea id="q_text" required rows="2" oninput="window.autoResizeTextarea(this, 64)" placeholder="z.B. Welche Bedeutung hat das Signal Zs 1?" class="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-brand-500 leading-relaxed overflow-hidden resize-none transition-colors duration-150"></textarea>
+          <textarea id="q_text" required rows="2" oninput="window.autoResizeTextarea(this, 64); window.checkQuestionDuplicates(this.value);" placeholder="z.B. Welche Bedeutung hat das Signal Zs 1?" class="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-brand-500 leading-relaxed overflow-hidden resize-none transition-colors duration-150"></textarea>
+          
+          <!-- DUPLIKAT-WARNUNG LIVE-ANZEIGE -->
+          <div id="q_duplicate_warning" class="hidden mt-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs">
+            <div class="flex items-center gap-1.5 font-bold mb-1">
+              <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-400 shrink-0"></i>
+              <span>Mögliche doppelte / ähnliche Frage im System gefunden:</span>
+            </div>
+            <div id="q_duplicate_list" class="text-[11px] text-gray-300 space-y-1 pl-5"></div>
+          </div>
         </div>
 
-        <div class="space-y-2.5 pt-2">
+        <!-- 1. KLASSISCHER MODUS: ANTWORTOPTIONEN (SINGLE / MULTIPLE CHOICE) -->
+        <div id="classic_options_container" class="space-y-2.5 pt-2">
           <div class="flex items-center justify-between flex-wrap gap-2">
             <label class="block text-xs font-bold text-gray-300 uppercase">Antwortoptionen * (Kästchen = Richtig • Button = BG)</label>
             <div class="flex items-center gap-1 bg-gray-950 p-1 rounded-xl border border-gray-800 text-xs">
@@ -1586,6 +1613,29 @@
               <span>BG</span>
             </button>
           </div>
+        </div>
+
+        <!-- 2. REIHENFOLGE-MODUS: INTERAKTIVER SCHRITTE-BUILDER -->
+        <div id="order_options_container" class="hidden space-y-3 pt-2">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <label class="block text-xs font-bold text-cyan-300 uppercase">Schritte in korrekter Reihenfolge (1 = Erster Schritt)</label>
+              <p class="text-[11px] text-gray-400">Trage die Schritte chronologisch von oben nach unten ein. Im Quiz werden sie automatisch zufällig gemischt.</p>
+            </div>
+            <span class="text-[11px] bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 px-2.5 py-1 rounded-lg font-bold flex items-center gap-1">
+              <i data-lucide="shuffle" class="w-3 h-3 text-cyan-400"></i>
+              <span>Anti-Memorier-Logik aktiv</span>
+            </span>
+          </div>
+
+          <div id="order_steps_list" class="space-y-2.5">
+            <!-- Dynamisch via window.renderOrderSteps() gerendert -->
+          </div>
+
+          <button type="button" onclick="window.addOrderStep()" id="btn_add_order_step" class="w-full py-2.5 border-2 border-dashed border-gray-800 hover:border-cyan-500/50 hover:bg-cyan-500/5 rounded-xl text-xs font-bold text-gray-400 hover:text-cyan-300 transition flex items-center justify-center gap-2">
+            <i data-lucide="plus-circle" class="w-4 h-4 text-cyan-400"></i>
+            <span>+ Weiteren Schritt hinzufügen (max. 6)</span>
+          </button>
         </div>
 
         <div>
@@ -3981,7 +4031,10 @@ function getFilteredQuestionsList() {
   const search = (document.getElementById('searchQuestionsInput')?.value || '').toLowerCase();
   return allQuestions.filter(q => {
     const matchesCat = selectedQuestionCategories.size === 0 ? false : selectedQuestionCategories.has(q.category);
-    const matchesSearch = (q.text || '').toLowerCase().includes(search) || ((q.explanation || '').toLowerCase().includes(search));
+    const matchesSearch = !search || 
+      (q.text || '').toLowerCase().includes(search) || 
+      ((q.explanation || '').toLowerCase().includes(search)) ||
+      (Array.isArray(q.options) && q.options.some(opt => (opt || '').toLowerCase().includes(search)));
     const isVerified = (q.is_verified === true || verifiedQuestionIds.has(q.id));
     const matchesReview = (questionReviewFilter === 'all') || 
                           (questionReviewFilter === 'verified' && isVerified) || 
@@ -4532,16 +4585,52 @@ window.renderQuestions = function(list) {
     const updatedDateStr = formatDateStr(q.updated_at);
     const showUpdated = authorUpdated && (authorUpdated !== authorCreated || (q.updated_at && q.updated_at !== q.created_at));
 
-    const optionsCountBadge = (options.length !== 4)
-      ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">' + options.length + ' Antworten</span>'
+    const isOrderQuestion = q.questionType === 'order' || q.question_type === 'order' || ((q.explanation || '').includes('"qt":"order"'));
+
+    const modeBadge = isOrderQuestion
+      ? '<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center gap-1"><i data-lucide="arrow-up-down" class="w-3.5 h-3.5"></i><span>Reihenfolge (' + options.length + ' Schritte)</span></span>'
+      : (corrIndices.length > 1 
+        ? '<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-1"><i data-lucide="check-square" class="w-3 h-3 text-purple-400"></i><span>Mehrfachauswahl (' + corrIndices.length + ')</span></span>'
+        : '');
+
+    const optionsCountBadge = (!isOrderQuestion && options.length !== 4)
+      ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-800 text-gray-300 border border-gray-700">' + options.length + ' Antworten</span>'
       : '';
+
+    const optionsHtml = isOrderQuestion
+      ? '<div class="space-y-1.5 mb-3 bg-cyan-950/15 border border-cyan-500/20 rounded-2xl p-3">' +
+          '<div class="text-[11px] font-bold text-cyan-400 mb-1.5 flex items-center gap-1.5"><i data-lucide="list-ordered" class="w-3.5 h-3.5"></i><span>Korrekte Soll-Reihenfolge (wird für Schüler automatisch gemischt):</span></div>' +
+          options.map((opt, oIdx) => {
+            return '<div class="px-3 py-1.5 rounded-xl bg-gray-950 border border-gray-800 text-xs flex items-center gap-2.5 text-gray-200">' +
+              '<span class="w-5 h-5 rounded-lg bg-cyan-600 text-white flex items-center justify-center font-bold text-[11px] shrink-0">' + (oIdx + 1) + '</span>' +
+              '<span class="flex-1">' + escapeHtml(opt) + '</span>' +
+            '</div>';
+          }).join('') +
+        '</div>'
+      : '<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">' +
+          options.map((opt, oIdx) => {
+            const isCorrect = corrIndices.includes(oIdx);
+            const isDanger = (q.danger_indices || q.dangerIndices || []).includes(oIdx);
+            const optLetter = ['A','B','C','D','E','F'][oIdx] || (oIdx + 1);
+            return '<div class="px-3.5 py-2 rounded-xl text-xs flex items-center justify-between gap-2.5 border ' +
+              (isCorrect ? 'bg-brand-500/10 border-brand-500/40 text-brand-300 font-semibold' : (isDanger ? 'bg-red-950/20 border-red-500/40 text-gray-200' : 'bg-gray-950 border-gray-800 text-gray-400')) + '">' +
+              '<div class="flex items-center gap-2.5 min-w-0">' +
+                '<span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ' +
+                  (isCorrect ? 'bg-brand-500 text-white' : (isDanger ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400')) + '">' + optLetter + '</span>' +
+                '<span class="truncate">' + escapeHtml(opt) + '</span>' +
+              '</div>' +
+              (isCorrect && corrIndices.length > 1 ? '<span class="text-[10px] font-bold text-brand-400 bg-brand-500/20 px-1.5 py-0.5 rounded shrink-0">Richtig ✓</span>' : '') +
+              (isDanger ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-black bg-red-500/20 text-red-400 border border-red-500/40 shrink-0 flex items-center gap-1"><i data-lucide="alert-triangle" class="w-3 h-3"></i><span>BG</span></span>' : '') +
+            '</div>';
+          }).join('') +
+        '</div>';
 
     return '<div class="border rounded-2xl p-5 shadow-lg transition ' + cardBorder + '">' +
       '<div class="flex items-start justify-between gap-4 mb-3">' +
         '<div class="flex items-center gap-2 flex-wrap">' +
           '<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand-500/20 text-brand-400 border border-brand-500/30">#' + (q.category || 'Allgemein') + '</span>' +
           optionsCountBadge +
-          (corrIndices.length > 1 ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-1"><i data-lucide="check-square" class="w-3 h-3 text-purple-400"></i><span>Mehrfachauswahl (' + corrIndices.length + ')</span></span>' : '') +
+          modeBadge +
           verifiedBtn +
         '</div>' +
         '<div class="flex items-center gap-2">' +
@@ -4562,23 +4651,7 @@ window.renderQuestions = function(list) {
             '</div>' +
           '</div>' +
         '</div>' : '') +
-      '<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">' +
-        options.map((opt, oIdx) => {
-          const isCorrect = corrIndices.includes(oIdx);
-          const isDanger = (q.danger_indices || q.dangerIndices || []).includes(oIdx);
-          const optLetter = ['A','B','C','D','E','F'][oIdx] || (oIdx + 1);
-          return '<div class="px-3.5 py-2 rounded-xl text-xs flex items-center justify-between gap-2.5 border ' +
-            (isCorrect ? 'bg-brand-500/10 border-brand-500/40 text-brand-300 font-semibold' : (isDanger ? 'bg-red-950/20 border-red-500/40 text-gray-200' : 'bg-gray-950 border-gray-800 text-gray-400')) + '">' +
-            '<div class="flex items-center gap-2.5 min-w-0">' +
-              '<span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ' +
-                (isCorrect ? 'bg-brand-500 text-white' : (isDanger ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400')) + '">' + optLetter + '</span>' +
-              '<span class="truncate">' + escapeHtml(opt) + '</span>' +
-            '</div>' +
-            (isCorrect && corrIndices.length > 1 ? '<span class="text-[10px] font-bold text-brand-400 bg-brand-500/20 px-1.5 py-0.5 rounded shrink-0">Richtig ✓</span>' : '') +
-            (isDanger ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-black bg-red-500/20 text-red-400 border border-red-500/40 shrink-0 flex items-center gap-1"><i data-lucide="alert-triangle" class="w-3 h-3"></i><span>BG</span></span>' : '') +
-          '</div>';
-        }).join('') +
-      '</div>' +
+      optionsHtml +
       (q.explanation ? '<div class="bg-gray-950/70 rounded-xl p-3 border border-gray-800/80 text-xs text-gray-300 whitespace-pre-line leading-relaxed mb-3"><span class="font-bold text-brand-400">Erklärung:</span> ' + window.formatRichContent(q.explanation) + '</div>' : '') +
       '<div class="mt-3 pt-2.5 border-t border-gray-800/70 flex items-center justify-between gap-3 text-[11px] text-gray-400 flex-wrap">' +
         '<div class="flex items-center gap-3.5 flex-wrap">' +
@@ -4635,12 +4708,154 @@ window.toggleDangerOption = function(idx) {
   window.updateDangerOptionButtons();
 };
 
+window.currentQuestionMode = 'classic';
+window.orderSteps = ['', '', '', ''];
+
+window.setQuestionMode = function(mode) {
+  window.currentQuestionMode = mode;
+  const qTypeInput = document.getElementById('q_type');
+  if (qTypeInput) qTypeInput.value = mode;
+
+  const btnClassic = document.getElementById('btn_qmode_classic');
+  const btnOrder = document.getElementById('btn_qmode_order');
+  const classicCont = document.getElementById('classic_options_container');
+  const orderCont = document.getElementById('order_options_container');
+
+  if (mode === 'order') {
+    if (btnOrder) {
+      btnOrder.className = 'py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-cyan-600 text-white shadow-sm ring-1 ring-cyan-400/40';
+    }
+    if (btnClassic) {
+      btnClassic.className = 'py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-transparent text-gray-400 hover:text-white';
+    }
+    if (classicCont) classicCont.classList.add('hidden');
+    if (orderCont) orderCont.classList.remove('hidden');
+    window.renderOrderSteps();
+  } else {
+    if (btnClassic) {
+      btnClassic.className = 'py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-brand-600 text-white shadow-sm';
+    }
+    if (btnOrder) {
+      btnOrder.className = 'py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-transparent text-gray-400 hover:text-white';
+    }
+    if (classicCont) classicCont.classList.remove('hidden');
+    if (orderCont) orderCont.classList.add('hidden');
+  }
+  if (window.lucide) lucide.createIcons();
+};
+
+window.renderOrderSteps = function() {
+  const container = document.getElementById('order_steps_list');
+  if (!container) return;
+
+  container.innerHTML = window.orderSteps.map((stepText, idx) => {
+    const isFirst = idx === 0;
+    const isLast = idx === window.orderSteps.length - 1;
+    const canDelete = window.orderSteps.length > 2;
+
+    return '<div class="flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-cyan-500/30 bg-cyan-950/10 transition">' +
+      '<span class="w-6 h-6 rounded-lg bg-cyan-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm">' + (idx + 1) + '</span>' +
+      '<textarea rows="1" placeholder="Schritt ' + (idx + 1) + ' eingeben..." oninput="window.updateOrderStepText(' + idx + ', this.value); window.autoResizeTextarea(this, 38);" class="flex-1 bg-transparent text-sm text-gray-100 placeholder-gray-500 focus:outline-none resize-none overflow-hidden leading-relaxed py-0.5">' + escapeHtml(stepText) + '</textarea>' +
+      '<div class="flex items-center gap-1 shrink-0">' +
+        '<button type="button" onclick="window.moveOrderStep(' + idx + ', -1)" ' + (isFirst ? 'disabled class="p-1 text-gray-700 cursor-not-allowed"' : 'class="p-1 text-gray-400 hover:text-cyan-400 hover:bg-gray-800 rounded transition"') + ' title="Nach oben verschieben">' +
+          '<i data-lucide="arrow-up" class="w-4 h-4"></i>' +
+        '</button>' +
+        '<button type="button" onclick="window.moveOrderStep(' + idx + ', 1)" ' + (isLast ? 'disabled class="p-1 text-gray-700 cursor-not-allowed"' : 'class="p-1 text-gray-400 hover:text-cyan-400 hover:bg-gray-800 rounded transition"') + ' title="Nach unten verschieben">' +
+          '<i data-lucide="arrow-down" class="w-4 h-4"></i>' +
+        '</button>' +
+        '<button type="button" onclick="window.removeOrderStep(' + idx + ')" ' + (canDelete ? 'class="p-1 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded transition"' : 'disabled class="p-1 text-gray-700 cursor-not-allowed"') + ' title="Schritt entfernen">' +
+          '<i data-lucide="trash-2" class="w-4 h-4"></i>' +
+        '</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  const addBtn = document.getElementById('btn_add_order_step');
+  if (addBtn) {
+    addBtn.style.display = window.orderSteps.length >= 6 ? 'none' : 'flex';
+  }
+
+  if (window.lucide) lucide.createIcons();
+};
+
+window.updateOrderStepText = function(idx, val) {
+  if (window.orderSteps[idx] !== undefined) {
+    window.orderSteps[idx] = val;
+  }
+};
+
+window.addOrderStep = function() {
+  if (window.orderSteps.length < 6) {
+    window.orderSteps.push('');
+    window.renderOrderSteps();
+  }
+};
+
+window.removeOrderStep = function(idx) {
+  if (window.orderSteps.length > 2) {
+    window.orderSteps.splice(idx, 1);
+    window.renderOrderSteps();
+  }
+};
+
+window.moveOrderStep = function(idx, dir) {
+  const targetIdx = idx + dir;
+  if (targetIdx < 0 || targetIdx >= window.orderSteps.length) return;
+  const temp = window.orderSteps[idx];
+  window.orderSteps[idx] = window.orderSteps[targetIdx];
+  window.orderSteps[targetIdx] = temp;
+  window.renderOrderSteps();
+};
+
+// LIVE DUPLIKATE PRÜFEN
+window.checkQuestionDuplicates = function(text) {
+  const clean = (text || '').trim().toLowerCase();
+  const warnBox = document.getElementById('q_duplicate_warning');
+  const listBox = document.getElementById('q_duplicate_list');
+  if (!warnBox || !listBox) return;
+
+  if (clean.length < 6) {
+    warnBox.classList.add('hidden');
+    return;
+  }
+
+  const currentId = document.getElementById('q_id')?.value;
+  const cleanWords = clean.split(/[\s,.:;?!"]+/).filter(w => w.length > 3);
+
+  const duplicates = allQuestions.filter(q => {
+    if (currentId && q.id === currentId) return false;
+    const qText = (q.text || '').toLowerCase();
+    // Exakter Teilmatch
+    if (qText.includes(clean) || (clean.length > 15 && clean.includes(qText))) return true;
+    // Wortübereinstimmung (mindestens 3 relevante Wörter übereinstimmend)
+    if (cleanWords.length >= 3) {
+      const matchesCount = cleanWords.filter(w => qText.includes(w)).length;
+      if (matchesCount >= Math.min(3, cleanWords.length)) return true;
+    }
+    return false;
+  });
+
+  if (duplicates.length > 0) {
+    warnBox.classList.remove('hidden');
+    listBox.innerHTML = duplicates.slice(0, 3).map(m => {
+      const modeTag = (m.questionType === 'order' || (m.explanation && m.explanation.includes('"qt":"order"'))) ? ' [🔀 Reihenfolge]' : '';
+      return '<div>• <span class="text-gray-400">(' + escapeHtml(m.category) + modeTag + ')</span> <strong class="text-amber-200">' + escapeHtml(m.text.substring(0, 95)) + (m.text.length > 95 ? '...' : '') + '</strong></div>';
+    }).join('');
+  } else {
+    warnBox.classList.add('hidden');
+  }
+};
+
 window.openQuestionModal = function() {
   const form = document.getElementById('questionForm');
   if (form) form.reset();
   document.getElementById('q_id').value = '';
   const qVer = document.getElementById('q_verified');
   if (qVer) qVer.checked = true;
+
+  window.setQuestionMode('classic');
+  window.orderSteps = ['', '', '', ''];
+  document.getElementById('q_duplicate_warning')?.classList.add('hidden');
 
   window.setQuestionOptionsCount(4);
   for (let i = 0; i <= 5; i++) {
@@ -4676,7 +4891,7 @@ window.editQuestion = function(id) {
   document.getElementById('q_id').value = q.id;
   document.getElementById('q_category').value = q.category;
   document.getElementById('q_text').value = q.text;
-  document.getElementById('q_explanation').value = q.explanation || '';
+  document.getElementById('q_explanation').value = (q.explanation || '').replace(/\s*<!--RT_META:.*?-->/gs, '').trim();
   if (q.image_url) {
     window.applyImageToPrefix('q', q.image_url, q.image_url.startsWith('http') ? q.image_url : 'Gespeichertes Bild');
   } else {
@@ -4685,23 +4900,34 @@ window.editQuestion = function(id) {
   const qVer = document.getElementById('q_verified');
   if (qVer) qVer.checked = (q.is_verified === true || verifiedQuestionIds.has(q.id));
 
-  const opts = Array.isArray(q.options) ? q.options : (typeof q.options === 'string' ? JSON.parse(q.options) : []);
-  const optCount = opts.length >= 3 && opts.length <= 6 ? opts.length : (opts.length > 6 ? 6 : 4);
-  window.setQuestionOptionsCount(optCount);
+  const isOrder = q.questionType === 'order' || q.question_type === 'order' || ((q.explanation || '').includes('"qt":"order"'));
+  if (isOrder) {
+    window.setQuestionMode('order');
+    const opts = Array.isArray(q.options) ? q.options : (typeof q.options === 'string' ? JSON.parse(q.options) : []);
+    window.orderSteps = (opts.length >= 2) ? [...opts] : ['', '', '', ''];
+    window.renderOrderSteps();
+  } else {
+    window.setQuestionMode('classic');
+    const opts = Array.isArray(q.options) ? q.options : (typeof q.options === 'string' ? JSON.parse(q.options) : []);
+    const optCount = opts.length >= 3 && opts.length <= 6 ? opts.length : (opts.length > 6 ? 6 : 4);
+    window.setQuestionOptionsCount(optCount);
 
-  for (let i = 0; i <= 5; i++) {
-    const el = document.getElementById('q_opt_' + i);
-    if (el) el.value = opts[i] || '';
+    for (let i = 0; i <= 5; i++) {
+      const el = document.getElementById('q_opt_' + i);
+      if (el) el.value = opts[i] || '';
+    }
+
+    const corrIndices = Array.isArray(q.correct_indices) ? q.correct_indices :
+      (Array.isArray(q.correctIndices) ? q.correctIndices :
+      (typeof q.correct_indices === 'string' ? JSON.parse(q.correct_indices) :
+      [typeof q.correct_index === 'number' ? q.correct_index : 0]));
+    window.setCorrectOptions(corrIndices);
+
+    currentDangerIndices = [...(q.danger_indices || q.dangerIndices || [])].filter(i => i < optCount);
+    window.updateDangerOptionButtons();
   }
 
-  const corrIndices = Array.isArray(q.correct_indices) ? q.correct_indices :
-    (Array.isArray(q.correctIndices) ? q.correctIndices :
-    (typeof q.correct_indices === 'string' ? JSON.parse(q.correct_indices) :
-    [typeof q.correct_index === 'number' ? q.correct_index : 0]));
-  window.setCorrectOptions(corrIndices);
-
-  currentDangerIndices = [...(q.danger_indices || q.dangerIndices || [])].filter(i => i < optCount);
-  window.updateDangerOptionButtons();
+  document.getElementById('q_duplicate_warning')?.classList.add('hidden');
 
   const metaBox = document.getElementById('questionModalMetaInfo');
   if (metaBox) {
@@ -4754,34 +4980,50 @@ window.handleSaveQuestion = async function(e, andNext = false) {
   const imageUrl = document.getElementById('q_image')?.value.trim() || null;
   const isVerified = document.getElementById('q_verified')?.checked || false;
 
-  const optCount = window.currentQuestionOptionsCount || 4;
-  const options = [];
-  for (let i = 0; i < optCount; i++) {
-    const val = (document.getElementById('q_opt_' + i)?.value || '').trim();
-    if (!val) {
-      alert('Bitte Antwortoption ' + ['A', 'B', 'C', 'D', 'E'][i] + ' ausfüllen.');
+  const isOrder = (window.currentQuestionMode === 'order');
+  let options = [];
+  let correctIndex = 0;
+  let correctIndices = [];
+  let dangerIndices = [];
+
+  if (isOrder) {
+    const steps = window.orderSteps.map(s => s.trim()).filter(Boolean);
+    if (steps.length < 2) {
+      alert('Bitte mindestens 2 Handlungsschritte für die Reihenfolge eintragen.');
       return;
     }
-    options.push(val);
-  }
+    options = steps;
+    correctIndex = 0;
+    correctIndices = steps.map((_, i) => i);
+    dangerIndices = [];
+  } else {
+    const optCount = window.currentQuestionOptionsCount || 4;
+    for (let i = 0; i < optCount; i++) {
+      const val = (document.getElementById('q_opt_' + i)?.value || '').trim();
+      if (!val) {
+        alert('Bitte Antwortoption ' + ['A', 'B', 'C', 'D', 'E'][i] + ' ausfüllen.');
+        return;
+      }
+      options.push(val);
+    }
 
-  const checkedBoxes = Array.from(document.querySelectorAll('input[name="q_correct"]:checked'));
-  const correctIndices = checkedBoxes
-    .map(cb => parseInt(cb.value))
-    .filter(idx => idx < optCount);
+    const checkedBoxes = Array.from(document.querySelectorAll('input[name="q_correct"]:checked'));
+    correctIndices = checkedBoxes
+      .map(cb => parseInt(cb.value))
+      .filter(idx => idx < optCount);
+
+    if (correctIndices.length === 0) {
+      alert('Bitte mindestens eine Antwort als richtig markieren.');
+      return;
+    }
+    correctIndex = correctIndices[0];
+    dangerIndices = currentDangerIndices.filter(idx => idx < optCount);
+  }
 
   if (!category || !text) {
     alert('Bitte Kategorie und Fragentext ausfüllen.');
     return;
   }
-
-  if (correctIndices.length === 0) {
-    alert('Bitte mindestens eine Antwort als richtig markieren.');
-    return;
-  }
-
-  const correctIndex = correctIndices[0];
-  const dangerIndices = currentDangerIndices.filter(idx => idx < optCount);
 
   // Ersteller- und Bearbeiter-Daten
   const authorName = (currentPortalUser && (currentPortalUser.name || currentPortalUser.email)) || 'Ausbilder';
@@ -4813,6 +5055,10 @@ window.handleSaveQuestion = async function(e, andNext = false) {
     localStorage.setItem('railtrainer_question_authors', JSON.stringify(store));
   } catch(e) {}
 
+  const finalExplanation = isOrder
+    ? (explanation ? explanation + '\n' : '') + '<!--RT_META:{"qt":"order"}-->'
+    : explanation;
+
   const payload = { 
     id, 
     category, 
@@ -4820,7 +5066,8 @@ window.handleSaveQuestion = async function(e, andNext = false) {
     options, 
     correct_index: correctIndex, 
     correct_indices: correctIndices,
-    explanation, 
+    question_type: isOrder ? 'order' : (correctIndices.length > 1 ? 'multiple' : 'single'),
+    explanation: finalExplanation, 
     image_url: imageUrl, 
     is_verified: isVerified,
     danger_indices: dangerIndices,
