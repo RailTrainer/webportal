@@ -1219,34 +1219,34 @@
           </div>
 
           <!-- 4 Kahoot-Style Colored Option Boxes -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5" id="battleOptionsGrid">
             <div id="battle_opt_box_0" class="p-5 rounded-3xl bg-red-600/90 text-white font-extrabold flex items-center gap-4 shadow-xl border border-red-500/50 transition">
-              <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-xl shrink-0">▲ A</div>
+              <div id="battle_opt_badge_0" class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-xl shrink-0">▲ A</div>
               <div class="text-base font-bold flex-1" id="battle_opt_text_0">Option A</div>
             </div>
 
             <div id="battle_opt_box_1" class="p-5 rounded-3xl bg-blue-600/90 text-white font-extrabold flex items-center gap-4 shadow-xl border border-blue-500/50 transition">
-              <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-xl shrink-0">◆ B</div>
+              <div id="battle_opt_badge_1" class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-xl shrink-0">◆ B</div>
               <div class="text-base font-bold flex-1" id="battle_opt_text_1">Option B</div>
             </div>
 
             <div id="battle_opt_box_2" class="p-5 rounded-3xl bg-amber-500/90 text-gray-950 font-extrabold flex items-center gap-4 shadow-xl border border-amber-400/50 transition">
-              <div class="w-10 h-10 rounded-2xl bg-black/20 text-black flex items-center justify-center text-xl shrink-0">● C</div>
+              <div id="battle_opt_badge_2" class="w-10 h-10 rounded-2xl bg-black/20 text-black flex items-center justify-center text-xl shrink-0">● C</div>
               <div class="text-base font-bold flex-1" id="battle_opt_text_2">Option C</div>
             </div>
 
             <div id="battle_opt_box_3" class="p-5 rounded-3xl bg-emerald-600/90 text-white font-extrabold flex items-center gap-4 shadow-xl border border-emerald-500/50 transition">
-              <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-xl shrink-0">■ D</div>
+              <div id="battle_opt_badge_3" class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-xl shrink-0">■ D</div>
               <div class="text-base font-bold flex-1" id="battle_opt_text_3">Option D</div>
             </div>
 
             <div id="battle_opt_box_4" class="hidden p-5 rounded-3xl bg-purple-600/90 text-white font-extrabold flex items-center gap-4 shadow-xl border border-purple-500/50 transition">
-              <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-xl shrink-0">★ E</div>
+              <div id="battle_opt_badge_4" class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-xl shrink-0">★ E</div>
               <div class="text-base font-bold flex-1" id="battle_opt_text_4">Option E</div>
             </div>
 
             <div id="battle_opt_box_5" class="hidden p-5 rounded-3xl bg-teal-600/90 text-white font-extrabold flex items-center gap-4 shadow-xl border border-teal-500/50 transition">
-              <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-xl shrink-0">✦ F</div>
+              <div id="battle_opt_badge_5" class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-xl shrink-0">✦ F</div>
               <div class="text-base font-bold flex-1" id="battle_opt_text_5">Option F</div>
             </div>
           </div>
@@ -2416,9 +2416,9 @@ window.createLiveBattleLobby = async function() {
   const qCount = countSel ? parseInt(countSel.value, 10) : 10;
   battleTimeLimit = timerSel ? parseInt(timerSel.value, 10) : 20;
 
-  // Fragen zusammenstellen
-  let pool = allQuestions.filter(q => selectedCat === 'all' || q.category === selectedCat);
-  if (pool.length === 0) pool = [...allQuestions];
+  // Fragen zusammenstellen (Reihenfolge-Fragen vorerst ausschließen, da Live-Battle ein Single-Choice Schnellformat ist)
+  let pool = allQuestions.filter(q => (selectedCat === 'all' || q.category === selectedCat) && q.question_type !== 'order' && q.questionType !== 'order');
+  if (pool.length === 0) pool = allQuestions.filter(q => q.question_type !== 'order' && q.questionType !== 'order');
   
   // Shuffeln
   pool = [...pool].sort(() => Math.random() - 0.5);
@@ -2883,15 +2883,43 @@ async function presentBattleQuestion(qIdx) {
     }
   }
 
-  // Antwortboxen (3, 4, 5 oder 6)
+  // Antwortboxen (3, 4, 5 oder 6) mit dynamischer Skalierung für lange Antworten
   const options = q.options || [];
+  const maxOptLen = Math.max(0, ...options.map(o => (typeof o === 'string' ? o.trim().length : 0)));
+
+  // Box 4 bei 5 Optionen auf Beamer mittig über 2 Spalten
+  const bBox4 = document.getElementById('battle_opt_box_4');
+  if (bBox4) {
+    if (options.length === 5) bBox4.classList.add('md:col-span-2');
+    else bBox4.classList.remove('md:col-span-2');
+  }
+
   for (let i = 0; i <= 5; i++) {
     const box = document.getElementById('battle_opt_box_' + i);
+    const badge = document.getElementById('battle_opt_badge_' + i);
     const txt = document.getElementById('battle_opt_text_' + i);
     if (box && txt) {
       if (options[i]) {
         box.classList.remove('hidden');
         txt.textContent = options[i];
+
+        // Dynamische Anpassung von Textgröße und Padding, damit lange Antworten auf dem Beamer niemals abgeschnitten werden
+        if (maxOptLen > 110) {
+          txt.className = 'text-sm md:text-base font-semibold flex-1 break-words leading-relaxed';
+          box.classList.remove('items-center', 'p-5');
+          box.classList.add('items-start', 'p-3.5', 'md:p-4');
+          if (badge) badge.classList.add('mt-0.5');
+        } else if (maxOptLen > 60) {
+          txt.className = 'text-base md:text-lg font-bold flex-1 break-words leading-snug';
+          box.classList.remove('items-start', 'p-5');
+          box.classList.add('items-center', 'p-4', 'md:p-4.5');
+          if (badge) badge.classList.remove('mt-0.5');
+        } else {
+          txt.className = 'text-lg md:text-xl font-extrabold flex-1 break-words leading-snug';
+          box.classList.remove('items-start');
+          box.classList.add('items-center', 'p-5');
+          if (badge) badge.classList.remove('mt-0.5');
+        }
       } else {
         box.classList.add('hidden');
       }
@@ -4810,7 +4838,15 @@ window.handleOrderStepDragOver = function(e, idx) {
   if (window.draggedOrderStepIdx !== null && window.draggedOrderStepIdx !== idx) {
     const row = document.getElementById('order_step_row_' + idx);
     if (row) {
-      row.classList.add('ring-2', 'ring-cyan-400', 'bg-cyan-900/40');
+      const rect = row.getBoundingClientRect();
+      const isTop = (e.clientY - rect.top) < (rect.height / 2);
+      if (isTop) {
+        row.classList.add('border-t-4', 'border-t-cyan-400');
+        row.classList.remove('border-b-4', 'border-b-cyan-400');
+      } else {
+        row.classList.add('border-b-4', 'border-b-cyan-400');
+        row.classList.remove('border-t-4', 'border-t-cyan-400');
+      }
     }
   }
 };
@@ -4818,7 +4854,7 @@ window.handleOrderStepDragOver = function(e, idx) {
 window.handleOrderStepDragLeave = function(e, idx) {
   const row = document.getElementById('order_step_row_' + idx);
   if (row) {
-    row.classList.remove('ring-2', 'ring-cyan-400', 'bg-cyan-900/40');
+    row.classList.remove('border-t-4', 'border-t-cyan-400', 'border-b-4', 'border-b-cyan-400', 'ring-2', 'ring-cyan-400', 'bg-cyan-900/40');
   }
 };
 
