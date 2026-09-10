@@ -178,6 +178,29 @@
           <div id="opt_badge_5" class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-base font-black shrink-0 shadow mr-3">✦ F</div>
           <span class="text-xs sm:text-sm font-bold leading-snug break-words flex-1 text-left" id="opt_text_5">Option F</span>
         </button>
+
+        <button onclick="handleSelectOption(6)" id="btn_opt_6" class="hidden touch-btn p-3.5 rounded-2xl bg-pink-600 active:bg-pink-700 text-white font-black flex items-center shadow-xl shadow-pink-600/30 border border-pink-500/50">
+          <div id="opt_badge_6" class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-base font-black shrink-0 shadow mr-3">✿ G</div>
+          <span class="text-xs sm:text-sm font-bold leading-snug break-words flex-1 text-left" id="opt_text_6">Option G</span>
+        </button>
+
+        <button onclick="handleSelectOption(7)" id="btn_opt_7" class="hidden touch-btn p-3.5 rounded-2xl bg-indigo-600 active:bg-indigo-700 text-white font-black flex items-center shadow-xl shadow-indigo-600/30 border border-indigo-500/50">
+          <div id="opt_badge_7" class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-base font-black shrink-0 shadow mr-3">❖ H</div>
+          <span class="text-xs sm:text-sm font-bold leading-snug break-words flex-1 text-left" id="opt_text_7">Option H</span>
+        </button>
+      </div>
+
+      <!-- REIHENFOLGE SORTIER-CONTAINER FÜR SMARTPHONE -->
+      <div id="battleOrderContainer" class="hidden flex-col gap-2 flex-1 min-h-0 overflow-y-auto custom-scrollbar p-0.5 pb-2">
+        <div class="p-2.5 rounded-2xl bg-cyan-950/60 border border-cyan-500/40 text-cyan-200 text-xs flex items-center gap-2 shrink-0">
+          <i data-lucide="arrow-up-down" class="w-4 h-4 text-cyan-400 shrink-0"></i>
+          <span>Bringe die Schritte mit <strong>▲ / ▼ Tasten</strong> oder <strong>Ziehen</strong> in die richtige Reihenfolge:</span>
+        </div>
+        <div id="battleOrderItemsList" class="space-y-2 flex-1 overflow-y-auto custom-scrollbar"></div>
+        <button type="button" onclick="handleSubmitOrder()" id="btnSubmitOrder" class="w-full py-3.5 mt-1 rounded-2xl bg-gradient-to-r from-cyan-600 to-brand-600 hover:from-cyan-500 hover:to-brand-500 active:scale-95 text-white font-extrabold text-sm tracking-wide shadow-xl shadow-cyan-600/30 transition flex items-center justify-center gap-2 shrink-0">
+          <i data-lucide="check-circle" class="w-4 h-4"></i>
+          <span>Reihenfolge einloggen</span>
+        </button>
       </div>
     </section>
 
@@ -280,6 +303,26 @@
     let myScore = 0;
     let myStreak = 0;
     let userLayoutPreference = null; // null = auto, 'list' = force list, 'grid' = force grid
+    let currentOrderPermutation = [];
+    let currentOrderQIndex = -1;
+
+    function generateAntiIdentityShuffle(count) {
+      if (count <= 1) return [0];
+      const original = Array.from({ length: count }, (_, i) => i);
+      let shuffled = [];
+      let attempts = 0;
+      do {
+        shuffled = [...original];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        attempts++;
+        const isIdentical = shuffled.every((val, idx) => val === idx);
+        if (!isIdentical || attempts > 50) break;
+      } while (true);
+      return shuffled;
+    }
 
     function escapeHtml(str) {
       if (!str) return '';
@@ -545,12 +588,43 @@
       document.getElementById('questionTextMobile').innerHTML = q.text || 'Frage auf dem Beamer beachten!';
 
       const options = Array.isArray(q.options) ? q.options : [];
-      const maxOptLen = Math.max(0, ...options.map(o => (typeof o === 'string' ? o.trim().length : 0)));
-
-      // Wenn eine Antwort > 40 Zeichen lang ist oder es 5/6 Optionen gibt -> Listenansicht (1-spaltig) für perfekten Lesefluss
-      const isListMode = userLayoutPreference === 'list' || (userLayoutPreference !== 'grid' && (maxOptLen > 40 || options.length >= 5));
+      const isOrder = q.question_type === 'order' || q.questionType === 'order' || ((q.explanation || '').includes('"qt":"order"'));
 
       const container = document.getElementById('battleOptionsContainer');
+      const orderContainer = document.getElementById('battleOrderContainer');
+      const toggleBtn = document.getElementById('btnToggleMobileLayout');
+
+      if (isOrder) {
+        if (container) container.classList.add('hidden');
+        if (orderContainer) {
+          orderContainer.classList.remove('hidden');
+          orderContainer.classList.add('flex');
+        }
+        if (toggleBtn) toggleBtn.classList.add('hidden');
+
+        // Initialisiere die gemischte Start-Reihenfolge (Anti-Identity Shuffle)
+        if (currentOrderQIndex !== session.current_q_index || currentOrderPermutation.length !== options.length) {
+          currentOrderQIndex = session.current_q_index;
+          currentOrderPermutation = generateAntiIdentityShuffle(options.length);
+        }
+
+        renderOrderItems(options);
+        return;
+      }
+
+      // Normaler Single-Choice Modus
+      if (orderContainer) {
+        orderContainer.classList.add('hidden');
+        orderContainer.classList.remove('flex');
+      }
+      if (container) container.classList.remove('hidden');
+      if (toggleBtn) toggleBtn.classList.remove('hidden');
+
+      const maxOptLen = Math.max(0, ...options.map(o => (typeof o === 'string' ? o.trim().length : 0)));
+
+      // Wenn eine Antwort > 40 Zeichen lang ist oder es 5/6/7/8 Optionen gibt -> Listenansicht (1-spaltig) für perfekten Lesefluss
+      const isListMode = userLayoutPreference === 'list' || (userLayoutPreference !== 'grid' && (maxOptLen > 40 || options.length >= 5));
+
       const toggleIcon = document.getElementById('layoutToggleIcon');
       const toggleText = document.getElementById('layoutToggleText');
 
@@ -578,7 +652,7 @@
         else btn4.classList.remove('col-span-2');
       }
 
-      for (let i = 0; i <= 5; i++) {
+      for (let i = 0; i <= 7; i++) {
         const btn = document.getElementById('btn_opt_' + i);
         const badge = document.getElementById('opt_badge_' + i);
         const txt = document.getElementById('opt_text_' + i);
@@ -632,11 +706,172 @@
       }
     }
 
+    function renderOrderItems(options) {
+      const listEl = document.getElementById('battleOrderItemsList');
+      if (!listEl) return;
+
+      listEl.innerHTML = currentOrderPermutation.map((origOptIdx, slotIdx) => {
+        const isFirst = (slotIdx === 0);
+        const isLast = (slotIdx === currentOrderPermutation.length - 1);
+        const text = options[origOptIdx] || '';
+
+        return '<div class="flex items-center gap-2 p-2.5 sm:p-3 rounded-2xl bg-gray-900 border border-gray-800 shadow transition select-none" ' +
+          'id="order_touch_item_' + slotIdx + '" data-slot="' + slotIdx + '">' +
+          '<div class="w-8 h-8 rounded-xl bg-cyan-600 text-white font-black text-xs sm:text-sm flex items-center justify-center shrink-0 shadow">' + (slotIdx + 1) + '</div>' +
+          '<div class="flex-1 text-xs sm:text-sm font-bold text-gray-100 leading-snug break-words">' + escapeHtml(text) + '</div>' +
+          '<div class="flex items-center gap-1 shrink-0">' +
+            '<button type="button" onclick="moveOrderItem(' + slotIdx + ', -1)" ' + (isFirst ? 'disabled class="opacity-20 p-2 text-gray-600 rounded-xl bg-gray-950 cursor-not-allowed"' : 'class="p-2 text-cyan-300 hover:text-white active:scale-90 bg-gray-950 border border-gray-800 rounded-xl transition"') + ' title="Nach oben">' +
+              '<i data-lucide="chevron-up" class="w-4 h-4"></i>' +
+            '</button>' +
+            '<button type="button" onclick="moveOrderItem(' + slotIdx + ', 1)" ' + (isLast ? 'disabled class="opacity-20 p-2 text-gray-600 rounded-xl bg-gray-950 cursor-not-allowed"' : 'class="p-2 text-cyan-300 hover:text-white active:scale-90 bg-gray-950 border border-gray-800 rounded-xl transition"') + ' title="Nach unten">' +
+              '<i data-lucide="chevron-down" class="w-4 h-4"></i>' +
+            '</button>' +
+            '<div class="touch-handle p-2 text-gray-500 hover:text-cyan-400 cursor-grab active:cursor-grabbing rounded-xl bg-gray-950 border border-gray-800 shrink-0 flex items-center justify-center" ' +
+              'data-slot="' + slotIdx + '" title="Halten & Ziehen">' +
+              '<i data-lucide="grip-vertical" class="w-4 h-4 pointer-events-none"></i>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+
+      if (window.lucide) lucide.createIcons();
+      attachTouchReorderListeners();
+    }
+
+    window.moveOrderItem = function(slotIdx, dir) {
+      if (hasAnsweredCurrentQ) return;
+      const targetIdx = slotIdx + dir;
+      if (targetIdx < 0 || targetIdx >= currentOrderPermutation.length) return;
+
+      const temp = currentOrderPermutation[slotIdx];
+      currentOrderPermutation[slotIdx] = currentOrderPermutation[targetIdx];
+      currentOrderPermutation[targetIdx] = temp;
+
+      const q = currentSession && currentSession.current_question_data;
+      const options = (q && Array.isArray(q.options)) ? q.options : [];
+      renderOrderItems(options);
+    };
+
+    let touchDragStartSlot = null;
+    let touchDragTargetSlot = null;
+
+    function attachTouchReorderListeners() {
+      const handles = document.querySelectorAll('.touch-handle');
+      handles.forEach(handle => {
+        handle.ontouchstart = (e) => {
+          if (hasAnsweredCurrentQ) return;
+          const slot = parseInt(handle.getAttribute('data-slot'), 10);
+          touchDragStartSlot = slot;
+          touchDragTargetSlot = slot;
+          const row = document.getElementById('order_touch_item_' + slot);
+          if (row) row.classList.add('ring-2', 'ring-cyan-500', 'opacity-70', 'scale-[1.02]');
+        };
+
+        handle.ontouchmove = (e) => {
+          if (touchDragStartSlot === null) return;
+          e.preventDefault();
+          const touch = e.touches[0];
+          const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+          if (!elemBelow) return;
+          const targetRow = elemBelow.closest('[data-slot]');
+          if (targetRow) {
+            const slot = parseInt(targetRow.getAttribute('data-slot'), 10);
+            if (!isNaN(slot) && slot !== touchDragTargetSlot) {
+              document.querySelectorAll('[id^="order_touch_item_"]').forEach(r => r.classList.remove('border-cyan-400', 'border-t-2', 'border-b-2'));
+              touchDragTargetSlot = slot;
+              if (slot > touchDragStartSlot) {
+                targetRow.classList.add('border-b-2', 'border-cyan-400');
+              } else if (slot < touchDragStartSlot) {
+                targetRow.classList.add('border-t-2', 'border-cyan-400');
+              }
+            }
+          }
+        };
+
+        handle.ontouchend = (e) => {
+          if (touchDragStartSlot === null) return;
+          const start = touchDragStartSlot;
+          const target = touchDragTargetSlot;
+          touchDragStartSlot = null;
+          touchDragTargetSlot = null;
+
+          document.querySelectorAll('[id^="order_touch_item_"]').forEach(r => {
+            r.classList.remove('ring-2', 'ring-cyan-500', 'opacity-70', 'scale-[1.02]', 'border-cyan-400', 'border-t-2', 'border-b-2');
+          });
+
+          if (target !== null && start !== target) {
+            const [moved] = currentOrderPermutation.splice(start, 1);
+            currentOrderPermutation.splice(target, 0, moved);
+            const q = currentSession && currentSession.current_question_data;
+            const options = (q && Array.isArray(q.options)) ? q.options : [];
+            renderOrderItems(options);
+          }
+        };
+      });
+    }
+
+    window.handleSubmitOrder = async function() {
+      if (hasAnsweredCurrentQ || !currentSession) return;
+      hasAnsweredCurrentQ = true;
+
+      const q = currentSession.current_question_data;
+      const options = (q && Array.isArray(q.options)) ? q.options : [];
+
+      const subChoice = document.getElementById('submittedChoiceText');
+      if (subChoice) {
+        const listHtml = currentOrderPermutation.map((origIdx, slot) => {
+          return '<div class="flex items-center gap-2 py-0.5"><span class="w-4 h-4 rounded text-[10px] bg-cyan-600 text-white font-black flex items-center justify-center shrink-0">' + (slot + 1) + '</span><span class="text-gray-200 truncate">' + escapeHtml(options[origIdx] || '') + '</span></div>';
+        }).join('');
+        subChoice.innerHTML = '<span class="text-cyan-400 font-black text-sm">Deine Reihenfolge:</span>' +
+          '<div class="text-gray-300 font-medium text-xs mt-1.5 text-left bg-gray-950 p-2.5 rounded-2xl border border-gray-800 space-y-1">' + listHtml + '</div>';
+      }
+      showScreen('screen-submitted');
+
+      const answerTime = Date.now();
+      // Die korrekte Reihenfolge verlangt, dass die Indizes 0, 1, ..., N-1 in exakt aufsteigender Folge sortiert wurden
+      const isCorrect = (currentOrderPermutation.length === options.length && currentOrderPermutation.every((val, i) => val === i));
+
+      const timeLimitSecs = currentSession.time_limit || 20;
+      const elapsedSecs = Math.max(0, (answerTime - (currentSession.question_start_time || answerTime)) / 1000);
+      const remainingSecs = Math.max(0, timeLimitSecs - elapsedSecs);
+      let earnedPoints = 0;
+
+      if (isCorrect) {
+        const speedBonus = Math.round((remainingSecs / timeLimitSecs) * 500);
+        earnedPoints = 500 + speedBonus;
+      }
+
+      try {
+        const freshSession = await fetchSessionByPin(currentPin);
+        if (!freshSession) return;
+        const players = freshSession.players || [];
+        const meIdx = players.findIndex(p => p.id === myPlayerId);
+
+        if (meIdx !== -1) {
+          const prevScore = players[meIdx].score || 0;
+          const prevStreak = isCorrect ? ((players[meIdx].streak || 0) + 1) : 0;
+          players[meIdx] = {
+            ...players[meIdx],
+            score: prevScore + earnedPoints,
+            streak: prevStreak,
+            last_answer: currentOrderPermutation,
+            last_answer_time: answerTime,
+            is_correct: isCorrect,
+            is_danger: false,
+            last_earned_points: earnedPoints
+          };
+          await updateSessionPlayers(freshSession.id, players);
+        }
+      } catch (e) {
+        console.error('Order submit error', e);
+      }
+    };
+
     window.handleSelectOption = async function(idx) {
       if (hasAnsweredCurrentQ || !currentSession) return;
       hasAnsweredCurrentQ = true;
 
-      const optLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
+      const optLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
       const q = currentSession.current_question_data;
       const chosenText = (q && q.options && q.options[idx]) ? q.options[idx] : '';
       const subChoice = document.getElementById('submittedChoiceText');
@@ -726,13 +961,24 @@
       // Richtige Lösung im Klartext anzeigen
       const q = session.current_question_data;
       if (q && q.options) {
-        const correctIdx = (q.correct_index !== undefined) ? q.correct_index : (q.correctIndex || 0);
-        const optLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
+        const isOrder = q.question_type === 'order' || q.questionType === 'order' || ((q.explanation || '').includes('"qt":"order"'));
+        const optLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
         const corrLetterEl = document.getElementById('roundResultCorrectLetter');
         const corrTextEl = document.getElementById('roundResultCorrectText');
         const sumBox = document.getElementById('roundResultAnswerSummary');
-        if (corrLetterEl) corrLetterEl.textContent = 'Antwort ' + (optLetters[correctIdx] || (correctIdx + 1));
-        if (corrTextEl) corrTextEl.textContent = q.options[correctIdx] || '';
+
+        if (isOrder) {
+          if (corrLetterEl) corrLetterEl.textContent = 'Korrekte Soll-Reihenfolge:';
+          if (corrTextEl) {
+            corrTextEl.innerHTML = q.options.map((opt, oIdx) => {
+              return '<div class="flex items-center gap-2 py-0.5"><span class="w-4 h-4 rounded text-[10px] bg-emerald-600 text-white font-black flex items-center justify-center shrink-0">' + (oIdx + 1) + '</span><span class="text-gray-200">' + escapeHtml(opt) + '</span></div>';
+            }).join('');
+          }
+        } else {
+          const correctIdx = (q.correct_index !== undefined) ? q.correct_index : (q.correctIndex || 0);
+          if (corrLetterEl) corrLetterEl.textContent = 'Antwort ' + (optLetters[correctIdx] || (correctIdx + 1));
+          if (corrTextEl) corrTextEl.textContent = q.options[correctIdx] || '';
+        }
         if (sumBox) sumBox.classList.remove('hidden');
       }
 

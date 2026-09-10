@@ -1218,7 +1218,13 @@
             <h2 class="text-2xl font-black text-white text-center leading-snug" id="battleQuestionText">Fragentext lädt...</h2>
           </div>
 
-          <!-- 4 Kahoot-Style Colored Option Boxes -->
+          <!-- Reihenfolge Banner (wird nur bei Order-Fragen eingeblendet) -->
+          <div id="battleOrderBanner" class="hidden p-4 rounded-2xl bg-cyan-950/60 border border-cyan-500/40 text-cyan-200 font-extrabold text-sm md:text-base shadow-xl flex items-center justify-center gap-2.5">
+            <i data-lucide="arrow-up-down" class="w-5 h-5 text-cyan-400"></i>
+            <span>🔄 REIHENFOLGE-AUFGABE: Bringe die Schritte auf deinem Smartphone in die richtige Reihenfolge!</span>
+          </div>
+
+          <!-- Kahoot-Style Colored Option Boxes (Bis zu 8 Optionen / Schritte) -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5" id="battleOptionsGrid">
             <div id="battle_opt_box_0" class="p-5 rounded-3xl bg-red-600/90 text-white font-extrabold flex items-center gap-4 shadow-xl border border-red-500/50 transition">
               <div id="battle_opt_badge_0" class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-xl shrink-0">▲ A</div>
@@ -1248,6 +1254,16 @@
             <div id="battle_opt_box_5" class="hidden p-5 rounded-3xl bg-teal-600/90 text-white font-extrabold flex items-center gap-4 shadow-xl border border-teal-500/50 transition">
               <div id="battle_opt_badge_5" class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-xl shrink-0">✦ F</div>
               <div class="text-base font-bold flex-1" id="battle_opt_text_5">Option F</div>
+            </div>
+
+            <div id="battle_opt_box_6" class="hidden p-5 rounded-3xl bg-pink-600/90 text-white font-extrabold flex items-center gap-4 shadow-xl border border-pink-500/50 transition">
+              <div id="battle_opt_badge_6" class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-xl shrink-0">✿ G</div>
+              <div class="text-base font-bold flex-1" id="battle_opt_text_6">Option G</div>
+            </div>
+
+            <div id="battle_opt_box_7" class="hidden p-5 rounded-3xl bg-indigo-600/90 text-white font-extrabold flex items-center gap-4 shadow-xl border border-indigo-500/50 transition">
+              <div id="battle_opt_badge_7" class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-xl shrink-0">❖ H</div>
+              <div class="text-base font-bold flex-1" id="battle_opt_text_7">Option H</div>
             </div>
           </div>
 
@@ -1634,7 +1650,7 @@
 
           <button type="button" onclick="window.addOrderStep()" id="btn_add_order_step" class="w-full py-2.5 border-2 border-dashed border-gray-800 hover:border-cyan-500/50 hover:bg-cyan-500/5 rounded-xl text-xs font-bold text-gray-400 hover:text-cyan-300 transition flex items-center justify-center gap-2">
             <i data-lucide="plus-circle" class="w-4 h-4 text-cyan-400"></i>
-            <span>+ Weiteren Schritt hinzufügen (max. 6)</span>
+            <span>+ Weiteren Schritt hinzufügen (max. 8)</span>
           </button>
         </div>
 
@@ -2416,9 +2432,9 @@ window.createLiveBattleLobby = async function() {
   const qCount = countSel ? parseInt(countSel.value, 10) : 10;
   battleTimeLimit = timerSel ? parseInt(timerSel.value, 10) : 20;
 
-  // Fragen zusammenstellen (Reihenfolge-Fragen vorerst ausschließen, da Live-Battle ein Single-Choice Schnellformat ist)
-  let pool = allQuestions.filter(q => (selectedCat === 'all' || q.category === selectedCat) && q.question_type !== 'order' && q.questionType !== 'order');
-  if (pool.length === 0) pool = allQuestions.filter(q => q.question_type !== 'order' && q.questionType !== 'order');
+  // Fragen zusammenstellen (Inklusive Reihenfolge-Aufgaben)
+  let pool = allQuestions.filter(q => (selectedCat === 'all' || q.category === selectedCat));
+  if (pool.length === 0) pool = [...allQuestions];
   
   // Shuffeln
   pool = [...pool].sort(() => Math.random() - 0.5);
@@ -2837,10 +2853,14 @@ async function presentBattleQuestion(qIdx) {
     last_earned_points: 0
   }));
 
+  const isOrder = q.questionType === 'order' || q.question_type === 'order' || ((q.explanation || '').includes('"qt":"order"'));
+
   const qData = {
     id: q.id,
     text: q.text,
     options: q.options,
+    question_type: isOrder ? 'order' : 'single',
+    questionType: isOrder ? 'order' : 'single',
     correct_index: q.correct_index !== undefined ? q.correct_index : q.correctIndex,
     danger_indices: q.danger_indices || q.dangerIndices || [],
     explanation: q.explanation || '',
@@ -2865,9 +2885,21 @@ async function presentBattleQuestion(qIdx) {
   document.getElementById('battleQuestionScreen')?.classList.remove('hidden');
   document.getElementById('battleQuestionScreen')?.classList.add('flex');
 
+  // Banner für Reihenfolge-Modus
+  const orderBanner = document.getElementById('battleOrderBanner');
+  if (orderBanner) {
+    if (isOrder) {
+      orderBanner.classList.remove('hidden');
+      orderBanner.classList.add('flex');
+    } else {
+      orderBanner.classList.add('hidden');
+      orderBanner.classList.remove('flex');
+    }
+  }
+
   // Frage im DOM befüllen
   document.getElementById('battleQNumBadge').textContent = 'Frage ' + (qIdx + 1) + ' / ' + battleQuestions.length;
-  document.getElementById('battleQCatBadge').textContent = '#' + (q.category || 'Signale');
+  document.getElementById('battleQCatBadge').textContent = '#' + (q.category || 'Signale') + (isOrder ? ' (Reihenfolge)' : '');
   document.getElementById('battleQuestionText').innerHTML = q.text;
 
   const imgCont = document.getElementById('battleQuestionImageContainer');
@@ -2883,18 +2915,20 @@ async function presentBattleQuestion(qIdx) {
     }
   }
 
-  // Antwortboxen (3, 4, 5 oder 6) mit dynamischer Skalierung für lange Antworten
+  // Antwortboxen (bis zu 8 Optionen / Schritte) mit dynamischer Skalierung
   const options = q.options || [];
   const maxOptLen = Math.max(0, ...options.map(o => (typeof o === 'string' ? o.trim().length : 0)));
 
-  // Box 4 bei 5 Optionen auf Beamer mittig über 2 Spalten
+  // Box 4 bei genau 5 Optionen auf Beamer mittig über 2 Spalten
   const bBox4 = document.getElementById('battle_opt_box_4');
   if (bBox4) {
     if (options.length === 5) bBox4.classList.add('md:col-span-2');
     else bBox4.classList.remove('md:col-span-2');
   }
 
-  for (let i = 0; i <= 5; i++) {
+  const optSymbols = ['▲ A', '◆ B', '● C', '■ D', '★ E', '✦ F', '✿ G', '❖ H'];
+
+  for (let i = 0; i <= 7; i++) {
     const box = document.getElementById('battle_opt_box_' + i);
     const badge = document.getElementById('battle_opt_badge_' + i);
     const txt = document.getElementById('battle_opt_text_' + i);
@@ -2902,6 +2936,18 @@ async function presentBattleQuestion(qIdx) {
       if (options[i]) {
         box.classList.remove('hidden');
         txt.textContent = options[i];
+
+        if (badge) {
+          if (isOrder) {
+            badge.textContent = (i + 1);
+            badge.className = 'w-9 h-9 rounded-xl bg-cyan-600 text-white flex items-center justify-center text-base font-black shrink-0 shadow';
+          } else {
+            badge.textContent = optSymbols[i] || ('#' + (i + 1));
+            badge.className = (i === 2)
+              ? 'w-10 h-10 rounded-2xl bg-black/20 text-black flex items-center justify-center text-xl shrink-0'
+              : 'w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-xl shrink-0';
+          }
+        }
 
         // Dynamische Anpassung von Textgröße und Padding, damit lange Antworten auf dem Beamer niemals abgeschnitten werden
         if (maxOptLen > 110) {
@@ -2986,47 +3032,84 @@ window.revealBattleRoundResults = async function() {
   document.getElementById('battleRoundResultScreen')?.classList.add('flex');
 
   const q = battleQuestions[battleCurrentQIdx];
+  const isOrder = q.questionType === 'order' || q.question_type === 'order' || ((q.explanation || '').includes('"qt":"order"'));
   const correctIdx = q.correct_index !== undefined ? q.correct_index : q.correctIndex;
-  const optLetters = ['A', 'B', 'C', 'D'];
+  const optLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
   const correctLetter = optLetters[correctIdx] || 'A';
   const correctText = (q.options && q.options[correctIdx]) ? q.options[correctIdx] : '';
 
   document.getElementById('battleRoundNumText').textContent = 'Frage ' + (battleCurrentQIdx + 1) + ' von ' + battleQuestions.length + ' abgeschlossen';
-  document.getElementById('battleCorrectAnswerText').innerHTML = 'Richtige Antwort: <span class="text-emerald-400">' + correctLetter + ' • ' + escapeHtml(correctText) + '</span>';
-  document.getElementById('battleExplanationText').innerHTML = q.explanation ? ('<strong>Erklärung:</strong> ' + escapeHtml(q.explanation)) : 'Keine weitere Erklärung hinterlegt.';
+  
+  if (isOrder) {
+    const opts = Array.isArray(q.options) ? q.options : [];
+    const stepsHtml = opts.map((opt, oIdx) => '<div class="flex items-center gap-2 py-0.5"><span class="w-5 h-5 rounded-md bg-cyan-600 text-white font-black text-xs flex items-center justify-center shrink-0">' + (oIdx + 1) + '</span><span class="text-gray-200">' + escapeHtml(opt) + '</span></div>').join('');
+    document.getElementById('battleCorrectAnswerText').innerHTML = '<div class="text-cyan-400 font-extrabold mb-1">Korrekte Soll-Reihenfolge:</div><div class="space-y-1 text-xs text-left bg-gray-950 p-2.5 rounded-xl border border-gray-800">' + stepsHtml + '</div>';
+  } else {
+    document.getElementById('battleCorrectAnswerText').innerHTML = 'Richtige Antwort: <span class="text-emerald-400 font-extrabold">' + correctLetter + ' • ' + escapeHtml(correctText) + '</span>';
+  }
+
+  document.getElementById('battleExplanationText').innerHTML = q.explanation ? ('<strong>Erklärung:</strong> ' + escapeHtml((q.explanation || '').replace(/\s*<!--RT_META:.*?-->/gs, '').trim())) : 'Keine weitere Erklärung hinterlegt.';
 
   // Verteilung Balken berechnen
   const players = battleSession.players || [];
-  const dist = [0, 0, 0, 0];
-  players.forEach(p => {
-    if (p.last_answer !== null && p.last_answer !== undefined && dist[p.last_answer] !== undefined) {
-      dist[p.last_answer]++;
-    }
-  });
-
   const distContainer = document.getElementById('battleDistributionBars');
-  const barColors = ['bg-red-500', 'bg-blue-500', 'bg-amber-500', 'bg-emerald-500'];
-  if (distContainer) {
-    distContainer.innerHTML = [0, 1, 2, 3].map(i => {
-      const count = dist[i];
-      const pct = players.length > 0 ? Math.round((count / players.length) * 100) : 0;
-      const isCorrectOption = (i === correctIdx);
-      const isDangerOption = (q.danger_indices || q.dangerIndices || []).includes(i);
 
-      return '<div class="space-y-1">' +
-        '<div class="flex items-center justify-between text-xs font-bold">' +
-          '<span class="flex items-center gap-1.5">' +
-            '<span class="w-4 h-4 rounded text-[10px] text-white flex items-center justify-center ' + barColors[i] + '">' + optLetters[i] + '</span>' +
-            (isCorrectOption ? '<span class="text-emerald-400 font-extrabold">✓ Richtig</span>' : '') +
-            (isDangerOption ? '<span class="text-red-400 font-extrabold">⚠️ BG</span>' : '') +
-          '</span>' +
-          '<span class="text-gray-300">' + count + ' Schüler (' + pct + '%)</span>' +
+  if (distContainer) {
+    if (isOrder) {
+      const correctCount = players.filter(p => p.is_correct).length;
+      const wrongCount = players.length - correctCount;
+      const correctPct = players.length > 0 ? Math.round((correctCount / players.length) * 100) : 0;
+      const wrongPct = players.length > 0 ? Math.round((wrongCount / players.length) * 100) : 0;
+
+      distContainer.innerHTML =
+        '<div class="space-y-1">' +
+          '<div class="flex items-center justify-between text-xs font-bold">' +
+            '<span class="text-emerald-400 font-extrabold flex items-center gap-1.5">✓ Perfekt richtige Reihenfolge</span>' +
+            '<span class="text-gray-300">' + correctCount + ' Schüler (' + correctPct + '%)</span>' +
+          '</div>' +
+          '<div class="w-full h-3 bg-gray-950 rounded-full overflow-hidden border border-gray-800">' +
+            '<div class="h-full rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50 transition-all duration-700" style="width: ' + correctPct + '%"></div>' +
+          '</div>' +
         '</div>' +
-        '<div class="w-full h-3 bg-gray-950 rounded-full overflow-hidden border border-gray-800">' +
-          '<div class="h-full rounded-full transition-all duration-700 ' + (isCorrectOption ? 'bg-emerald-400 shadow-sm shadow-emerald-400/50' : barColors[i]) + '" style="width: ' + pct + '%"></div>' +
-        '</div>' +
-      '</div>';
-    }).join('');
+        '<div class="space-y-1 mt-2">' +
+          '<div class="flex items-center justify-between text-xs font-bold">' +
+            '<span class="text-red-400 font-extrabold flex items-center gap-1.5">✗ Falsche Reihenfolge</span>' +
+            '<span class="text-gray-300">' + wrongCount + ' Schüler (' + wrongPct + '%)</span>' +
+          '</div>' +
+          '<div class="w-full h-3 bg-gray-950 rounded-full overflow-hidden border border-gray-800">' +
+            '<div class="h-full rounded-full bg-red-500 shadow-sm shadow-red-500/50 transition-all duration-700" style="width: ' + wrongPct + '%"></div>' +
+          '</div>' +
+        '</div>';
+    } else {
+      const numOptions = Math.min(8, (q.options || []).length || 4);
+      const dist = Array(numOptions).fill(0);
+      players.forEach(p => {
+        if (typeof p.last_answer === 'number' && dist[p.last_answer] !== undefined) {
+          dist[p.last_answer]++;
+        }
+      });
+
+      const barColors = ['bg-red-500', 'bg-blue-500', 'bg-amber-500', 'bg-emerald-500', 'bg-purple-500', 'bg-teal-500', 'bg-pink-500', 'bg-indigo-500'];
+      distContainer.innerHTML = dist.map((count, i) => {
+        const pct = players.length > 0 ? Math.round((count / players.length) * 100) : 0;
+        const isCorrectOption = (i === correctIdx);
+        const isDangerOption = (q.danger_indices || q.dangerIndices || []).includes(i);
+
+        return '<div class="space-y-1">' +
+          '<div class="flex items-center justify-between text-xs font-bold">' +
+            '<span class="flex items-center gap-1.5">' +
+              '<span class="w-4 h-4 rounded text-[10px] text-white flex items-center justify-center ' + barColors[i] + '">' + optLetters[i] + '</span>' +
+              (isCorrectOption ? '<span class="text-emerald-400 font-extrabold">✓ Richtig</span>' : '') +
+              (isDangerOption ? '<span class="text-red-400 font-extrabold">⚠️ BG</span>' : '') +
+            '</span>' +
+            '<span class="text-gray-300">' + count + ' Schüler (' + pct + '%)</span>' +
+          '</div>' +
+          '<div class="w-full h-3 bg-gray-950 rounded-full overflow-hidden border border-gray-800">' +
+            '<div class="h-full rounded-full transition-all duration-700 ' + (isCorrectOption ? 'bg-emerald-400 shadow-sm shadow-emerald-400/50' : barColors[i]) + '" style="width: ' + pct + '%"></div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
   }
 
   // Leaderboard Top 5
@@ -4466,6 +4549,22 @@ window.loadAllData = async function() {
       } else {
         verifiedQuestionIds.delete(q.id);
       }
+
+      if (!q.questionType && !q.question_type && q.explanation) {
+        const match = q.explanation.match(/<!--RT_META:(.*?)-->/s);
+        if (match) {
+          try {
+            const meta = JSON.parse(match[1]);
+            if (meta.qt) {
+              q.questionType = meta.qt;
+              q.question_type = meta.qt;
+            }
+            if (meta.ci && (!q.correct_indices || q.correct_indices.length <= 1)) {
+              q.correct_indices = meta.ci;
+            }
+          } catch(e) {}
+        }
+      }
     });
     saveVerifiedQuestions();
     const bq = document.getElementById('badge-questions-count');
@@ -4810,7 +4909,7 @@ window.renderOrderSteps = function() {
 
   const addBtn = document.getElementById('btn_add_order_step');
   if (addBtn) {
-    addBtn.style.display = window.orderSteps.length >= 6 ? 'none' : 'flex';
+    addBtn.style.display = window.orderSteps.length >= 8 ? 'none' : 'flex';
   }
 
   if (window.lucide) lucide.createIcons();
@@ -4881,7 +4980,7 @@ window.updateOrderStepText = function(idx, val) {
 };
 
 window.addOrderStep = function() {
-  if (window.orderSteps.length < 6) {
+  if (window.orderSteps.length < 8) {
     window.orderSteps.push('');
     window.renderOrderSteps();
   }
