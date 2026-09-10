@@ -507,7 +507,7 @@
             headers: { ...restHeaders, 'Prefer': 'resolution=merge-duplicates' },
             body: JSON.stringify([{
               id: 'battle_' + currentPin,
-              category: 'Anlage 5',
+              category: '__battle_sync__',
               sender_id: 'admin-default-id',
               sender_name: session.status || 'lobby',
               sender_role: 'admin',

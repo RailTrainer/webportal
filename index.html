@@ -1995,6 +1995,62 @@ const restHeaders = {
   'Content-Type': 'application/json'
 };
 
+function packQuestionMetadata(q) {
+  const meta = {};
+  if (Array.isArray(q.correctIndices) && q.correctIndices.length > 1) {
+    meta.ci = q.correctIndices;
+  }
+  if (q.questionType) meta.qt = q.questionType;
+  if (q.createdBy) meta.cb = q.createdBy;
+  if (q.createdByName) meta.cbn = q.createdByName;
+  if (q.creatorRole) meta.cr = q.creatorRole;
+  if (q.verifiedBy) meta.vb = q.verifiedBy;
+  if (q.verifiedByName) meta.vbn = q.verifiedByName;
+
+  const clean = (q.explanation || '').replace(/\s*<!--RT_META:.*?-->/gs, '').trim();
+  if (Object.keys(meta).length === 0) return clean;
+  return (clean ? clean + '\n' : '') + `<!--RT_META:${JSON.stringify(meta)}-->`;
+}
+
+function unpackQuestionMetadata(rawExplanation) {
+  let explanation = rawExplanation || '';
+  let meta = null;
+  const match = explanation.match(/<!--RT_META:(.*?)-->/s);
+  if (match) {
+    try {
+      meta = JSON.parse(match[1]);
+      explanation = explanation.replace(/\s*<!--RT_META:.*?-->/gs, '').trim();
+    } catch(e) {}
+  }
+  return { explanation, meta };
+}
+
+function packFactMetadata(f) {
+  const meta = {};
+  if (f.createdBy) meta.cb = f.createdBy;
+  if (f.createdByName) meta.cbn = f.createdByName;
+  if (f.creatorRole) meta.cr = f.creatorRole;
+  if (f.verifiedBy) meta.vb = f.verifiedBy;
+  if (f.verifiedByName) meta.vbn = f.verifiedByName;
+
+  const clean = (f.reference || '').replace(/\s*<!--RT_META:.*?-->/gs, '').trim();
+  if (Object.keys(meta).length === 0) return clean;
+  return (clean ? clean + '\n' : '') + `<!--RT_META:${JSON.stringify(meta)}-->`;
+}
+
+function unpackFactMetadata(rawReference) {
+  let reference = rawReference || '';
+  let meta = null;
+  const match = reference.match(/<!--RT_META:(.*?)-->/s);
+  if (match) {
+    try {
+      meta = JSON.parse(match[1]);
+      reference = reference.replace(/\s*<!--RT_META:.*?-->/gs, '').trim();
+    } catch(e) {}
+  }
+  return { reference, meta };
+}
+
 window.autoResizeTextarea = function(el, minHeight) {
   if (!el || el.tagName !== 'TEXTAREA') return;
   el.style.height = 'auto';
@@ -2738,7 +2794,7 @@ window.syncBattleSession = async function(sessionObj) {
       headers: { ...restHeaders, 'Prefer': 'resolution=merge-duplicates' },
       body: JSON.stringify([{
         id: 'battle_' + sessionObj.pin,
-        category: 'Anlage 5',
+        category: '__battle_sync__',
         sender_id: 'admin-default-id',
         sender_name: sessionObj.status || 'lobby',
         sender_role: 'admin',
@@ -3225,6 +3281,16 @@ window.renderBattlePodium = function() {
 window.resetLiveBattleToSetup = function() {
   if (battlePollInterval) clearInterval(battlePollInterval);
   if (battleTimerInterval) clearInterval(battleTimerInterval);
+
+  if (battleSession?.pin) {
+    try {
+      fetch(SUPABASE_URL + '/rest/v1/chat_messages?id=eq.battle_' + encodeURIComponent(battleSession.pin), {
+        method: 'DELETE',
+        headers: restHeaders
+      }).catch(() => {});
+    } catch {}
+    battleSession = null;
+  }
 
   document.getElementById('battlePodiumScreen')?.classList.add('hidden');
   document.getElementById('battleLobbyScreen')?.classList.add('hidden');
@@ -4054,7 +4120,16 @@ window.toggleQuestionVerification = async function(id, e) {
   const currentVerified = q ? (q.is_verified === true || verifiedQuestionIds.has(id)) : verifiedQuestionIds.has(id);
   const newStatus = !currentVerified;
 
-  if (q) q.is_verified = newStatus;
+  if (q) {
+    q.is_verified = newStatus;
+    if (newStatus && currentPortalUser) {
+      q.verified_by = currentPortalUser.id;
+      q.verified_by_name = currentPortalUser.name || currentPortalUser.email;
+    } else if (!newStatus) {
+      q.verified_by = null;
+      q.verified_by_name = null;
+    }
+  }
   if (newStatus) {
     verifiedQuestionIds.add(id);
     showToast('Frage als geprüft & freigegeben markiert! ✓');
@@ -4067,10 +4142,23 @@ window.toggleQuestionVerification = async function(id, e) {
   filterQuestions();
 
   try {
+    const patchBody = { is_verified: newStatus };
+    if (q) {
+      patchBody.explanation = packQuestionMetadata({
+        explanation: q.explanation,
+        questionType: q.questionType || q.question_type,
+        correctIndices: q.correct_indices,
+        createdBy: q.created_by,
+        createdByName: q.created_by_name,
+        creatorRole: q.creator_role,
+        verifiedBy: q.verified_by,
+        verifiedByName: q.verified_by_name
+      });
+    }
     await fetch(SUPABASE_URL + '/rest/v1/quiz_questions?id=eq.' + id, {
       method: 'PATCH',
       headers: { ...restHeaders, 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ is_verified: newStatus })
+      body: JSON.stringify(patchBody)
     });
   } catch (err) {
     console.error('Fehler beim Speichern in Supabase:', err);
@@ -4273,7 +4361,16 @@ window.toggleFlashcardVerification = async function(id, e) {
   const newStatus = !currentVerified;
 
   // Optimistisches UI-Update
-  if (fc) fc.is_verified = newStatus;
+  if (fc) {
+    fc.is_verified = newStatus;
+    if (newStatus && currentPortalUser) {
+      fc.verified_by = currentPortalUser.id;
+      fc.verified_by_name = currentPortalUser.name || currentPortalUser.email;
+    } else if (!newStatus) {
+      fc.verified_by = null;
+      fc.verified_by_name = null;
+    }
+  }
   if (newStatus) {
     verifiedFlashcardIds.add(id);
     showToast('Lernkarte als geprüft markiert! ✓');
@@ -4287,10 +4384,21 @@ window.toggleFlashcardVerification = async function(id, e) {
 
   // Dauerhaft in Supabase Cloud speichern
   try {
+    const patchBody = { is_verified: newStatus };
+    if (fc) {
+      patchBody.reference = packFactMetadata({
+        reference: fc.reference,
+        createdBy: fc.created_by,
+        createdByName: fc.created_by_name,
+        creatorRole: fc.creator_role,
+        verifiedBy: fc.verified_by,
+        verifiedByName: fc.verified_by_name
+      });
+    }
     await fetch(SUPABASE_URL + '/rest/v1/flashcards?id=eq.' + id, {
       method: 'PATCH',
       headers: { ...restHeaders, 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ is_verified: newStatus })
+      body: JSON.stringify(patchBody)
     });
   } catch (err) {
     console.error('Fehler beim Speichern in Supabase:', err);
@@ -4534,6 +4642,23 @@ window.loadAllData = async function() {
     } catch(e) {}
 
     allQuestions.forEach(q => {
+      const { explanation, meta } = unpackQuestionMetadata(q.explanation);
+      q.explanation = explanation;
+      if (meta) {
+        if (meta.qt) {
+          q.questionType = meta.qt;
+          q.question_type = meta.qt;
+        }
+        if (meta.ci && (!q.correct_indices || q.correct_indices.length <= 1)) {
+          q.correct_indices = meta.ci;
+        }
+        if (meta.cb && !q.created_by) q.created_by = meta.cb;
+        if (meta.cbn && !q.created_by_name) q.created_by_name = meta.cbn;
+        if (meta.cr && !q.creator_role) q.creator_role = meta.cr;
+        if (meta.vb && !q.verified_by) q.verified_by = meta.vb;
+        if (meta.vbn && !q.verified_by_name) q.verified_by_name = meta.vbn;
+      }
+
       const localMeta = localAuthorStore[q.id] || {};
       if (!q.created_by && localMeta.created_by) q.created_by = localMeta.created_by;
       if (!q.created_by_name && localMeta.created_by_name) q.created_by_name = localMeta.created_by_name;
@@ -4548,22 +4673,6 @@ window.loadAllData = async function() {
         verifiedQuestionIds.add(q.id);
       } else {
         verifiedQuestionIds.delete(q.id);
-      }
-
-      if (!q.questionType && !q.question_type && q.explanation) {
-        const match = q.explanation.match(/<!--RT_META:(.*?)-->/s);
-        if (match) {
-          try {
-            const meta = JSON.parse(match[1]);
-            if (meta.qt) {
-              q.questionType = meta.qt;
-              q.question_type = meta.qt;
-            }
-            if (meta.ci && (!q.correct_indices || q.correct_indices.length <= 1)) {
-              q.correct_indices = meta.ci;
-            }
-          } catch(e) {}
-        }
       }
     });
     saveVerifiedQuestions();
@@ -4580,6 +4689,16 @@ window.loadAllData = async function() {
     } catch(e) {}
 
     allFlashcards.forEach(fc => {
+      const { reference, meta } = unpackFactMetadata(fc.reference);
+      fc.reference = reference;
+      if (meta) {
+        if (meta.cb && !fc.created_by) fc.created_by = meta.cb;
+        if (meta.cbn && !fc.created_by_name) fc.created_by_name = meta.cbn;
+        if (meta.cr && !fc.creator_role) fc.creator_role = meta.cr;
+        if (meta.vb && !fc.verified_by) fc.verified_by = meta.vb;
+        if (meta.vbn && !fc.verified_by_name) fc.verified_by_name = meta.vbn;
+      }
+
       const localMeta = localFcAuthorStore[fc.id] || {};
       if (!fc.created_by && localMeta.created_by) fc.created_by = localMeta.created_by;
       if (!fc.created_by_name && localMeta.created_by_name) fc.created_by_name = localMeta.created_by_name;
@@ -5226,13 +5345,15 @@ window.handleSaveQuestion = async function(e, andNext = false) {
   const authorRole = (currentPortalUser && currentPortalUser.role) || 'moderator';
 
   const existingQ = isNew ? null : allQuestions.find(item => item.id === id);
-  const createdBy = isNew ? authorId : (existingQ?.created_by || authorId);
+  const createdBy = isNew ? authorId : (existingQ?.created_by || existingQ?.createdBy || authorId);
   const createdByName = isNew ? authorName : (existingQ?.created_by_name || existingQ?.createdByName || authorName);
   const creatorRole = isNew ? authorRole : (existingQ?.creator_role || existingQ?.creatorRole || authorRole);
   const createdAt = isNew ? new Date().toISOString() : (existingQ?.created_at || existingQ?.createdAt || new Date().toISOString());
   const updatedBy = authorId;
   const updatedByName = authorName;
   const updatedAt = new Date().toISOString();
+  const verifiedBy = isVerified ? (existingQ?.verified_by || existingQ?.verifiedBy || authorId) : undefined;
+  const verifiedByName = isVerified ? (existingQ?.verified_by_name || existingQ?.verifiedByName || authorName) : undefined;
 
   // Lokal cachen für sofortige Anzeige ohne Wartezeit auf Datenbank-Migration
   try {
@@ -5250,9 +5371,16 @@ window.handleSaveQuestion = async function(e, andNext = false) {
     localStorage.setItem('railtrainer_question_authors', JSON.stringify(store));
   } catch(e) {}
 
-  const finalExplanation = isOrder
-    ? (explanation ? explanation + '\n' : '') + '<!--RT_META:{"qt":"order"}-->'
-    : explanation;
+  const finalExplanation = packQuestionMetadata({
+    explanation: explanation,
+    questionType: isOrder ? 'order' : (correctIndices.length > 1 ? 'multiple' : 'single'),
+    correctIndices: correctIndices,
+    createdBy: createdBy,
+    createdByName: createdByName,
+    creatorRole: creatorRole,
+    verifiedBy: verifiedBy,
+    verifiedByName: verifiedByName
+  });
 
   const payload = { 
     id, 
@@ -5609,13 +5737,15 @@ window.handleSaveFlashcard = async function(e, andNext = false) {
   const authorRole = (currentPortalUser && currentPortalUser.role) || 'moderator';
 
   const existingFc = isNew ? null : allFlashcards.find(item => item.id === id);
-  const createdBy = isNew ? authorId : (existingFc?.created_by || authorId);
+  const createdBy = isNew ? authorId : (existingFc?.created_by || existingFc?.createdBy || authorId);
   const createdByName = isNew ? authorName : (existingFc?.created_by_name || existingFc?.createdByName || authorName);
   const creatorRole = isNew ? authorRole : (existingFc?.creator_role || existingFc?.creatorRole || authorRole);
   const createdAt = isNew ? new Date().toISOString() : (existingFc?.created_at || existingFc?.createdAt || new Date().toISOString());
   const updatedBy = authorId;
   const updatedByName = authorName;
   const updatedAt = new Date().toISOString();
+  const verifiedBy = isVerified ? (existingFc?.verified_by || existingFc?.verifiedBy || authorId) : undefined;
+  const verifiedByName = isVerified ? (existingFc?.verified_by_name || existingFc?.verifiedByName || authorName) : undefined;
 
   // Lokal cachen für sofortige Anzeige ohne Wartezeit
   try {
@@ -5633,12 +5763,21 @@ window.handleSaveFlashcard = async function(e, andNext = false) {
     localStorage.setItem('railtrainer_flashcard_authors', JSON.stringify(store));
   } catch(e) {}
 
+  const finalReference = packFactMetadata({
+    reference: reference,
+    createdBy: createdBy,
+    createdByName: createdByName,
+    creatorRole: creatorRole,
+    verifiedBy: verifiedBy,
+    verifiedByName: verifiedByName
+  });
+
   const payload = { 
     id, 
     category, 
     title, 
     content, 
-    reference, 
+    reference: finalReference, 
     image_url: imageUrl, 
     is_verified: isVerified,
     created_by: createdBy,
@@ -5658,7 +5797,7 @@ window.handleSaveFlashcard = async function(e, andNext = false) {
     });
     if (!res.ok) {
       // Fallback falls Spalten in Supabase noch nicht existieren
-      const fallbackPayload = { id, category, title, content, reference, image_url: imageUrl, is_verified: isVerified };
+      const fallbackPayload = { id, category, title, content, reference: finalReference, image_url: imageUrl, is_verified: isVerified };
       res = await fetch(SUPABASE_URL + '/rest/v1/flashcards', {
         method: 'POST',
         headers: { ...restHeaders, 'Prefer': 'resolution=merge-duplicates' },
