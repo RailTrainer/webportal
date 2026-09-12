@@ -865,13 +865,13 @@
           <div class="flex items-center gap-2 flex-wrap">
             <span class="text-xs text-gray-400 font-semibold mr-1">Ansicht:</span>
             <button type="button" onclick="setDuplicateSubTab('all')" id="btn-dup-subtab-all" class="px-3 py-1.5 rounded-xl text-xs font-bold transition border bg-brand-600 text-white border-brand-500 shadow-sm shadow-brand-500/20">
-              Alle (<span id="dup-subtab-count-all">0</span>)
+              Alle (<span id="dup-subtab-count-all">0</span> Paare)
             </button>
             <button type="button" onclick="setDuplicateSubTab('questions')" id="btn-dup-subtab-questions" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition border bg-gray-950 text-gray-400 border-gray-800 hover:text-white hover:border-gray-700">
-              Prüfungsfragen (<span id="dup-subtab-count-questions">0</span>)
+              Prüfungsfragen (<span id="dup-subtab-count-questions">0</span> Paare)
             </button>
             <button type="button" onclick="setDuplicateSubTab('flashcards')" id="btn-dup-subtab-flashcards" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition border bg-gray-950 text-gray-400 border-gray-800 hover:text-white hover:border-gray-700">
-              Lernkarten (<span id="dup-subtab-count-flashcards">0</span>)
+              Lernkarten (<span id="dup-subtab-count-flashcards">0</span> Paare)
             </button>
           </div>
           <div class="text-xs text-gray-500">
@@ -5134,18 +5134,20 @@ window.renderDuplicatesTab = function() {
   }
 
   container.innerHTML = itemsToRender.map(item => {
+    if (!item || !item.similarity) return '';
     const scorePct = Math.round(item.similarity.score * 100);
     const scoreBadgeClass = scorePct >= 90
       ? 'bg-red-500/20 text-red-300 border-red-500/40'
       : 'bg-amber-500/20 text-amber-300 border-amber-500/40';
 
-    const reasonsHtml = item.similarity.reasons.map(r =>
+    const reasonsHtml = (item.similarity.reasons || []).map(r =>
       `<span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-800 text-gray-300 border border-gray-700">${escapeHtml(r)}</span>`
     ).join(' ');
 
     if (item.type === 'question') {
       const q1 = item.q1;
       const q2 = item.q2;
+      if (!q1 || !q2) return '';
       const renderQSide = (q, label) => {
         const isVerified = (q.is_verified === true || verifiedQuestionIds.has(q.id));
         const options = Array.isArray(q.options) ? q.options : (typeof q.options === 'string' ? JSON.parse(q.options || '[]') : []);
@@ -5203,14 +5205,24 @@ window.renderDuplicatesTab = function() {
               <span class="text-xs font-bold text-gray-400">Fragen-Duplikat:</span>
               ${reasonsHtml}
             </div>
-            <button onclick="window.markDuplicateReviewedPortal('question', '${q1.id}', '${q2.id}')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 transition flex items-center gap-1.5 self-start sm:self-auto shrink-0 shadow-sm" title="Dieses Paar als geprüft markieren (verschwindet sofort aus dieser Ansicht)">
-              <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-400"></i>
-              <span>Als geprüft markieren</span>
-            </button>
+            <div class="flex items-center gap-2 flex-wrap self-start sm:self-auto shrink-0">
+              <button onclick="window.markDuplicateReviewedPortal('question', '${q1.id}', '${q2.id}')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 transition flex items-center gap-1.5 shadow-sm" title="Dieses Paar als geprüft markieren (beide behalten)">
+                <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-400"></i>
+                <span>Als geprüft markieren</span>
+              </button>
+              <button onclick="window.deleteQuestion('${q1.id}')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/30 transition flex items-center gap-1.5 shadow-sm" title="Frage 1 (links) löschen">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-400"></i>
+                <span>Frage 1 löschen</span>
+              </button>
+              <button onclick="window.deleteQuestion('${q2.id}')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/30 transition flex items-center gap-1.5 shadow-sm" title="Frage 2 (rechts) löschen">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-400"></i>
+                <span>Frage 2 löschen</span>
+              </button>
+            </div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            ${renderQSide(q1, 'Frage A')}
-            ${renderQSide(q2, 'Frage B')}
+            ${renderQSide(q1, 'Frage 1')}
+            ${renderQSide(q2, 'Frage 2')}
           </div>
         </div>
       `;
@@ -5218,6 +5230,7 @@ window.renderDuplicatesTab = function() {
       // Flashcard duplicate
       const f1 = item.f1;
       const f2 = item.f2;
+      if (!f1 || !f2) return '';
       const renderFSide = (fc, label) => {
         const isVerified = (fc.is_verified === true || verifiedFlashcardIds.has(fc.id));
         return `
@@ -5263,14 +5276,24 @@ window.renderDuplicatesTab = function() {
               <span class="text-xs font-bold text-gray-400">Lernkarten-Duplikat:</span>
               ${reasonsHtml}
             </div>
-            <button onclick="window.markDuplicateReviewedPortal('fact', '${f1.id}', '${f2.id}')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 transition flex items-center gap-1.5 self-start sm:self-auto shrink-0 shadow-sm" title="Dieses Paar als geprüft markieren (verschwindet sofort aus dieser Ansicht)">
-              <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-400"></i>
-              <span>Als geprüft markieren</span>
-            </button>
+            <div class="flex items-center gap-2 flex-wrap self-start sm:self-auto shrink-0">
+              <button onclick="window.markDuplicateReviewedPortal('fact', '${f1.id}', '${f2.id}')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 transition flex items-center gap-1.5 shadow-sm" title="Dieses Paar als geprüft markieren (beide behalten)">
+                <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-400"></i>
+                <span>Als geprüft markieren</span>
+              </button>
+              <button onclick="window.deleteFlashcard('${f1.id}')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/30 transition flex items-center gap-1.5 shadow-sm" title="Lernkarte 1 (links) löschen">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-400"></i>
+                <span>Lernkarte 1 löschen</span>
+              </button>
+              <button onclick="window.deleteFlashcard('${f2.id}')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/30 transition flex items-center gap-1.5 shadow-sm" title="Lernkarte 2 (rechts) löschen">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-400"></i>
+                <span>Lernkarte 2 löschen</span>
+              </button>
+            </div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            ${renderFSide(f1, 'Lernkarte A')}
-            ${renderFSide(f2, 'Lernkarte B')}
+            ${renderFSide(f1, 'Lernkarte 1')}
+            ${renderFSide(f2, 'Lernkarte 2')}
           </div>
         </div>
       `;
@@ -6359,17 +6382,6 @@ window.deleteQuestion = async function(id) {
     await fetch(SUPABASE_URL + '/rest/v1/quiz_questions?id=eq.' + id, { method: 'DELETE', headers: restHeaders });
     verifiedQuestionIds.delete(id);
     saveVerifiedQuestions();
-    showToast('Frage gelöscht! 🗑️');
-    await loadAllData();
-  } catch (err) {
-    alert('Löschfehler: ' + err.message);
-  }
-};
-
-window.deleteQuestion = async function(id) {
-  if (!confirm('Prüfungsfrage wirklich löschen?')) return;
-  try {
-    await fetch(SUPABASE_URL + '/rest/v1/quiz_questions?id=eq.' + id, { method: 'DELETE', headers: restHeaders });
     showToast('Frage gelöscht! 🗑️');
     await loadAllData();
   } catch (err) {
