@@ -350,6 +350,12 @@
         <span id="badge-flashcards-count" class="ml-auto text-xs px-2 py-0.5 rounded-full bg-gray-800">0</span>
       </button>
 
+      <button onclick="switchTab('duplicates')" id="tab-btn-duplicates" class="nav-tab flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-gray-400 hover:bg-gray-800 hover:text-white">
+        <i data-lucide="copy" class="w-4 h-4"></i>
+        <span>Doppel-Check</span>
+        <span id="badge-duplicates-count" class="ml-auto text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30 hidden">0</span>
+      </button>
+
       <button onclick="switchTab('categories')" id="tab-btn-categories" class="nav-tab flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-gray-400 hover:bg-gray-800 hover:text-white">
         <i data-lucide="folder" class="w-4 h-4"></i>
         <span>Kategorien</span>
@@ -429,6 +435,13 @@
               </button>
               <button type="button" onclick="setQuestionReviewFilter('unverified')" id="btn-q-filter-unverified" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition border bg-gray-950 text-gray-400 border-gray-800 hover:text-amber-300 hover:border-amber-500/40">
                 ⏳ Ungeprüft (<span id="q-count-unverified">0</span>)
+              </button>
+              <button type="button" onclick="setQuestionReviewFilter('duplicate')" id="btn-q-filter-duplicate" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition border bg-gray-950 text-gray-400 border-gray-800 hover:text-amber-300 hover:border-amber-500/40">
+                ⚠️ Doppelt (<span id="q-count-duplicate">0</span>)
+              </button>
+              <button type="button" onclick="runDoppelCheck(true)" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition flex items-center gap-1.5" title="Ähnlichkeits- und Duplikatsprüfung manuell ausführen">
+                <i data-lucide="scan-search" class="w-3.5 h-3.5"></i>
+                <span>Doppel-Check</span>
               </button>
               <button type="button" onclick="markAllVisibleQuestions(true)" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-emerald-400 border border-gray-700 transition ml-auto" title="Alle sichtbaren Fragen als geprüft markieren">
                 ✓ Alle sichtbaren prüfen
@@ -527,6 +540,13 @@
               </button>
               <button type="button" onclick="setFlashcardReviewFilter('unverified')" id="btn-fc-filter-unverified" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition border bg-gray-950 text-gray-400 border-gray-800 hover:text-amber-300 hover:border-amber-500/40">
                 ⏳ Ungeprüft (<span id="fc-count-unverified">0</span>)
+              </button>
+              <button type="button" onclick="setFlashcardReviewFilter('duplicate')" id="btn-fc-filter-duplicate" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition border bg-gray-950 text-gray-400 border-gray-800 hover:text-amber-300 hover:border-amber-500/40">
+                ⚠️ Doppelt (<span id="fc-count-duplicate">0</span>)
+              </button>
+              <button type="button" onclick="runDoppelCheck(true)" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition flex items-center gap-1.5" title="Ähnlichkeits- und Duplikatsprüfung manuell ausführen">
+                <i data-lucide="scan-search" class="w-3.5 h-3.5"></i>
+                <span>Doppel-Check</span>
               </button>
               <button type="button" onclick="markAllVisibleFlashcards(true)" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-emerald-400 border border-gray-700 transition ml-auto" title="Alle sichtbaren Karten als geprüft markieren">
                 ✓ Alle sichtbaren prüfen
@@ -788,6 +808,79 @@
             </table>
           </div>
         </div>
+      </section>
+
+      <!-- TAB 7: DOPPEL-CHECK (DUPLICATES REVIEW) -->
+      <section id="tab-duplicates" class="tab-content hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <div class="flex items-center gap-2.5">
+              <h2 class="text-2xl font-bold text-white tracking-tight">Doppel-Check & Ähnlichkeitsprüfung</h2>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
+                <span>Admin & Dozenten</span>
+              </span>
+            </div>
+            <p class="text-sm text-gray-400 mt-1">Automatische Erkennung ähnlicher Fragen, Antwortoptionen & Lernkarten. Sobald ein Duplikat geprüft ist, verschwindet es aus dieser Übersicht.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            <button onclick="runDoppelCheck(true)" id="btn-run-doppelcheck-main" class="px-4 py-2.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold text-xs rounded-xl border border-amber-500/40 transition flex items-center gap-2 shadow-sm shadow-amber-500/10">
+              <i data-lucide="scan-search" class="w-4 h-4 text-amber-400"></i>
+              <span>Doppel-Check starten</span>
+            </button>
+            <button onclick="resetReviewedDuplicatesPortal()" id="btn-reset-reviewed-duplicates" class="px-3.5 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold text-xs rounded-xl border border-gray-700 transition flex items-center gap-2" title="Geprüfte Duplikate wieder anzeigen">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+              <span>Geprüfte zurücksetzen</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- STATS KPI KARTEN -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <div class="bg-gray-900 p-5 rounded-2xl border border-gray-800 shadow">
+            <div class="text-xs text-gray-400 uppercase font-semibold flex items-center gap-1.5">
+              <i data-lucide="help-circle" class="w-4 h-4 text-amber-400"></i>
+              <span>Verdächtige Fragen-Paare</span>
+            </div>
+            <div id="dup-stat-questions" class="text-3xl font-extrabold text-white mt-1">0</div>
+          </div>
+          <div class="bg-gray-900 p-5 rounded-2xl border border-gray-800 shadow">
+            <div class="text-xs text-gray-400 uppercase font-semibold flex items-center gap-1.5">
+              <i data-lucide="layers" class="w-4 h-4 text-blue-400"></i>
+              <span>Verdächtige Lernkarten-Paare</span>
+            </div>
+            <div id="dup-stat-flashcards" class="text-3xl font-extrabold text-white mt-1">0</div>
+          </div>
+          <div class="bg-gray-900 p-5 rounded-2xl border border-gray-800 shadow">
+            <div class="text-xs text-gray-400 uppercase font-semibold flex items-center gap-1.5">
+              <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
+              <span>Geprüft & Ausgeblendet</span>
+            </div>
+            <div id="dup-stat-reviewed" class="text-3xl font-extrabold text-emerald-400 mt-1">0</div>
+          </div>
+        </div>
+
+        <!-- FILTER LEISTE (SUBTABS: ALLE, FRAGEN, LERNKARTEN) -->
+        <div class="bg-gray-900 border border-gray-800 p-4 rounded-2xl mb-6 flex items-center justify-between gap-3 flex-wrap shadow">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-xs text-gray-400 font-semibold mr-1">Ansicht:</span>
+            <button type="button" onclick="setDuplicateSubTab('all')" id="btn-dup-subtab-all" class="px-3 py-1.5 rounded-xl text-xs font-bold transition border bg-brand-600 text-white border-brand-500 shadow-sm shadow-brand-500/20">
+              Alle (<span id="dup-subtab-count-all">0</span>)
+            </button>
+            <button type="button" onclick="setDuplicateSubTab('questions')" id="btn-dup-subtab-questions" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition border bg-gray-950 text-gray-400 border-gray-800 hover:text-white hover:border-gray-700">
+              Prüfungsfragen (<span id="dup-subtab-count-questions">0</span>)
+            </button>
+            <button type="button" onclick="setDuplicateSubTab('flashcards')" id="btn-dup-subtab-flashcards" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition border bg-gray-950 text-gray-400 border-gray-800 hover:text-white hover:border-gray-700">
+              Lernkarten (<span id="dup-subtab-count-flashcards">0</span>)
+            </button>
+          </div>
+          <div class="text-xs text-gray-500">
+            Klick auf <span class="text-emerald-400 font-semibold">"Als geprüft markieren"</span> entfernt ein Paar dauerhaft aus dieser Liste.
+          </div>
+        </div>
+
+        <!-- DUPLIKATE CONTAINER -->
+        <div id="duplicatesListContainer" class="space-y-4"></div>
       </section>
     </main>
   </div>
@@ -1573,7 +1666,7 @@
           <div id="opt_row_0" onclick="window.toggleCorrectOption(0, event)" class="flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-brand-500/50 bg-brand-500/5 transition cursor-pointer select-none">
             <input type="checkbox" name="q_correct" value="0" id="opt_radio_0" checked class="w-4 h-4 rounded accent-brand-500 cursor-pointer" onclick="event.stopPropagation()" onchange="window.handleCorrectCheckboxChange(0, this)">
             <span id="opt_badge_0" class="w-5 h-5 rounded-md bg-brand-600 text-white flex items-center justify-center font-bold text-[11px] shrink-0">A</span>
-            <textarea id="q_opt_0" required rows="1" placeholder="Antwort A" oninput="window.autoResizeTextarea(this, 38)" class="flex-1 bg-transparent text-sm text-gray-100 placeholder-gray-500 focus:outline-none resize-none overflow-hidden leading-relaxed py-0.5" onclick="event.stopPropagation()"></textarea>
+            <textarea id="q_opt_0" required rows="1" placeholder="Antwort A" oninput="window.autoResizeTextarea(this, 38); window.checkQuestionDuplicates();" class="flex-1 bg-transparent text-sm text-gray-100 placeholder-gray-500 focus:outline-none resize-none overflow-hidden leading-relaxed py-0.5" onclick="event.stopPropagation()"></textarea>
             <button type="button" onclick="event.stopPropagation(); toggleDangerOption(0)" id="q_bg_btn_0" class="px-2.5 py-1 rounded-lg border border-gray-800 bg-gray-900 text-gray-400 hover:text-red-400 hover:border-red-500/40 text-xs font-bold transition flex items-center gap-1 shrink-0" title="Als betriebsgefährdend (BG) kennzeichnen">
               <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
               <span>BG</span>
@@ -1583,7 +1676,7 @@
           <div id="opt_row_1" onclick="window.toggleCorrectOption(1, event)" class="flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-gray-800 transition cursor-pointer select-none">
             <input type="checkbox" name="q_correct" value="1" id="opt_radio_1" class="w-4 h-4 rounded accent-brand-500 cursor-pointer" onclick="event.stopPropagation()" onchange="window.handleCorrectCheckboxChange(1, this)">
             <span id="opt_badge_1" class="w-5 h-5 rounded-md bg-gray-800 text-gray-300 flex items-center justify-center font-bold text-[11px] shrink-0">B</span>
-            <textarea id="q_opt_1" required rows="1" placeholder="Antwort B" oninput="window.autoResizeTextarea(this, 38)" class="flex-1 bg-transparent text-sm text-gray-100 placeholder-gray-500 focus:outline-none resize-none overflow-hidden leading-relaxed py-0.5" onclick="event.stopPropagation()"></textarea>
+            <textarea id="q_opt_1" required rows="1" placeholder="Antwort B" oninput="window.autoResizeTextarea(this, 38); window.checkQuestionDuplicates();" class="flex-1 bg-transparent text-sm text-gray-100 placeholder-gray-500 focus:outline-none resize-none overflow-hidden leading-relaxed py-0.5" onclick="event.stopPropagation()"></textarea>
             <button type="button" onclick="event.stopPropagation(); toggleDangerOption(1)" id="q_bg_btn_1" class="px-2.5 py-1 rounded-lg border border-gray-800 bg-gray-900 text-gray-400 hover:text-red-400 hover:border-red-500/40 text-xs font-bold transition flex items-center gap-1 shrink-0" title="Als betriebsgefährdend (BG) kennzeichnen">
               <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
               <span>BG</span>
@@ -1593,7 +1686,7 @@
           <div id="opt_row_2" onclick="window.toggleCorrectOption(2, event)" class="flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-gray-800 transition cursor-pointer select-none">
             <input type="checkbox" name="q_correct" value="2" id="opt_radio_2" class="w-4 h-4 rounded accent-brand-500 cursor-pointer" onclick="event.stopPropagation()" onchange="window.handleCorrectCheckboxChange(2, this)">
             <span id="opt_badge_2" class="w-5 h-5 rounded-md bg-gray-800 text-gray-300 flex items-center justify-center font-bold text-[11px] shrink-0">C</span>
-            <textarea id="q_opt_2" required rows="1" placeholder="Antwort C" oninput="window.autoResizeTextarea(this, 38)" class="flex-1 bg-transparent text-sm text-gray-100 placeholder-gray-500 focus:outline-none resize-none overflow-hidden leading-relaxed py-0.5" onclick="event.stopPropagation()"></textarea>
+            <textarea id="q_opt_2" required rows="1" placeholder="Antwort C" oninput="window.autoResizeTextarea(this, 38); window.checkQuestionDuplicates();" class="flex-1 bg-transparent text-sm text-gray-100 placeholder-gray-500 focus:outline-none resize-none overflow-hidden leading-relaxed py-0.5" onclick="event.stopPropagation()"></textarea>
             <button type="button" onclick="event.stopPropagation(); toggleDangerOption(2)" id="q_bg_btn_2" class="px-2.5 py-1 rounded-lg border border-gray-800 bg-gray-900 text-gray-400 hover:text-red-400 hover:border-red-500/40 text-xs font-bold transition flex items-center gap-1 shrink-0" title="Als betriebsgefährdend (BG) kennzeichnen">
               <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
               <span>BG</span>
@@ -1603,7 +1696,7 @@
           <div id="opt_row_3" onclick="window.toggleCorrectOption(3, event)" class="flex items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-gray-800 transition cursor-pointer select-none">
             <input type="checkbox" name="q_correct" value="3" id="opt_radio_3" class="w-4 h-4 rounded accent-brand-500 cursor-pointer" onclick="event.stopPropagation()" onchange="window.handleCorrectCheckboxChange(3, this)">
             <span id="opt_badge_3" class="w-5 h-5 rounded-md bg-gray-800 text-gray-300 flex items-center justify-center font-bold text-[11px] shrink-0">D</span>
-            <textarea id="q_opt_3" rows="1" placeholder="Antwort D" oninput="window.autoResizeTextarea(this, 38)" class="flex-1 bg-transparent text-sm text-gray-100 placeholder-gray-500 focus:outline-none resize-none overflow-hidden leading-relaxed py-0.5" onclick="event.stopPropagation()"></textarea>
+            <textarea id="q_opt_3" rows="1" placeholder="Antwort D" oninput="window.autoResizeTextarea(this, 38); window.checkQuestionDuplicates();" class="flex-1 bg-transparent text-sm text-gray-100 placeholder-gray-500 focus:outline-none resize-none overflow-hidden leading-relaxed py-0.5" onclick="event.stopPropagation()"></textarea>
             <button type="button" onclick="event.stopPropagation(); toggleDangerOption(3)" id="q_bg_btn_3" class="px-2.5 py-1 rounded-lg border border-gray-800 bg-gray-900 text-gray-400 hover:text-red-400 hover:border-red-500/40 text-xs font-bold transition flex items-center gap-1 shrink-0" title="Als betriebsgefährdend (BG) kennzeichnen">
               <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
               <span>BG</span>
@@ -1613,7 +1706,7 @@
           <div id="opt_row_4" onclick="window.toggleCorrectOption(4, event)" class="hidden items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-gray-800 transition cursor-pointer select-none">
             <input type="checkbox" name="q_correct" value="4" id="opt_radio_4" class="w-4 h-4 rounded accent-brand-500 cursor-pointer" onclick="event.stopPropagation()" onchange="window.handleCorrectCheckboxChange(4, this)">
             <span id="opt_badge_4" class="w-5 h-5 rounded-md bg-gray-800 text-gray-300 flex items-center justify-center font-bold text-[11px] shrink-0">E</span>
-            <textarea id="q_opt_4" rows="1" placeholder="Antwort E" oninput="window.autoResizeTextarea(this, 38)" class="flex-1 bg-transparent text-sm text-gray-100 placeholder-gray-500 focus:outline-none resize-none overflow-hidden leading-relaxed py-0.5" onclick="event.stopPropagation()"></textarea>
+            <textarea id="q_opt_4" rows="1" placeholder="Antwort E" oninput="window.autoResizeTextarea(this, 38); window.checkQuestionDuplicates();" class="flex-1 bg-transparent text-sm text-gray-100 placeholder-gray-500 focus:outline-none resize-none overflow-hidden leading-relaxed py-0.5" onclick="event.stopPropagation()"></textarea>
             <button type="button" onclick="event.stopPropagation(); toggleDangerOption(4)" id="q_bg_btn_4" class="px-2.5 py-1 rounded-lg border border-gray-800 bg-gray-900 text-gray-400 hover:text-red-400 hover:border-red-500/40 text-xs font-bold transition flex items-center gap-1 shrink-0" title="Als betriebsgefährdend (BG) kennzeichnen">
               <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
               <span>BG</span>
@@ -1623,7 +1716,7 @@
           <div id="opt_row_5" onclick="window.toggleCorrectOption(5, event)" class="hidden items-center gap-2.5 bg-gray-950 p-2.5 rounded-xl border border-gray-800 transition cursor-pointer select-none">
             <input type="checkbox" name="q_correct" value="5" id="opt_radio_5" class="w-4 h-4 rounded accent-brand-500 cursor-pointer" onclick="event.stopPropagation()" onchange="window.handleCorrectCheckboxChange(5, this)">
             <span id="opt_badge_5" class="w-5 h-5 rounded-md bg-gray-800 text-gray-300 flex items-center justify-center font-bold text-[11px] shrink-0">F</span>
-            <textarea id="q_opt_5" rows="1" placeholder="Antwort F" oninput="window.autoResizeTextarea(this, 38)" class="flex-1 bg-transparent text-sm text-gray-100 placeholder-gray-500 focus:outline-none resize-none overflow-hidden leading-relaxed py-0.5" onclick="event.stopPropagation()"></textarea>
+            <textarea id="q_opt_5" rows="1" placeholder="Antwort F" oninput="window.autoResizeTextarea(this, 38); window.checkQuestionDuplicates();" class="flex-1 bg-transparent text-sm text-gray-100 placeholder-gray-500 focus:outline-none resize-none overflow-hidden leading-relaxed py-0.5" onclick="event.stopPropagation()"></textarea>
             <button type="button" onclick="event.stopPropagation(); toggleDangerOption(5)" id="q_bg_btn_5" class="px-2.5 py-1 rounded-lg border border-gray-800 bg-gray-900 text-gray-400 hover:text-red-400 hover:border-red-500/40 text-xs font-bold transition flex items-center gap-1 shrink-0" title="Als betriebsgefährdend (BG) kennzeichnen">
               <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
               <span>BG</span>
@@ -1802,7 +1895,7 @@
 
         <div>
           <label class="block text-xs font-bold text-gray-300 uppercase mb-1.5">Titel / Signalbegriff *</label>
-          <textarea id="fc_title" required rows="1" oninput="window.autoResizeTextarea(this, 42)" placeholder="z.B. Signal Hp 1 - Fahrt" class="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-brand-500 leading-relaxed overflow-hidden resize-none transition-colors duration-150"></textarea>
+          <textarea id="fc_title" required rows="1" oninput="window.autoResizeTextarea(this, 42); window.checkFlashcardDuplicates();" placeholder="z.B. Signal Hp 1 - Fahrt" class="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-brand-500 leading-relaxed overflow-hidden resize-none transition-colors duration-150"></textarea>
         </div>
 
         <div>
@@ -1818,7 +1911,16 @@
               <button type="button" onclick="insertFormat('fc_content', 'arrow')" class="px-2 py-0.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-[11px] font-semibold rounded border border-gray-700 transition" title="Pfeil">➔</button>
             </div>
           </div>
-          <textarea id="fc_content" required rows="3" oninput="window.autoResizeTextarea(this, 90)" placeholder="Ausführliche Erklärung, Bedeutung, Verhaltensregeln..." class="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-brand-500 leading-relaxed overflow-hidden resize-none transition-colors duration-150"></textarea>
+          <textarea id="fc_content" required rows="3" oninput="window.autoResizeTextarea(this, 90); window.checkFlashcardDuplicates();" placeholder="Ausführliche Erklärung, Bedeutung, Verhaltensregeln..." class="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-brand-500 leading-relaxed overflow-hidden resize-none transition-colors duration-150"></textarea>
+          
+          <!-- DUPLIKAT-WARNUNG LIVE-ANZEIGE -->
+          <div id="fc_duplicate_warning" class="hidden mt-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs">
+            <div class="flex items-center gap-1.5 font-bold mb-1">
+              <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-400 shrink-0"></i>
+              <span>Mögliche doppelte / ähnliche Lernkarte im System gefunden:</span>
+            </div>
+            <div id="fc_duplicate_list" class="text-[11px] text-gray-300 space-y-1 pl-5"></div>
+          </div>
         </div>
 
         <div>
@@ -2006,6 +2108,7 @@ function packQuestionMetadata(q) {
   if (q.creatorRole) meta.cr = q.creatorRole;
   if (q.verifiedBy) meta.vb = q.verifiedBy;
   if (q.verifiedByName) meta.vbn = q.verifiedByName;
+  if (q.duplicateReviewed) meta.dr = true;
 
   const clean = (q.explanation || '').replace(/\s*<!--RT_META:.*?-->/gs, '').trim();
   if (Object.keys(meta).length === 0) return clean;
@@ -2032,6 +2135,7 @@ function packFactMetadata(f) {
   if (f.creatorRole) meta.cr = f.creatorRole;
   if (f.verifiedBy) meta.vb = f.verifiedBy;
   if (f.verifiedByName) meta.vbn = f.verifiedByName;
+  if (f.duplicateReviewed) meta.dr = true;
 
   const clean = (f.reference || '').replace(/\s*<!--RT_META:.*?-->/gs, '').trim();
   if (Object.keys(meta).length === 0) return clean;
@@ -4093,11 +4197,37 @@ function saveVerifiedQuestions() {
 }
 loadVerifiedItems();
 
+// --- DOPPEL-CHECK & DUPLIKATE SPEICHERUNG ---
+let reviewedDuplicateKeys = new Set();
+function loadReviewedDuplicates() {
+  try {
+    const raw = localStorage.getItem('railtrainer_reviewed_duplicates');
+    if (raw) {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr)) reviewedDuplicateKeys = new Set(arr);
+    }
+  } catch (e) {
+    console.error('Fehler beim Laden geprüfter Duplikate:', e);
+  }
+}
+function saveReviewedDuplicates() {
+  try {
+    localStorage.setItem('railtrainer_reviewed_duplicates', JSON.stringify([...reviewedDuplicateKeys]));
+  } catch (e) {}
+}
+loadReviewedDuplicates();
+
+let duplicateQuestionsList = []; // Array<{ q1, q2, similarity, pairKey }>
+let duplicateFactsList = [];     // Array<{ f1, f2, similarity, pairKey }>
+let duplicateQuestionIds = new Set();
+let duplicateFactIds = new Set();
+let duplicateSubTab = 'all'; // 'all' | 'questions' | 'flashcards'
+
 // 1. QUESTION VERIFICATION
-let questionReviewFilter = 'all'; // 'all' | 'verified' | 'unverified'
+let questionReviewFilter = 'all'; // 'all' | 'verified' | 'unverified' | 'duplicate'
 window.setQuestionReviewFilter = function(filter) {
   questionReviewFilter = filter;
-  ['all', 'verified', 'unverified'].forEach(f => {
+  ['all', 'verified', 'unverified', 'duplicate'].forEach(f => {
     const btn = document.getElementById('btn-q-filter-' + f);
     if (!btn) return;
     if (f === filter) {
@@ -4235,9 +4365,11 @@ function getFilteredQuestionsList() {
       ((q.explanation || '').toLowerCase().includes(search)) ||
       (Array.isArray(q.options) && q.options.some(opt => (opt || '').toLowerCase().includes(search)));
     const isVerified = (q.is_verified === true || verifiedQuestionIds.has(q.id));
+    const isDuplicate = duplicateQuestionIds.has(q.id);
     const matchesReview = (questionReviewFilter === 'all') || 
                           (questionReviewFilter === 'verified' && isVerified) || 
-                          (questionReviewFilter === 'unverified' && !isVerified);
+                          (questionReviewFilter === 'unverified' && !isVerified) ||
+                          (questionReviewFilter === 'duplicate' && isDuplicate);
     return matchesCat && matchesSearch && matchesReview;
   });
 }
@@ -4257,6 +4389,8 @@ window.renderQuestionReviewStats = function() {
   if (countVer) countVer.textContent = verifiedCount;
   const countUnver = document.getElementById('q-count-unverified');
   if (countUnver) countUnver.textContent = unverifiedCount;
+  const countDup = document.getElementById('q-count-duplicate');
+  if (countDup) countDup.textContent = duplicateQuestionIds.size;
   const pctEl = document.getElementById('q-verified-percentage');
   if (pctEl) pctEl.textContent = pct + '%';
   const barEl = document.getElementById('q-verified-progress-bar');
@@ -4288,9 +4422,11 @@ function getFilteredFlashcardsList() {
                           (fc.content || '').toLowerCase().includes(search) || 
                           (fc.reference || '').toLowerCase().includes(search);
     const isVerified = (fc.is_verified === true || verifiedFlashcardIds.has(fc.id));
+    const isDuplicate = duplicateFactIds.has(fc.id);
     const matchesReview = (flashcardReviewFilter === 'all') || 
                           (flashcardReviewFilter === 'verified' && isVerified) || 
-                          (flashcardReviewFilter === 'unverified' && !isVerified);
+                          (flashcardReviewFilter === 'unverified' && !isVerified) ||
+                          (flashcardReviewFilter === 'duplicate' && isDuplicate);
     return matchesCat && matchesSearch && matchesReview;
   });
 }
@@ -4310,9 +4446,11 @@ window.renderFlashcardReviewStats = function() {
   if (countVer) countVer.textContent = verifiedCount;
   const countUnver = document.getElementById('fc-count-unverified');
   if (countUnver) countUnver.textContent = unverifiedCount;
+  const countDup = document.getElementById('fc-count-duplicate');
+  if (countDup) countDup.textContent = duplicateFactIds.size;
   const pctEl = document.getElementById('fc-verified-percentage');
   if (pctEl) pctEl.textContent = pct + '%';
-  const barEl = document.getElementById('fc-verified-progress-bar');
+  const barEl = document.getElementById('flashcardVerifiedProgressBar');
   if (barEl) barEl.style.width = pct + '%';
 };
 
@@ -4334,10 +4472,10 @@ window.filterFlashcardsByReview = function(filterType) {
 };
 
 // 2. FLASHCARD VERIFICATION
-let flashcardReviewFilter = 'all'; // 'all' | 'verified' | 'unverified'
+let flashcardReviewFilter = 'all'; // 'all' | 'verified' | 'unverified' | 'duplicate'
 window.setFlashcardReviewFilter = function(filter) {
   flashcardReviewFilter = filter;
-  ['all', 'verified', 'unverified'].forEach(f => {
+  ['all', 'verified', 'unverified', 'duplicate'].forEach(f => {
     const btn = document.getElementById('btn-fc-filter-' + f);
     if (!btn) return;
     if (f === filter) {
@@ -4465,6 +4603,569 @@ window.markAllFlashcardsGlobally = async function(status = false) {
   } catch (e) {
     console.error('Massen-Update Fehler:', e);
   }
+};
+
+// =======================================================
+// DOPPEL-CHECK & ÄHNLICHKEITSPRÜFUNG LOGIK
+// =======================================================
+const GERMAN_STOP_WORDS_SET = new Set([
+  'der', 'die', 'das', 'den', 'dem', 'des', 'ein', 'eine', 'einer', 'einem', 'einen', 'eines',
+  'und', 'oder', 'aber', 'in', 'im', 'an', 'am', 'auf', 'aus', 'bei', 'beim', 'mit', 'nach',
+  'von', 'vom', 'zu', 'zum', 'zur', 'uber', 'unter', 'vor', 'zwischen', 'durch', 'fur',
+  'gegen', 'ohne', 'um', 'ist', 'sind', 'war', 'waren', 'wird', 'werden', 'wurde', 'wurden',
+  'hat', 'haben', 'hatte', 'hatten', 'kann', 'konnen', 'muss', 'mussen', 'soll', 'sollen',
+  'darf', 'durfen', 'nicht', 'kein', 'keine', 'keinen', 'keinem', 'keiner', 'keines',
+  'welche', 'welcher', 'welches', 'welchem', 'welchen', 'wie', 'was', 'wo', 'wann', 'warum',
+  'wer', 'wen', 'wem', 'wessen', 'sie', 'er', 'es', 'wir', 'ihr', 'dass', 'da', 'wenn',
+  'als', 'auch', 'noch', 'nur', 'sehr', 'so', 'hier', 'dort'
+]);
+
+function normalizeGermanText(text) {
+  if (!text) return '';
+  let str = text.toLowerCase()
+    .replace(/ä/g, 'ae')
+    .replace(/ö/g, 'oe')
+    .replace(/ü/g, 'ue')
+    .replace(/ß/g, 'ss');
+  str = str.replace(/<!--rt_meta:.*?-->/gs, '');
+  str = str.replace(/<[^>]+>/g, ' ');
+  str = str.replace(/[^a-z0-9\s]/g, ' ');
+  const boilerplate = [
+    /\bwelche bedeutung hat\b/g,
+    /\bwas bedeutet\b/g,
+    /\bwas ist\b/g,
+    /\bwelches signal\b/g,
+    /\bwas gilt\b/g,
+    /\bwelche der folgenden aussagen\b/g,
+    /\bwie verhaelt sich\b/g,
+    /\bwie ist zu verfahren\b/g,
+    /\bwelche regelung gilt\b/g
+  ];
+  for (const b of boilerplate) {
+    str = str.replace(b, ' ');
+  }
+  return str.replace(/\s+/g, ' ').trim();
+}
+
+function tokenizeGerman(text) {
+  const norm = normalizeGermanText(text);
+  if (!norm) return [];
+  return norm.split(/\s+/).filter(w => w.length > 2 && !GERMAN_STOP_WORDS_SET.has(w));
+}
+
+function diceCoefficient(strA, strB) {
+  if (!strA && !strB) return 1.0;
+  if (!strA || !strB) return 0.0;
+  if (strA === strB) return 1.0;
+  if (strA.length < 2 || strB.length < 2) return strA === strB ? 1.0 : 0.0;
+
+  const getBigrams = s => {
+    const map = new Map();
+    for (let i = 0; i < s.length - 1; i++) {
+      const bg = s.slice(i, i + 2);
+      map.set(bg, (map.get(bg) || 0) + 1);
+    }
+    return map;
+  };
+
+  const bigramsA = getBigrams(strA);
+  const bigramsB = getBigrams(strB);
+
+  let intersection = 0;
+  for (const [bg, countA] of bigramsA.entries()) {
+    if (bigramsB.has(bg)) {
+      intersection += Math.min(countA, bigramsB.get(bg));
+    }
+  }
+
+  const totalA = strA.length - 1;
+  const totalB = strB.length - 1;
+  return (2.0 * intersection) / (totalA + totalB);
+}
+
+function levenshteinSimilarity(strA, strB) {
+  if (!strA && !strB) return 1.0;
+  if (!strA || !strB) return 0.0;
+  if (strA === strB) return 1.0;
+
+  const lenA = strA.length;
+  const lenB = strB.length;
+  if (Math.abs(lenA - lenB) > Math.max(lenA, lenB) * 0.7) return 0.0;
+
+  const dp = Array(lenB + 1).fill(0);
+  for (let j = 0; j <= lenB; j++) dp[j] = j;
+
+  for (let i = 1; i <= lenA; i++) {
+    let prev = dp[0];
+    dp[0] = i;
+    for (let j = 1; j <= lenB; j++) {
+      const temp = dp[j];
+      if (strA[i - 1] === strB[j - 1]) {
+        dp[j] = prev;
+      } else {
+        dp[j] = Math.min(prev, dp[j], dp[j - 1]) + 1;
+      }
+      prev = temp;
+    }
+  }
+
+  const dist = dp[lenB];
+  const maxLen = Math.max(lenA, lenB);
+  return maxLen === 0 ? 1.0 : Math.max(0, 1 - dist / maxLen);
+}
+
+function combinedTextSimilarity(strA, strB) {
+  const normA = normalizeGermanText(strA);
+  const normB = normalizeGermanText(strB);
+  if (!normA && !normB) return 1.0;
+  if (!normA || !normB) return 0.0;
+  if (normA === normB) return 1.0;
+
+  const minLen = Math.min(normA.length, normB.length);
+  const maxLen = Math.max(normA.length, normB.length);
+  if (minLen / maxLen < 0.45) return 0.15;
+
+  const tokensA = tokenizeGerman(strA);
+  const tokensB = tokenizeGerman(strB);
+  if (tokensA.length >= 3 && tokensB.length >= 3) {
+    const setA = new Set(tokensA);
+    const setB = new Set(tokensB);
+    let inter = 0;
+    for (const t of setA) {
+      if (setB.has(t)) inter++;
+    }
+    const union = new Set([...tokensA, ...tokensB]).size;
+    if (union > 0 && (inter / union) === 1.0) return 1.0;
+  }
+
+  const dice = diceCoefficient(normA, normB);
+  const lev = (minLen / maxLen > 0.65 && maxLen < 180) ? levenshteinSimilarity(normA, normB) : dice;
+  return (dice * 0.55) + (lev * 0.45);
+}
+
+function compareAnswerOptions(optionsA, optionsB) {
+  const cleanOptsA = (Array.isArray(optionsA) ? optionsA : []).map(o => normalizeGermanText(o)).filter(Boolean);
+  const cleanOptsB = (Array.isArray(optionsB) ? optionsB : []).map(o => normalizeGermanText(o)).filter(Boolean);
+  if (cleanOptsA.length === 0 || cleanOptsB.length === 0) return 0;
+
+  // Exact set match check
+  const setB = new Set(cleanOptsB);
+  let exactMatches = 0;
+  for (const optA of cleanOptsA) {
+    if (setB.has(optA)) exactMatches++;
+  }
+  if (exactMatches === cleanOptsA.length && cleanOptsA.length === cleanOptsB.length) return 1.0;
+
+  let totalSim = 0;
+  for (const optA of cleanOptsA) {
+    if (setB.has(optA)) {
+      totalSim += 1.0;
+      continue;
+    }
+    let maxMatch = 0;
+    for (const optB of cleanOptsB) {
+      const sim = combinedTextSimilarity(optA, optB);
+      if (sim > maxMatch) maxMatch = sim;
+      if (maxMatch >= 0.95) break;
+    }
+    totalSim += maxMatch;
+  }
+  return totalSim / cleanOptsA.length;
+}
+
+function getDuplicatePairKey(id1, id2) {
+  return [id1, id2].sort().join('::');
+}
+
+function checkQuestionSimilarity(q1, q2) {
+  const textSim = combinedTextSimilarity(q1.text, q2.text);
+  const opts1 = Array.isArray(q1.options) ? q1.options : (typeof q1.options === 'string' ? JSON.parse(q1.options || '[]') : []);
+  const opts2 = Array.isArray(q2.options) ? q2.options : (typeof q2.options === 'string' ? JSON.parse(q2.options || '[]') : []);
+  const optSim = compareAnswerOptions(opts1, opts2);
+
+  const reasons = [];
+  let isDupe = false;
+  let score = 0;
+
+  if (textSim >= 0.85) {
+    isDupe = true;
+    reasons.push(textSim >= 0.95 ? 'Identischer Fragentext' : 'Sehr ähnlicher Fragentext');
+  }
+  if (textSim >= 0.72 && optSim >= 0.75) {
+    isDupe = true;
+    reasons.push('Ähnliche Frage und Antwortoptionen');
+  }
+  if (optSim >= 0.90 && (opts1.length >= 2 && opts2.length >= 2)) {
+    isDupe = true;
+    reasons.push('Weitgehend identische Antwortoptionen');
+  }
+
+  score = Math.max(textSim, (textSim * 0.6) + (optSim * 0.4));
+  if (isDupe && score < 0.70) score = 0.75;
+
+  return { isDuplicate: isDupe, score: Math.min(1.0, score), textSimilarity: textSim, optionsSimilarity: optSim, reasons };
+}
+
+function checkFactSimilarity(f1, f2) {
+  const titleSim = combinedTextSimilarity(f1.title, f2.title);
+  const contentSim = combinedTextSimilarity(f1.content, f2.content);
+
+  const reasons = [];
+  let isDupe = false;
+  let score = 0;
+
+  if (titleSim >= 0.85) {
+    isDupe = true;
+    reasons.push(titleSim >= 0.95 ? 'Identischer Titel / Begriff' : 'Sehr ähnlicher Titel / Begriff');
+  }
+  if (titleSim >= 0.70 && contentSim >= 0.70) {
+    isDupe = true;
+    reasons.push('Ähnlicher Begriff & Inhalt');
+  }
+  if (contentSim >= 0.88) {
+    isDupe = true;
+    reasons.push('Sehr ähnlicher Inhalt / Erklärung');
+  }
+
+  score = Math.max(titleSim, (titleSim * 0.5) + (contentSim * 0.5));
+  if (isDupe && score < 0.70) score = 0.75;
+
+  return { isDuplicate: isDupe, score: Math.min(1.0, score), titleSimilarity: titleSim, contentSimilarity: contentSim, reasons };
+}
+
+window.runDoppelCheck = function(manual = false) {
+  loadReviewedDuplicates();
+
+  const dupQuestions = [];
+  const dupQuestionIdsSet = new Set();
+  for (let i = 0; i < allQuestions.length; i++) {
+    for (let j = i + 1; j < allQuestions.length; j++) {
+      const q1 = allQuestions[i];
+      const q2 = allQuestions[j];
+      const pairKey = getDuplicatePairKey(q1.id, q2.id);
+      if (reviewedDuplicateKeys.has(pairKey)) continue;
+      if (q1.duplicateReviewed || q2.duplicateReviewed) continue;
+
+      const sim = checkQuestionSimilarity(q1, q2);
+      if (sim.isDuplicate) {
+        dupQuestions.push({ q1, q2, similarity: sim, pairKey });
+        dupQuestionIdsSet.add(q1.id);
+        dupQuestionIdsSet.add(q2.id);
+      }
+    }
+  }
+
+  const dupFacts = [];
+  const dupFactIdsSet = new Set();
+  for (let i = 0; i < allFlashcards.length; i++) {
+    for (let j = i + 1; j < allFlashcards.length; j++) {
+      const f1 = allFlashcards[i];
+      const f2 = allFlashcards[j];
+      const pairKey = getDuplicatePairKey(f1.id, f2.id);
+      if (reviewedDuplicateKeys.has(pairKey)) continue;
+      if (f1.duplicateReviewed || f2.duplicateReviewed) continue;
+
+      const sim = checkFactSimilarity(f1, f2);
+      if (sim.isDuplicate) {
+        dupFacts.push({ f1, f2, similarity: sim, pairKey });
+        dupFactIdsSet.add(f1.id);
+        dupFactIdsSet.add(f2.id);
+      }
+    }
+  }
+
+  dupQuestions.sort((a, b) => b.similarity.score - a.similarity.score);
+  dupFacts.sort((a, b) => b.similarity.score - a.similarity.score);
+
+  duplicateQuestionsList = dupQuestions;
+  duplicateFactsList = dupFacts;
+  duplicateQuestionIds = dupQuestionIdsSet;
+  duplicateFactIds = dupFactIdsSet;
+
+  // Badge im Hauptmenü aktualisieren
+  const totalDupPairs = dupQuestions.length + dupFacts.length;
+  const badgeEl = document.getElementById('badge-duplicates-count');
+  if (badgeEl) {
+    badgeEl.textContent = totalDupPairs;
+    if (totalDupPairs > 0) {
+      badgeEl.classList.remove('hidden');
+    } else {
+      badgeEl.classList.add('hidden');
+    }
+  }
+
+  renderQuestionReviewStats();
+  renderFlashcardReviewStats();
+  renderDuplicatesTab();
+
+  if (manual) {
+    if (totalDupPairs > 0) {
+      showToast(`Doppel-Check: ${dupQuestions.length} Frage- und ${dupFacts.length} Lernkarten-Duplikate gefunden! ⚠️`);
+    } else {
+      showToast('Doppel-Check abgeschlossen: Keine neuen Duplikate gefunden! Alles sauber ✓');
+    }
+  }
+};
+
+window.markDuplicateReviewedPortal = async function(itemType, idA, idB) {
+  const pairKey = getDuplicatePairKey(idA, idB);
+  reviewedDuplicateKeys.add(pairKey);
+  saveReviewedDuplicates();
+
+  // Lokal sofort als geprüft markieren
+  if (itemType === 'question') {
+    const qA = allQuestions.find(q => q.id === idA);
+    const qB = allQuestions.find(q => q.id === idB);
+    if (qA) qA.duplicateReviewed = true;
+    if (qB) qB.duplicateReviewed = true;
+  } else {
+    const fA = allFlashcards.find(f => f.id === idA);
+    const fB = allFlashcards.find(f => f.id === idB);
+    if (fA) fA.duplicateReviewed = true;
+    if (fB) fB.duplicateReviewed = true;
+  }
+
+  showToast('Duplikat-Paar als geprüft markiert & ausgeblendet! ✓');
+  runDoppelCheck(false);
+  filterQuestions();
+  filterFlashcards();
+};
+
+window.resetReviewedDuplicatesPortal = function() {
+  if (reviewedDuplicateKeys.size === 0) {
+    showToast('Keine ausgeblendeten Duplikate vorhanden.');
+    return;
+  }
+  if (!confirm(`Möchtest du alle ${reviewedDuplicateKeys.size} geprüften Duplikat-Paare zurücksetzen, damit sie wieder angezeigt werden?`)) {
+    return;
+  }
+  reviewedDuplicateKeys.clear();
+  saveReviewedDuplicates();
+  allQuestions.forEach(q => { delete q.duplicateReviewed; });
+  allFlashcards.forEach(fc => { delete fc.duplicateReviewed; });
+  showToast('Geprüfte Duplikate zurückgesetzt! ✓');
+  runDoppelCheck(false);
+  filterQuestions();
+  filterFlashcards();
+};
+
+window.setDuplicateSubTab = function(subTab) {
+  duplicateSubTab = subTab;
+  ['all', 'questions', 'flashcards'].forEach(t => {
+    const btn = document.getElementById('btn-dup-subtab-' + t);
+    if (!btn) return;
+    if (t === subTab) {
+      btn.className = 'px-3 py-1.5 rounded-xl text-xs font-bold transition border bg-brand-600 text-white border-brand-500 shadow-sm shadow-brand-500/20';
+    } else {
+      btn.className = 'px-3 py-1.5 rounded-xl text-xs font-semibold transition border bg-gray-950 text-gray-400 border-gray-800 hover:text-white hover:border-gray-700';
+    }
+  });
+  renderDuplicatesTab();
+};
+
+window.renderDuplicatesTab = function() {
+  const container = document.getElementById('duplicatesListContainer');
+  if (!container) return;
+
+  const qPairsCount = duplicateQuestionsList.length;
+  const fPairsCount = duplicateFactsList.length;
+  const reviewedCount = reviewedDuplicateKeys.size;
+
+  // Stats KPI aktualisieren
+  const statQ = document.getElementById('dup-stat-questions');
+  if (statQ) statQ.textContent = qPairsCount;
+  const statF = document.getElementById('dup-stat-flashcards');
+  if (statF) statF.textContent = fPairsCount;
+  const statR = document.getElementById('dup-stat-reviewed');
+  if (statR) statR.textContent = reviewedCount;
+
+  // Subtab Counts aktualisieren
+  const countAll = document.getElementById('dup-subtab-count-all');
+  if (countAll) countAll.textContent = qPairsCount + fPairsCount;
+  const countQ = document.getElementById('dup-subtab-count-questions');
+  if (countQ) countQ.textContent = qPairsCount;
+  const countF = document.getElementById('dup-subtab-count-flashcards');
+  if (countF) countF.textContent = fPairsCount;
+
+  let itemsToRender = [];
+  if (duplicateSubTab === 'all' || duplicateSubTab === 'questions') {
+    duplicateQuestionsList.forEach(item => {
+      itemsToRender.push({ type: 'question', ...item });
+    });
+  }
+  if (duplicateSubTab === 'all' || duplicateSubTab === 'flashcards') {
+    duplicateFactsList.forEach(item => {
+      itemsToRender.push({ type: 'fact', ...item });
+    });
+  }
+
+  itemsToRender.sort((a, b) => b.similarity.score - a.similarity.score);
+
+  if (itemsToRender.length === 0) {
+    container.innerHTML = `
+      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-12 text-center text-gray-500">
+        <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-3">
+          <i data-lucide="check-check" class="w-7 h-7"></i>
+        </div>
+        <p class="font-bold text-gray-200 text-base">Keine verdächtigen Duplikate gefunden!</p>
+        <p class="text-xs text-gray-400 mt-1 max-w-md mx-auto">Alle ${duplicateSubTab === 'questions' ? 'Fragen' : (duplicateSubTab === 'flashcards' ? 'Lernkarten' : 'Fragen und Lernkarten')} sind einzigartig oder wurden bereits als geprüft abgehakt.</p>
+        ${reviewedCount > 0 ? `
+          <button onclick="window.resetReviewedDuplicatesPortal()" class="mt-4 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl text-xs font-semibold border border-gray-700 transition inline-flex items-center gap-1.5">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+            <span>${reviewedCount} bereits geprüfte Paare wieder einblenden</span>
+          </button>
+        ` : ''}
+      </div>
+    `;
+    if (window.lucide) lucide.createIcons();
+    return;
+  }
+
+  container.innerHTML = itemsToRender.map(item => {
+    const scorePct = Math.round(item.similarity.score * 100);
+    const scoreBadgeClass = scorePct >= 90
+      ? 'bg-red-500/20 text-red-300 border-red-500/40'
+      : 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+
+    const reasonsHtml = item.similarity.reasons.map(r =>
+      `<span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-800 text-gray-300 border border-gray-700">${escapeHtml(r)}</span>`
+    ).join(' ');
+
+    if (item.type === 'question') {
+      const q1 = item.q1;
+      const q2 = item.q2;
+      const renderQSide = (q, label) => {
+        const isVerified = (q.is_verified === true || verifiedQuestionIds.has(q.id));
+        const options = Array.isArray(q.options) ? q.options : (typeof q.options === 'string' ? JSON.parse(q.options || '[]') : []);
+        const corrIndices = Array.isArray(q.correct_indices) ? q.correct_indices :
+          (Array.isArray(q.correctIndices) ? q.correctIndices :
+          (typeof q.correct_indices === 'string' ? JSON.parse(q.correct_indices || '[0]') :
+          [typeof q.correct_index === 'number' ? q.correct_index : 0]));
+
+        return `
+          <div class="flex-1 min-w-0 bg-gray-950/70 border border-gray-800 rounded-xl p-4 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-2.5">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-brand-600/30 text-brand-300 border border-brand-500/30">${label}</span>
+                  <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-800 text-gray-300 border border-gray-700">#${escapeHtml(q.category)}</span>
+                  <span class="text-[11px] ${isVerified ? 'text-emerald-400 font-semibold' : 'text-gray-500'}">${isVerified ? '✓ Geprüft' : '◯ Ungeprüft'}</span>
+                </div>
+                <div class="flex items-center gap-1 shrink-0">
+                  <button onclick="window.editQuestion('${q.id}')" class="p-1 text-gray-400 hover:text-brand-400 hover:bg-gray-800 rounded transition" title="Frage bearbeiten"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+                  <button onclick="window.deleteQuestion('${q.id}')" class="p-1 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded transition" title="Frage löschen"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                </div>
+              </div>
+              <p class="font-semibold text-sm text-gray-100 mb-3 whitespace-pre-line leading-relaxed">${window.formatRichContent(q.text)}</p>
+              <div class="space-y-1.5 mb-3">
+                ${options.map((opt, oIdx) => {
+                  const isCorrect = corrIndices.includes(oIdx);
+                  const letter = ['A','B','C','D','E','F'][oIdx] || (oIdx + 1);
+                  return `
+                    <div class="px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-2 border ${isCorrect ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-200 font-medium' : 'bg-gray-900 border-gray-800/80 text-gray-300'}">
+                      <span class="w-4 h-4 rounded text-[10px] flex items-center justify-center font-bold ${isCorrect ? 'bg-emerald-600 text-white' : 'bg-gray-800 text-gray-400'}">${letter}</span>
+                      <span class="flex-1">${escapeHtml(opt)}</span>
+                      ${isCorrect ? '<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400 shrink-0"></i>' : ''}
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+              ${q.explanation ? `<div class="text-[11px] text-gray-400 bg-gray-900/60 p-2 rounded-lg border border-gray-800/60 mb-2 truncate"><strong class="text-gray-300">Erklärung:</strong> ${escapeHtml(q.explanation)}</div>` : ''}
+            </div>
+            <div class="pt-2 border-t border-gray-800/60 text-[10px] text-gray-500 flex items-center justify-between">
+              <span>Autor: ${escapeHtml(q.created_by_name || q.created_by || 'Dozent')}</span>
+              <span class="font-mono">ID: ${q.id}</span>
+            </div>
+          </div>
+        `;
+      };
+
+      return `
+        <div class="bg-gray-900 border border-amber-500/30 rounded-2xl p-4 shadow-lg">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 mb-3 border-b border-gray-800">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="px-2.5 py-1 rounded-full text-xs font-bold border ${scoreBadgeClass} flex items-center gap-1.5">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                <span>${scorePct}% Übereinstimmung</span>
+              </span>
+              <span class="text-xs font-bold text-gray-400">Fragen-Duplikat:</span>
+              ${reasonsHtml}
+            </div>
+            <button onclick="window.markDuplicateReviewedPortal('question', '${q1.id}', '${q2.id}')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 transition flex items-center gap-1.5 self-start sm:self-auto shrink-0 shadow-sm" title="Dieses Paar als geprüft markieren (verschwindet sofort aus dieser Ansicht)">
+              <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-400"></i>
+              <span>Als geprüft markieren</span>
+            </button>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            ${renderQSide(q1, 'Frage A')}
+            ${renderQSide(q2, 'Frage B')}
+          </div>
+        </div>
+      `;
+    } else {
+      // Flashcard duplicate
+      const f1 = item.f1;
+      const f2 = item.f2;
+      const renderFSide = (fc, label) => {
+        const isVerified = (fc.is_verified === true || verifiedFlashcardIds.has(fc.id));
+        return `
+          <div class="flex-1 min-w-0 bg-gray-950/70 border border-gray-800 rounded-xl p-4 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-2.5">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-600/30 text-blue-300 border border-blue-500/30">${label}</span>
+                  <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-800 text-gray-300 border border-gray-700">#${escapeHtml(fc.category)}</span>
+                  <span class="text-[11px] ${isVerified ? 'text-emerald-400 font-semibold' : 'text-gray-500'}">${isVerified ? '✓ Geprüft' : '◯ Ungeprüft'}</span>
+                </div>
+                <div class="flex items-center gap-1 shrink-0">
+                  <button onclick="window.editFlashcard('${fc.id}')" class="p-1 text-gray-400 hover:text-brand-400 hover:bg-gray-800 rounded transition" title="Lernkarte bearbeiten"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+                  <button onclick="window.deleteFlashcard('${fc.id}')" class="p-1 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded transition" title="Lernkarte löschen"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                </div>
+              </div>
+              <h4 class="font-bold text-sm text-white mb-2 leading-snug">${escapeHtml(fc.title)}</h4>
+              <p class="text-xs text-gray-300 mb-3 whitespace-pre-line leading-relaxed">${window.formatRichContent(fc.content)}</p>
+              ${fc.reference ? `<div class="text-[11px] text-gray-400 bg-gray-900/60 p-1.5 rounded-lg border border-gray-800/60 mb-2 truncate"><strong class="text-gray-300">Regelwerk:</strong> ${escapeHtml(fc.reference)}</div>` : ''}
+              ${fc.image_url ? `
+                <div class="mb-2 p-1.5 rounded-lg bg-gray-900 border border-gray-800 flex items-center gap-2">
+                  <img src="${escapeHtml(fc.image_url)}" alt="Signal" class="w-10 h-10 object-contain rounded bg-gray-950">
+                  <span class="text-[10px] text-gray-400">Abbildung vorhanden</span>
+                </div>
+              ` : ''}
+            </div>
+            <div class="pt-2 border-t border-gray-800/60 text-[10px] text-gray-500 flex items-center justify-between">
+              <span>Autor: ${escapeHtml(fc.created_by_name || fc.created_by || 'Dozent')}</span>
+              <span class="font-mono">ID: ${fc.id}</span>
+            </div>
+          </div>
+        `;
+      };
+
+      return `
+        <div class="bg-gray-900 border border-blue-500/30 rounded-2xl p-4 shadow-lg">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 mb-3 border-b border-gray-800">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="px-2.5 py-1 rounded-full text-xs font-bold border ${scoreBadgeClass} flex items-center gap-1.5">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                <span>${scorePct}% Übereinstimmung</span>
+              </span>
+              <span class="text-xs font-bold text-gray-400">Lernkarten-Duplikat:</span>
+              ${reasonsHtml}
+            </div>
+            <button onclick="window.markDuplicateReviewedPortal('fact', '${f1.id}', '${f2.id}')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 transition flex items-center gap-1.5 self-start sm:self-auto shrink-0 shadow-sm" title="Dieses Paar als geprüft markieren (verschwindet sofort aus dieser Ansicht)">
+              <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-400"></i>
+              <span>Als geprüft markieren</span>
+            </button>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            ${renderFSide(f1, 'Lernkarte A')}
+            ${renderFSide(f2, 'Lernkarte B')}
+          </div>
+        </div>
+      `;
+    }
+  }).join('');
+
+  if (window.lucide) lucide.createIcons();
 };
 
 window.currentQuestionOptionsCount = 4;
@@ -4657,6 +5358,7 @@ window.loadAllData = async function() {
         if (meta.cr && !q.creator_role) q.creator_role = meta.cr;
         if (meta.vb && !q.verified_by) q.verified_by = meta.vb;
         if (meta.vbn && !q.verified_by_name) q.verified_by_name = meta.vbn;
+        if (meta.dr) q.duplicateReviewed = true;
       }
 
       const localMeta = localAuthorStore[q.id] || {};
@@ -4697,6 +5399,7 @@ window.loadAllData = async function() {
         if (meta.cr && !fc.creator_role) fc.creator_role = meta.cr;
         if (meta.vb && !fc.verified_by) fc.verified_by = meta.vb;
         if (meta.vbn && !fc.verified_by_name) fc.verified_by_name = meta.vbn;
+        if (meta.dr) fc.duplicateReviewed = true;
       }
 
       const localMeta = localFcAuthorStore[fc.id] || {};
@@ -4725,6 +5428,7 @@ window.loadAllData = async function() {
     filterFlashcards();
     renderQuestionReviewStats();
     renderFlashcardReviewStats();
+    runDoppelCheck(false);
 
     const uRes = await fetch(SUPABASE_URL + '/rest/v1/users?select=*&order=created_at.desc', { headers: restHeaders });
     allUsers = await uRes.json();
@@ -4775,6 +5479,9 @@ window.switchTab = function(tabId) {
 
   if (tabId === 'stats') {
     renderStats();
+  }
+  if (tabId === 'duplicates') {
+    renderDuplicatesTab();
   }
 
   if (window.lucide) lucide.createIcons();
@@ -4871,10 +5578,15 @@ window.renderQuestions = function(list) {
           }).join('') +
         '</div>';
 
+    const dupBadge = duplicateQuestionIds.has(q.id)
+      ? '<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1"><i data-lucide="copy" class="w-3 h-3 text-amber-400"></i><span>⚠️ Doppelt</span></span>'
+      : '';
+
     return '<div class="border rounded-2xl p-5 shadow-lg transition ' + cardBorder + '">' +
       '<div class="flex items-start justify-between gap-4 mb-3">' +
         '<div class="flex items-center gap-2 flex-wrap">' +
           '<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand-500/20 text-brand-400 border border-brand-500/30">#' + (q.category || 'Allgemein') + '</span>' +
+          dupBadge +
           optionsCountBadge +
           modeBadge +
           verifiedBtn +
@@ -5121,40 +5833,95 @@ window.moveOrderStep = function(idx, dir) {
   window.renderOrderSteps();
 };
 
-// LIVE DUPLIKATE PRÜFEN
+// LIVE DUPLIKATE PRÜFEN (FRAGEN)
 window.checkQuestionDuplicates = function(text) {
-  const clean = (text || '').trim().toLowerCase();
+  const currentText = (text !== undefined ? text : (document.getElementById('q_text')?.value || '')).trim();
   const warnBox = document.getElementById('q_duplicate_warning');
   const listBox = document.getElementById('q_duplicate_list');
   if (!warnBox || !listBox) return;
 
-  if (clean.length < 6) {
+  const currentId = document.getElementById('q_id')?.value;
+  const currentOptions = [];
+  const optCount = window.currentQuestionOptionsCount || 4;
+  for (let i = 0; i < optCount; i++) {
+    const val = (document.getElementById('q_opt_' + i)?.value || '').trim();
+    if (val) currentOptions.push(val);
+  }
+
+  if (currentText.length < 5 && currentOptions.length < 2) {
     warnBox.classList.add('hidden');
     return;
   }
 
-  const currentId = document.getElementById('q_id')?.value;
-  const cleanWords = clean.split(/[\s,.:;?!"]+/).filter(w => w.length > 3);
-
-  const duplicates = allQuestions.filter(q => {
-    if (currentId && q.id === currentId) return false;
-    const qText = (q.text || '').toLowerCase();
-    // Exakter Teilmatch
-    if (qText.includes(clean) || (clean.length > 15 && clean.includes(qText))) return true;
-    // Wortübereinstimmung (mindestens 3 relevante Wörter übereinstimmend)
-    if (cleanWords.length >= 3) {
-      const matchesCount = cleanWords.filter(w => qText.includes(w)).length;
-      if (matchesCount >= Math.min(3, cleanWords.length)) return true;
+  const matches = [];
+  for (const q of allQuestions) {
+    if (currentId && q.id === currentId) continue;
+    const qOpts = Array.isArray(q.options) ? q.options : (typeof q.options === 'string' ? JSON.parse(q.options || '[]') : []);
+    const sim = checkQuestionSimilarity({ text: currentText, options: currentOptions }, { text: q.text, options: qOpts });
+    if (sim.isDuplicate || sim.score >= 0.70) {
+      matches.push({ q, score: sim.score, reasons: sim.reasons });
     }
-    return false;
-  });
+  }
 
-  if (duplicates.length > 0) {
+  if (matches.length > 0) {
+    matches.sort((a, b) => b.score - a.score);
     warnBox.classList.remove('hidden');
-    listBox.innerHTML = duplicates.slice(0, 3).map(m => {
-      const modeTag = (m.questionType === 'order' || (m.explanation && m.explanation.includes('"qt":"order"'))) ? ' [🔀 Reihenfolge]' : '';
-      return '<div>• <span class="text-gray-400">(' + escapeHtml(m.category) + modeTag + ')</span> <strong class="text-amber-200">' + escapeHtml(m.text.substring(0, 95)) + (m.text.length > 95 ? '...' : '') + '</strong></div>';
+    listBox.innerHTML = matches.slice(0, 3).map(m => {
+      const pct = Math.round(m.score * 100);
+      const reasonStr = m.reasons.length > 0 ? ` • ${m.reasons.join(', ')}` : '';
+      return `<div class="p-1.5 rounded-lg bg-gray-950/60 border border-amber-500/20 mt-1">
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-amber-300">${pct}% ähnlich</span>
+          <span class="text-[10px] text-gray-400">#${escapeHtml(m.q.category)}${reasonStr}</span>
+        </div>
+        <div class="text-gray-200 mt-0.5 truncate">${escapeHtml(m.q.text)}</div>
+      </div>`;
     }).join('');
+    if (window.lucide) lucide.createIcons();
+  } else {
+    warnBox.classList.add('hidden');
+  }
+};
+
+// LIVE DUPLIKATE PRÜFEN (LERNKARTEN)
+window.checkFlashcardDuplicates = function() {
+  const currentTitle = (document.getElementById('fc_title')?.value || '').trim();
+  const currentContent = (document.getElementById('fc_content')?.value || '').trim();
+  const warnBox = document.getElementById('fc_duplicate_warning');
+  const listBox = document.getElementById('fc_duplicate_list');
+  if (!warnBox || !listBox) return;
+
+  if (currentTitle.length < 4 && currentContent.length < 10) {
+    warnBox.classList.add('hidden');
+    return;
+  }
+
+  const currentId = document.getElementById('fc_id')?.value;
+  const matches = [];
+  for (const fc of allFlashcards) {
+    if (currentId && fc.id === currentId) continue;
+    const sim = checkFactSimilarity({ title: currentTitle, content: currentContent }, { title: fc.title, content: fc.content });
+    if (sim.isDuplicate || sim.score >= 0.70) {
+      matches.push({ fc, score: sim.score, reasons: sim.reasons });
+    }
+  }
+
+  if (matches.length > 0) {
+    matches.sort((a, b) => b.score - a.score);
+    warnBox.classList.remove('hidden');
+    listBox.innerHTML = matches.slice(0, 3).map(m => {
+      const pct = Math.round(m.score * 100);
+      const reasonStr = m.reasons.length > 0 ? ` • ${m.reasons.join(', ')}` : '';
+      return `<div class="p-1.5 rounded-lg bg-gray-950/60 border border-amber-500/20 mt-1">
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-amber-300">${pct}% ähnlich</span>
+          <span class="text-[10px] text-gray-400">#${escapeHtml(m.fc.category)}${reasonStr}</span>
+        </div>
+        <div class="text-gray-200 mt-0.5 truncate font-semibold">${escapeHtml(m.fc.title)}</div>
+        <div class="text-gray-400 text-[10px] truncate">${escapeHtml(m.fc.content)}</div>
+      </div>`;
+    }).join('');
+    if (window.lucide) lucide.createIcons();
   } else {
     warnBox.classList.add('hidden');
   }
@@ -5577,11 +6344,16 @@ window.renderFlashcards = function(list) {
     const updatedDateStr = formatDateStr(fc.updated_at);
     const showUpdated = authorUpdated && (authorUpdated !== authorCreated || updatedDateStr !== createdDateStr);
 
+    const dupBadge = duplicateFactIds.has(fc.id)
+      ? '<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1"><i data-lucide="copy" class="w-3 h-3 text-amber-400"></i><span>⚠️ Doppelt</span></span>'
+      : '';
+
     return '<div class="border rounded-2xl p-5 shadow-lg flex flex-col justify-between transition ' + cardBorder + '">' +
       '<div>' +
         '<div class="flex items-center justify-between gap-2 mb-3">' +
           '<div class="flex items-center gap-2 flex-wrap">' +
             '<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand-500/20 text-brand-400 border border-brand-500/30">#' + fc.category + '</span>' +
+            dupBadge +
             verifiedBtn +
           '</div>' +
           '<div class="flex items-center gap-1 shrink-0">' +
@@ -5647,6 +6419,7 @@ window.openFlashcardModal = function() {
   }
 
   document.getElementById('flashcardModalTitle').textContent = 'Neue Lernkarte anlegen';
+  document.getElementById('fc_duplicate_warning')?.classList.add('hidden');
   const modal = document.getElementById('flashcardModal');
   if (modal) {
     modal.classList.remove('hidden');
@@ -5665,6 +6438,7 @@ window.editFlashcard = function(id) {
   document.getElementById('fc_title').value = fc.title;
   document.getElementById('fc_content').value = fc.content;
   document.getElementById('fc_reference').value = fc.reference || '';
+  document.getElementById('fc_duplicate_warning')?.classList.add('hidden');
   if (fc.image_url) {
     window.applyImageToPrefix('fc', fc.image_url, fc.image_url.startsWith('http') ? fc.image_url : 'Gespeichertes Bild');
   } else {
