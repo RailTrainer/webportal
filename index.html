@@ -4778,10 +4778,21 @@ function getDuplicatePairKey(id1, id2) {
 }
 
 function checkQuestionSimilarity(q1, q2) {
+  if (!q1 || !q2 || !q1.text || !q2.text) return { isDuplicate: false, score: 0, textSimilarity: 0, optionsSimilarity: 0, reasons: [] };
   const textSim = combinedTextSimilarity(q1.text, q2.text);
-  const opts1 = Array.isArray(q1.options) ? q1.options : (typeof q1.options === 'string' ? JSON.parse(q1.options || '[]') : []);
-  const opts2 = Array.isArray(q2.options) ? q2.options : (typeof q2.options === 'string' ? JSON.parse(q2.options || '[]') : []);
-  const optSim = compareAnswerOptions(opts1, opts2);
+  let opts1 = [];
+  try {
+    opts1 = Array.isArray(q1.options) ? q1.options : (typeof q1.options === 'string' ? JSON.parse(q1.options || '[]') : []);
+  } catch {}
+  let opts2 = [];
+  try {
+    opts2 = Array.isArray(q2.options) ? q2.options : (typeof q2.options === 'string' ? JSON.parse(q2.options || '[]') : []);
+  } catch {}
+
+  let optSim = 0;
+  if (textSim >= 0.35 || opts1.length > 0) {
+    optSim = compareAnswerOptions(opts1, opts2);
+  }
 
   const reasons = [];
   let isDupe = false;
@@ -4807,8 +4818,14 @@ function checkQuestionSimilarity(q1, q2) {
 }
 
 function checkFactSimilarity(f1, f2) {
+  if (!f1 || !f2 || (!f1.title && !f1.content) || (!f2.title && !f2.content)) {
+    return { isDuplicate: false, score: 0, titleSimilarity: 0, contentSimilarity: 0, reasons: [] };
+  }
   const titleSim = combinedTextSimilarity(f1.title, f2.title);
-  const contentSim = combinedTextSimilarity(f1.content, f2.content);
+  let contentSim = 0;
+  if (titleSim >= 0.55 || (f1.category && f1.category === f2.category)) {
+    contentSim = combinedTextSimilarity(f1.content, f2.content);
+  }
 
   const reasons = [];
   let isDupe = false;
@@ -4833,78 +4850,173 @@ function checkFactSimilarity(f1, f2) {
   return { isDuplicate: isDupe, score: Math.min(1.0, score), titleSimilarity: titleSim, contentSimilarity: contentSim, reasons };
 }
 
+let isRunningDoppelCheck = false;
+
 window.runDoppelCheck = function(manual = false) {
-  loadReviewedDuplicates();
-
-  const dupQuestions = [];
-  const dupQuestionIdsSet = new Set();
-  for (let i = 0; i < allQuestions.length; i++) {
-    for (let j = i + 1; j < allQuestions.length; j++) {
-      const q1 = allQuestions[i];
-      const q2 = allQuestions[j];
-      const pairKey = getDuplicatePairKey(q1.id, q2.id);
-      if (reviewedDuplicateKeys.has(pairKey)) continue;
-      if (q1.duplicateReviewed || q2.duplicateReviewed) continue;
-
-      const sim = checkQuestionSimilarity(q1, q2);
-      if (sim.isDuplicate) {
-        dupQuestions.push({ q1, q2, similarity: sim, pairKey });
-        dupQuestionIdsSet.add(q1.id);
-        dupQuestionIdsSet.add(q2.id);
-      }
-    }
-  }
-
-  const dupFacts = [];
-  const dupFactIdsSet = new Set();
-  for (let i = 0; i < allFlashcards.length; i++) {
-    for (let j = i + 1; j < allFlashcards.length; j++) {
-      const f1 = allFlashcards[i];
-      const f2 = allFlashcards[j];
-      const pairKey = getDuplicatePairKey(f1.id, f2.id);
-      if (reviewedDuplicateKeys.has(pairKey)) continue;
-      if (f1.duplicateReviewed || f2.duplicateReviewed) continue;
-
-      const sim = checkFactSimilarity(f1, f2);
-      if (sim.isDuplicate) {
-        dupFacts.push({ f1, f2, similarity: sim, pairKey });
-        dupFactIdsSet.add(f1.id);
-        dupFactIdsSet.add(f2.id);
-      }
-    }
-  }
-
-  dupQuestions.sort((a, b) => b.similarity.score - a.similarity.score);
-  dupFacts.sort((a, b) => b.similarity.score - a.similarity.score);
-
-  duplicateQuestionsList = dupQuestions;
-  duplicateFactsList = dupFacts;
-  duplicateQuestionIds = dupQuestionIdsSet;
-  duplicateFactIds = dupFactIdsSet;
-
-  // Badge im Hauptmenü aktualisieren
-  const totalDupPairs = dupQuestions.length + dupFacts.length;
-  const badgeEl = document.getElementById('badge-duplicates-count');
-  if (badgeEl) {
-    badgeEl.textContent = totalDupPairs;
-    if (totalDupPairs > 0) {
-      badgeEl.classList.remove('hidden');
-    } else {
-      badgeEl.classList.add('hidden');
-    }
-  }
-
-  renderQuestionReviewStats();
-  renderFlashcardReviewStats();
-  renderDuplicatesTab();
+  if (isRunningDoppelCheck) return;
+  isRunningDoppelCheck = true;
 
   if (manual) {
-    if (totalDupPairs > 0) {
-      showToast(`Doppel-Check: ${dupQuestions.length} Frage- und ${dupFacts.length} Lernkarten-Duplikate gefunden! ⚠️`);
-    } else {
-      showToast('Doppel-Check abgeschlossen: Keine neuen Duplikate gefunden! Alles sauber ✓');
-    }
+    const btn = document.getElementById('btn-run-doppelcheck-main');
+    if (btn) btn.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Prüfe Duplikate...</span>';
+    if (window.lucide) lucide.createIcons();
   }
+
+  // Asynchron über setTimeout ausführen, damit die Browser-UI flüssig bleibt und nie abstürzt
+  setTimeout(() => {
+    try {
+      loadReviewedDuplicates();
+
+      // 1. SCHNELLE FRAGEN-PRÜFUNG MIT INVERTIERTEM INDEX
+      const dupQuestions = [];
+      const dupQuestionIdsSet = new Set();
+      const validQuestions = allQuestions.filter(q => q && q.id && q.text && !q.duplicateReviewed);
+
+      if (validQuestions.length >= 2) {
+        const qTokenMap = new Map();
+        const preQ = validQuestions.map((q, idx) => {
+          const tokens = tokenizeGerman(q.text);
+          return { q, tokens, set: new Set(tokens) };
+        });
+
+        preQ.forEach((item, idx) => {
+          for (const t of item.set) {
+            let list = qTokenMap.get(t);
+            if (!list) { list = []; qTokenMap.set(t, list); }
+            list.push(idx);
+          }
+        });
+
+        const candidatePairsQ = new Map();
+        for (const [token, indices] of qTokenMap.entries()) {
+          if (indices.length < 2) continue;
+          if (indices.length > preQ.length * 0.35) continue;
+          for (let i = 0; i < indices.length; i++) {
+            const a = indices[i];
+            for (let j = i + 1; j < indices.length; j++) {
+              const b = indices[j];
+              const hash = a < b ? a * 1000000 + b : b * 1000000 + a;
+              candidatePairsQ.set(hash, (candidatePairsQ.get(hash) || 0) + 1);
+            }
+          }
+        }
+
+        for (const [hash, sharedCount] of candidatePairsQ.entries()) {
+          const a = Math.floor(hash / 1000000);
+          const b = hash % 1000000;
+          const itemA = preQ[a];
+          const itemB = preQ[b];
+
+          const minTokens = Math.min(itemA.tokens.length, itemB.tokens.length);
+          if (minTokens >= 3 && sharedCount < 2) continue;
+
+          const pairKey = getDuplicatePairKey(itemA.q.id, itemB.q.id);
+          if (reviewedDuplicateKeys.has(pairKey)) continue;
+
+          const sim = checkQuestionSimilarity(itemA.q, itemB.q);
+          if (sim.isDuplicate) {
+            dupQuestions.push({ q1: itemA.q, q2: itemB.q, similarity: sim, pairKey });
+            dupQuestionIdsSet.add(itemA.q.id);
+            dupQuestionIdsSet.add(itemB.q.id);
+          }
+        }
+      }
+
+      // 2. SCHNELLE LERNKARTEN-PRÜFUNG MIT INVERTIERTEM INDEX
+      const dupFacts = [];
+      const dupFactIdsSet = new Set();
+      const validFlashcards = allFlashcards.filter(f => f && f.id && (f.title || f.content) && !f.duplicateReviewed);
+
+      if (validFlashcards.length >= 2) {
+        const fcTokenMap = new Map();
+        const preFC = validFlashcards.map((fc, idx) => {
+          const tokens = tokenizeGerman(fc.title || '');
+          return { fc, tokens, set: new Set(tokens) };
+        });
+
+        preFC.forEach((item, idx) => {
+          for (const t of item.set) {
+            let list = fcTokenMap.get(t);
+            if (!list) { list = []; fcTokenMap.set(t, list); }
+            list.push(idx);
+          }
+        });
+
+        const candidatePairsFC = new Map();
+        for (const [token, indices] of fcTokenMap.entries()) {
+          if (indices.length < 2) continue;
+          if (indices.length > preFC.length * 0.25) continue;
+          for (let i = 0; i < indices.length; i++) {
+            const a = indices[i];
+            for (let j = i + 1; j < indices.length; j++) {
+              const b = indices[j];
+              const hash = a < b ? a * 1000000 + b : b * 1000000 + a;
+              candidatePairsFC.set(hash, (candidatePairsFC.get(hash) || 0) + 1);
+            }
+          }
+        }
+
+        for (const [hash, sharedCount] of candidatePairsFC.entries()) {
+          const a = Math.floor(hash / 1000000);
+          const b = hash % 1000000;
+          const itemA = preFC[a];
+          const itemB = preFC[b];
+
+          const minTokens = Math.min(itemA.tokens.length, itemB.tokens.length);
+          if (minTokens >= 3 && sharedCount < 2) continue;
+
+          const pairKey = getDuplicatePairKey(itemA.fc.id, itemB.fc.id);
+          if (reviewedDuplicateKeys.has(pairKey)) continue;
+
+          const sim = checkFactSimilarity(itemA.fc, itemB.fc);
+          if (sim.isDuplicate) {
+            dupFacts.push({ f1: itemA.fc, f2: itemB.fc, similarity: sim, pairKey });
+            dupFactIdsSet.add(itemA.fc.id);
+            dupFactIdsSet.add(itemB.fc.id);
+          }
+        }
+      }
+
+      dupQuestions.sort((a, b) => b.similarity.score - a.similarity.score);
+      dupFacts.sort((a, b) => b.similarity.score - a.similarity.score);
+
+      duplicateQuestionsList = dupQuestions;
+      duplicateFactsList = dupFacts;
+      duplicateQuestionIds = dupQuestionIdsSet;
+      duplicateFactIds = dupFactIdsSet;
+
+      // Badge im Hauptmenü aktualisieren
+      const totalDupPairs = dupQuestions.length + dupFacts.length;
+      const badgeEl = document.getElementById('badge-duplicates-count');
+      if (badgeEl) {
+        badgeEl.textContent = totalDupPairs;
+        if (totalDupPairs > 0) {
+          badgeEl.classList.remove('hidden');
+        } else {
+          badgeEl.classList.add('hidden');
+        }
+      }
+
+      renderQuestionReviewStats();
+      renderFlashcardReviewStats();
+      renderDuplicatesTab();
+
+      if (manual) {
+        if (totalDupPairs > 0) {
+          showToast(`Doppel-Check: ${dupQuestions.length} Frage- und ${dupFacts.length} Lernkarten-Duplikate gefunden! ⚠️`);
+        } else {
+          showToast('Doppel-Check abgeschlossen: Keine neuen Duplikate gefunden! Alles sauber ✓');
+        }
+      }
+    } catch (err) {
+      console.error('Fehler bei runDoppelCheck:', err);
+    } finally {
+      isRunningDoppelCheck = false;
+      const btn = document.getElementById('btn-run-doppelcheck-main');
+      if (btn) btn.innerHTML = '<i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i><span>Doppel-Check starten</span>';
+      if (window.lucide) lucide.createIcons();
+    }
+  }, 50);
 };
 
 window.markDuplicateReviewedPortal = async function(itemType, idA, idB) {
@@ -5428,7 +5540,10 @@ window.loadAllData = async function() {
     filterFlashcards();
     renderQuestionReviewStats();
     renderFlashcardReviewStats();
-    runDoppelCheck(false);
+    // Doppel-Check asynchron im Hintergrund ausführen, damit das Dashboard sofort erscheint
+    setTimeout(() => {
+      runDoppelCheck(false);
+    }, 250);
 
     const uRes = await fetch(SUPABASE_URL + '/rest/v1/users?select=*&order=created_at.desc', { headers: restHeaders });
     allUsers = await uRes.json();
