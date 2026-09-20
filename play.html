@@ -45,27 +45,28 @@
 </head>
 <body class="bg-gray-950 text-gray-100 min-h-screen flex flex-col justify-between overflow-x-hidden p-4 relative">
 
-  <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden flex items-center justify-center opacity-20">
-    <div class="w-96 h-96 rounded-full bg-brand-500/30 blur-3xl"></div>
+  <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    <div class="absolute -top-28 -left-28 w-80 h-80 rounded-full bg-emerald-500/15 blur-[100px]"></div>
+    <div class="absolute -bottom-28 -right-28 w-80 h-80 rounded-full bg-teal-500/15 blur-[100px]"></div>
   </div>
 
-  <header class="relative z-10 flex items-center justify-between py-2 border-b border-gray-800/80">
+  <header class="relative z-10 flex items-center justify-between py-2.5 border-b border-gray-800/80">
     <div class="flex items-center gap-2.5">
-      <div class="w-8 h-8 rounded-xl bg-brand-600 flex items-center justify-center font-black text-white text-sm shadow-md shadow-brand-500/20">
+      <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center font-black text-white text-sm shadow-md shadow-emerald-500/25 ring-1 ring-emerald-400/30">
         RT
       </div>
       <div>
         <div class="font-extrabold text-sm tracking-tight text-white flex items-center gap-1.5">
           <span>RailTrainer</span>
-          <span class="px-1.5 py-0.2 text-[9px] rounded-full bg-brand-500/20 text-brand-400 font-bold border border-brand-500/30">BATTLE</span>
+          <span class="px-1.5 py-0.2 text-[9px] rounded-full bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30 shadow-sm shadow-emerald-500/10">BATTLE</span>
         </div>
         <div class="text-[10px] text-gray-400" id="headerGameInfo">Live-Quiz</div>
       </div>
     </div>
-    <div id="playerBadge" class="hidden items-center gap-2 bg-gray-900 border border-gray-800 px-3 py-1 rounded-full text-xs">
+    <div id="playerBadge" class="hidden items-center gap-2 bg-gradient-to-r from-gray-950 to-emerald-950/40 border border-emerald-500/30 px-3.5 py-1 rounded-full text-xs shadow-sm shadow-emerald-950/50">
       <span id="playerAvatarDisplay">🚂</span>
       <span id="playerNameDisplay" class="font-bold text-white max-w-[100px] truncate">Spieler</span>
-      <span id="playerScoreDisplay" class="font-extrabold text-brand-400 ml-1">0 Pkt</span>
+      <span id="playerScoreDisplay" class="font-extrabold text-emerald-400 ml-1">0 Pkt</span>
     </div>
   </header>
 
@@ -74,24 +75,24 @@
     <!-- 1. JOIN SCREEN -->
     <section id="screen-join" class="space-y-5 max-w-sm mx-auto w-full">
       <div class="text-center space-y-1.5">
-        <div class="w-16 h-16 rounded-3xl bg-brand-500/20 border border-brand-500/30 flex items-center justify-center mx-auto mb-2 text-3xl shadow-lg shadow-brand-500/20">
+        <div class="w-16 h-16 rounded-3xl bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border-2 border-emerald-500/40 flex items-center justify-center mx-auto mb-2 text-3xl shadow-xl shadow-emerald-500/20">
           ⚔️
         </div>
         <h1 class="text-2xl font-black text-white tracking-tight">Quiz-Battle beitreten</h1>
         <p class="text-xs text-gray-400">Tritt der Live-Runde auf dem Beamer bei und sammle Punkte!</p>
       </div>
 
-      <form id="joinForm" onsubmit="handleJoinBattle(event)" class="bg-gray-900 border border-gray-800 rounded-3xl p-6 shadow-2xl space-y-4">
+      <form id="joinForm" onsubmit="handleJoinBattle(event)" class="bg-gradient-to-b from-gray-900 to-gray-950 border border-emerald-500/20 rounded-3xl p-6 shadow-2xl space-y-4">
         <div>
-          <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">4-Stelliger Game-PIN</label>
+          <label class="block text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1.5">4-Stelliger Game-PIN</label>
           <input type="text" id="inputPin" required placeholder="z.B. 4821" maxlength="6" inputmode="numeric"
-            class="w-full text-center text-2xl font-black tracking-widest py-3 bg-gray-950 border-2 border-gray-800 rounded-2xl text-white placeholder-gray-700 focus:outline-none focus:border-brand-500 transition">
+            class="w-full text-center text-3xl font-black tracking-widest py-3 bg-gray-950 border-2 border-gray-800 rounded-2xl text-emerald-400 placeholder-gray-700 focus:outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/20 transition shadow-inner drop-shadow-[0_0_12px_rgba(52,211,153,0.25)]">
         </div>
 
         <div>
           <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Dein Name / Spitzname</label>
           <input type="text" id="inputName" required placeholder="z.B. Max oder Lokführer 1" maxlength="20"
-            class="w-full py-2.5 px-4 bg-gray-950 border border-gray-800 rounded-xl text-sm font-semibold text-white placeholder-gray-600 focus:outline-none focus:border-brand-500 transition">
+            class="w-full py-2.5 px-4 bg-gray-950 border border-gray-800 rounded-xl text-sm font-semibold text-white placeholder-gray-600 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 transition">
         </div>
 
         <div>
@@ -99,7 +100,7 @@
           <div class="grid grid-cols-4 gap-2" id="avatarGrid"></div>
         </div>
 
-        <button type="submit" id="joinSubmitBtn" class="w-full py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-sm tracking-wide shadow-xl shadow-brand-600/30 transition flex items-center justify-center gap-2">
+        <button type="submit" id="joinSubmitBtn" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-sm tracking-wide shadow-xl shadow-emerald-600/30 active:scale-95 transition-all flex items-center justify-center gap-2">
           <span>Jetzt Mitspielen</span>
           <i data-lucide="arrow-right" class="w-4 h-4"></i>
         </button>
@@ -109,28 +110,28 @@
 
     <!-- 2. LOBBY WAITING SCREEN -->
     <section id="screen-waiting" class="hidden text-center space-y-6 max-w-sm mx-auto w-full">
-      <div class="bg-gray-900 border border-gray-800 rounded-3xl p-8 shadow-2xl space-y-5">
-        <div class="w-20 h-20 rounded-3xl bg-brand-500/10 border-2 border-brand-500/30 flex items-center justify-center mx-auto text-4xl shadow-xl shadow-brand-500/10" id="waitingAvatarBox">
+      <div class="bg-gradient-to-b from-gray-900 to-gray-950 border border-emerald-500/30 rounded-3xl p-8 shadow-2xl space-y-5">
+        <div class="w-24 h-24 rounded-3xl bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border-2 border-emerald-400/50 ring-4 ring-emerald-500/20 flex items-center justify-center mx-auto text-5xl shadow-2xl shadow-emerald-500/20 animate-pulse" id="waitingAvatarBox">
           🚂
         </div>
         <div>
-          <div class="text-xs text-brand-400 font-bold uppercase tracking-wider">Erfolgreich in der Lobby!</div>
+          <div class="inline-block px-3 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 tracking-wider uppercase mb-2">Erfolgreich in der Lobby!</div>
           <h2 class="text-2xl font-black text-white mt-1" id="waitingPlayerName">Spieler</h2>
           <p class="text-xs text-gray-400 mt-2">Blick auf den Beamer: Der Ausbilder startet das Quiz-Battle gleich...</p>
         </div>
-        <div class="p-3 bg-gray-950 border border-gray-800 rounded-2xl text-xs text-gray-300 flex items-center justify-center gap-2">
+        <div class="p-3 bg-gray-950 border border-emerald-500/30 rounded-2xl text-xs text-gray-300 flex items-center justify-center gap-2 shadow-inner">
           <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></div>
-          <span>Verbunden mit PIN: <strong class="text-white font-black" id="waitingPinDisplay">----</strong></span>
+          <span>Verbunden mit PIN: <strong class="text-emerald-400 font-black tracking-widest text-sm ml-1" id="waitingPinDisplay">----</strong></span>
         </div>
       </div>
     </section>
 
     <!-- 3. QUESTION SCREEN -->
     <section id="screen-question" class="hidden flex-col justify-between flex-1 max-w-md mx-auto w-full min-h-0">
-      <div class="bg-gray-900/90 border border-gray-800 rounded-2xl p-3 mb-2.5 flex items-center justify-between shadow shrink-0">
+      <div class="bg-gray-900/90 border border-gray-800 rounded-2xl p-3 mb-2.5 flex items-center justify-between shadow-lg shrink-0">
         <div class="flex items-center gap-2">
-          <span class="w-6 h-6 rounded-lg bg-brand-600 text-white font-black text-xs flex items-center justify-center" id="qNumBadge">1</span>
-          <span class="text-xs font-bold text-gray-300" id="qCategoryBadge">Signale</span>
+          <span class="w-6 h-6 rounded-lg bg-gradient-to-br from-emerald-600 to-teal-600 text-white font-black text-xs flex items-center justify-center shadow-sm shadow-emerald-500/30" id="qNumBadge">1</span>
+          <span class="text-xs font-bold text-emerald-300 bg-emerald-950/60 border border-emerald-500/30 px-2.5 py-0.5 rounded-full" id="qCategoryBadge">Signale</span>
         </div>
         <div class="flex items-center gap-2">
           <button type="button" onclick="toggleMobileLayoutMode()" id="btnToggleMobileLayout" class="px-2.5 py-1 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white text-[11px] font-bold border border-gray-700 flex items-center gap-1 transition shadow-sm" title="Layout umschalten: Liste oder Kacheln">
@@ -144,47 +145,47 @@
         </div>
       </div>
 
-      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-3 mb-2.5 text-center shadow-lg max-h-32 overflow-y-auto custom-scrollbar shrink-0">
+      <div class="bg-gradient-to-b from-gray-900 to-gray-950 border border-emerald-500/25 rounded-2xl p-3.5 mb-2.5 text-center shadow-lg shadow-black/40 max-h-32 overflow-y-auto custom-scrollbar shrink-0">
         <h3 class="text-xs sm:text-sm font-bold text-white leading-snug break-words" id="questionTextMobile">Frage auf dem Beamer beachten!</h3>
       </div>
 
       <div id="battleOptionsContainer" class="grid gap-2.5 flex-1 min-h-0 overflow-y-auto custom-scrollbar p-0.5 pb-2">
-        <button onclick="handleSelectOption(0)" id="btn_opt_0" class="touch-btn p-3.5 rounded-2xl bg-red-600 active:bg-red-700 text-white font-black flex items-center shadow-xl shadow-red-600/30 border border-red-500/50">
+        <button onclick="handleSelectOption(0)" id="btn_opt_0" class="touch-btn p-3.5 rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 active:from-red-700 active:to-rose-700 text-white font-black flex items-center shadow-xl shadow-red-600/25 border border-red-400/30">
           <div id="opt_badge_0" class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-base font-black shrink-0 shadow mr-3">▲ A</div>
           <span class="text-xs sm:text-sm font-bold leading-snug break-words flex-1 text-left" id="opt_text_0">Option A</span>
         </button>
 
-        <button onclick="handleSelectOption(1)" id="btn_opt_1" class="touch-btn p-3.5 rounded-2xl bg-blue-600 active:bg-blue-700 text-white font-black flex items-center shadow-xl shadow-blue-600/30 border border-blue-500/50">
+        <button onclick="handleSelectOption(1)" id="btn_opt_1" class="touch-btn p-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 active:from-blue-700 active:to-indigo-700 text-white font-black flex items-center shadow-xl shadow-blue-600/25 border border-blue-400/30">
           <div id="opt_badge_1" class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-base font-black shrink-0 shadow mr-3">◆ B</div>
           <span class="text-xs sm:text-sm font-bold leading-snug break-words flex-1 text-left" id="opt_text_1">Option B</span>
         </button>
 
-        <button onclick="handleSelectOption(2)" id="btn_opt_2" class="touch-btn p-3.5 rounded-2xl bg-amber-500 active:bg-amber-600 text-gray-950 font-black flex items-center shadow-xl shadow-amber-500/30 border border-amber-400/50">
+        <button onclick="handleSelectOption(2)" id="btn_opt_2" class="touch-btn p-3.5 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 active:from-amber-500 active:to-amber-600 text-gray-950 font-black flex items-center shadow-xl shadow-amber-500/25 border border-amber-300/40">
           <div id="opt_badge_2" class="w-10 h-10 rounded-xl bg-black/20 text-black flex items-center justify-center text-base font-black shrink-0 shadow mr-3">● C</div>
           <span class="text-xs sm:text-sm font-bold leading-snug break-words flex-1 text-left text-gray-950" id="opt_text_2">Option C</span>
         </button>
 
-        <button onclick="handleSelectOption(3)" id="btn_opt_3" class="touch-btn p-3.5 rounded-2xl bg-emerald-600 active:bg-emerald-700 text-white font-black flex items-center shadow-xl shadow-emerald-600/30 border border-emerald-500/50">
+        <button onclick="handleSelectOption(3)" id="btn_opt_3" class="touch-btn p-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 active:from-emerald-700 active:to-teal-700 text-white font-black flex items-center shadow-xl shadow-emerald-600/35 border border-emerald-400/40 ring-1 ring-emerald-400/20">
           <div id="opt_badge_3" class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-base font-black shrink-0 shadow mr-3">■ D</div>
           <span class="text-xs sm:text-sm font-bold leading-snug break-words flex-1 text-left" id="opt_text_3">Option D</span>
         </button>
 
-        <button onclick="handleSelectOption(4)" id="btn_opt_4" class="hidden touch-btn p-3.5 rounded-2xl bg-purple-600 active:bg-purple-700 text-white font-black flex items-center shadow-xl shadow-purple-600/30 border border-purple-500/50">
+        <button onclick="handleSelectOption(4)" id="btn_opt_4" class="hidden touch-btn p-3.5 rounded-2xl bg-gradient-to-r from-purple-600 to-violet-600 active:from-purple-700 active:to-violet-700 text-white font-black flex items-center shadow-xl shadow-purple-600/25 border border-purple-400/30">
           <div id="opt_badge_4" class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-base font-black shrink-0 shadow mr-3">★ E</div>
           <span class="text-xs sm:text-sm font-bold leading-snug break-words flex-1 text-left" id="opt_text_4">Option E</span>
         </button>
 
-        <button onclick="handleSelectOption(5)" id="btn_opt_5" class="hidden touch-btn p-3.5 rounded-2xl bg-teal-600 active:bg-teal-700 text-white font-black flex items-center shadow-xl shadow-teal-600/30 border border-teal-500/50">
+        <button onclick="handleSelectOption(5)" id="btn_opt_5" class="hidden touch-btn p-3.5 rounded-2xl bg-gradient-to-r from-teal-600 to-cyan-600 active:from-teal-700 active:to-cyan-700 text-white font-black flex items-center shadow-xl shadow-teal-600/25 border border-teal-400/30">
           <div id="opt_badge_5" class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-base font-black shrink-0 shadow mr-3">✦ F</div>
           <span class="text-xs sm:text-sm font-bold leading-snug break-words flex-1 text-left" id="opt_text_5">Option F</span>
         </button>
 
-        <button onclick="handleSelectOption(6)" id="btn_opt_6" class="hidden touch-btn p-3.5 rounded-2xl bg-pink-600 active:bg-pink-700 text-white font-black flex items-center shadow-xl shadow-pink-600/30 border border-pink-500/50">
+        <button onclick="handleSelectOption(6)" id="btn_opt_6" class="hidden touch-btn p-3.5 rounded-2xl bg-gradient-to-r from-pink-600 to-rose-600 active:from-pink-700 active:to-rose-700 text-white font-black flex items-center shadow-xl shadow-pink-600/25 border border-pink-400/30">
           <div id="opt_badge_6" class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-base font-black shrink-0 shadow mr-3">✿ G</div>
           <span class="text-xs sm:text-sm font-bold leading-snug break-words flex-1 text-left" id="opt_text_6">Option G</span>
         </button>
 
-        <button onclick="handleSelectOption(7)" id="btn_opt_7" class="hidden touch-btn p-3.5 rounded-2xl bg-indigo-600 active:bg-indigo-700 text-white font-black flex items-center shadow-xl shadow-indigo-600/30 border border-indigo-500/50">
+        <button onclick="handleSelectOption(7)" id="btn_opt_7" class="hidden touch-btn p-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 active:from-indigo-700 active:to-blue-700 text-white font-black flex items-center shadow-xl shadow-indigo-600/25 border border-indigo-400/30">
           <div id="opt_badge_7" class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-base font-black shrink-0 shadow mr-3">❖ H</div>
           <span class="text-xs sm:text-sm font-bold leading-snug break-words flex-1 text-left" id="opt_text_7">Option H</span>
         </button>
@@ -197,7 +198,7 @@
           <span>Bringe die Schritte mit <strong>▲ / ▼ Tasten</strong> oder <strong>Ziehen</strong> in die richtige Reihenfolge:</span>
         </div>
         <div id="battleOrderItemsList" class="space-y-2 flex-1 overflow-y-auto custom-scrollbar"></div>
-        <button type="button" onclick="handleSubmitOrder()" id="btnSubmitOrder" class="w-full py-3.5 mt-1 rounded-2xl bg-gradient-to-r from-cyan-600 to-brand-600 hover:from-cyan-500 hover:to-brand-500 active:scale-95 text-white font-extrabold text-sm tracking-wide shadow-xl shadow-cyan-600/30 transition flex items-center justify-center gap-2 shrink-0">
+        <button type="button" onclick="handleSubmitOrder()" id="btnSubmitOrder" class="w-full py-3.5 mt-1 rounded-2xl bg-gradient-to-r from-cyan-600 via-teal-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 active:scale-95 text-white font-extrabold text-sm tracking-wide shadow-xl shadow-cyan-600/30 transition flex items-center justify-center gap-2 shrink-0">
           <i data-lucide="check-circle" class="w-4 h-4"></i>
           <span>Reihenfolge einloggen</span>
         </button>
@@ -206,14 +207,14 @@
 
     <!-- 4. SUBMITTED SCREEN -->
     <section id="screen-submitted" class="hidden text-center space-y-5 max-w-sm mx-auto w-full">
-      <div class="bg-gray-900 border border-gray-800 rounded-3xl p-8 shadow-2xl space-y-4">
-        <div class="w-16 h-16 rounded-3xl bg-brand-500/20 text-brand-400 border border-brand-500/30 flex items-center justify-center mx-auto text-3xl shadow-lg shadow-brand-500/20 animate-pulse">
+      <div class="bg-gradient-to-b from-gray-900 to-gray-950 border border-emerald-500/30 rounded-3xl p-8 shadow-2xl space-y-4">
+        <div class="w-20 h-20 rounded-3xl bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border-2 border-emerald-400/50 ring-4 ring-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto text-4xl shadow-2xl shadow-emerald-500/30 animate-pulse">
           ⚡
         </div>
         <h2 class="text-xl font-black text-white">Antwort abgegeben!</h2>
-        <div class="p-3 bg-gray-950 border border-gray-800 rounded-2xl text-xs text-gray-300" id="submittedChoiceContainer">
-          <div class="text-[11px] text-gray-400 uppercase font-bold mb-1">Deine Wahl:</div>
-          <div class="text-brand-400 text-sm font-black" id="submittedChoiceText">Antwort A</div>
+        <div class="p-3.5 bg-gradient-to-b from-gray-950 to-emerald-950/20 border border-emerald-500/30 rounded-2xl text-xs text-gray-300" id="submittedChoiceContainer">
+          <div class="text-[11px] text-emerald-400 uppercase font-bold mb-1">Deine Wahl:</div>
+          <div class="text-emerald-300 text-sm font-black" id="submittedChoiceText">Antwort A</div>
         </div>
         <p class="text-xs text-gray-400">Warte auf das Timer-Ende und die Beamer-Auflösung...</p>
       </div>
@@ -221,7 +222,7 @@
 
     <!-- 5. ROUND RESULT SCREEN -->
     <section id="screen-round-result" class="hidden text-center space-y-4 max-w-sm mx-auto w-full">
-      <div id="roundResultCard" class="bg-gray-900 border-2 rounded-3xl p-6 shadow-2xl space-y-3 transition-all">
+      <div id="roundResultCard" class="bg-gradient-to-b from-gray-900 to-gray-950 border-2 rounded-3xl p-6 shadow-2xl space-y-3 transition-all">
         <div id="roundResultIcon" class="text-5xl mx-auto mb-1">🎉</div>
         <h2 id="roundResultTitle" class="text-2xl font-black text-white">RICHTIG!</h2>
         <div id="roundResultPointsBadge" class="inline-block px-4 py-1.5 rounded-full text-base font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow">
@@ -232,7 +233,7 @@
         </div>
 
         <!-- Richtige Lösung im Klartext anzeigen -->
-        <div id="roundResultAnswerSummary" class="hidden p-3 rounded-2xl bg-gray-950/80 border border-gray-800 text-left text-xs space-y-1.5">
+        <div id="roundResultAnswerSummary" class="hidden p-3.5 rounded-2xl bg-gray-950/90 border border-emerald-500/30 text-left text-xs space-y-1.5 shadow-inner">
           <div class="flex items-center justify-between text-[11px] font-bold text-gray-400">
             <span>Richtige Lösung:</span>
             <span class="text-emerald-400 font-extrabold" id="roundResultCorrectLetter">Antwort A</span>
@@ -247,7 +248,7 @@
           </div>
           <div>
             <div class="text-[10px] text-gray-400 uppercase font-bold">Aktueller Rang</div>
-            <div class="font-extrabold text-sm text-brand-400 mt-0.5" id="roundCurrentRank">#1</div>
+            <div class="font-extrabold text-sm text-emerald-400 mt-0.5" id="roundCurrentRank">#1</div>
           </div>
           <div>
             <div class="text-[10px] text-gray-400 uppercase font-bold">Streak 🔥</div>
@@ -259,15 +260,15 @@
 
     <!-- 6. FINAL PODIUM SCREEN -->
     <section id="screen-game-over" class="hidden text-center space-y-5 max-w-sm mx-auto w-full">
-      <div class="bg-gray-900 border-2 border-brand-500/40 rounded-3xl p-8 shadow-2xl space-y-4">
-        <div class="text-6xl" id="finalTrophyIcon">🏆</div>
+      <div class="bg-gradient-to-b from-gray-900 to-gray-950 border-2 border-emerald-500/40 rounded-3xl p-8 shadow-2xl space-y-4">
+        <div class="text-6xl filter drop-shadow" id="finalTrophyIcon">🏆</div>
         <h2 class="text-2xl font-black text-white" id="finalPlacementHeading">Platz 1!</h2>
         <p class="text-xs text-gray-300" id="finalSubtext">Großartige Leistung im Quiz-Battle!</p>
-        <div class="p-4 rounded-2xl bg-gray-950 border border-gray-800 text-center space-y-1">
+        <div class="p-4 rounded-2xl bg-gradient-to-b from-gray-950 to-emerald-950/30 border border-emerald-500/30 text-center space-y-1 shadow-inner">
           <div class="text-[11px] text-gray-400 uppercase font-bold">Endstand</div>
-          <div class="text-3xl font-black text-brand-400" id="finalTotalPoints">0 Pkt</div>
+          <div class="text-3xl font-black text-emerald-400" id="finalTotalPoints">0 Pkt</div>
         </div>
-        <button onclick="handlePlayAgain()" class="w-full py-3 rounded-2xl bg-gray-800 hover:bg-gray-700 text-white font-bold text-xs border border-gray-700 transition">
+        <button onclick="handlePlayAgain()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-sm border border-emerald-500/40 shadow-xl shadow-emerald-600/25 active:scale-95 transition-all">
           Neues Spiel beitreten
         </button>
       </div>
@@ -350,8 +351,8 @@
       if (!grid) return;
       grid.innerHTML = AVATARS.map(av => {
         const isSelected = av === selectedAvatar;
-        return '<button type="button" onclick="selectAvatar(\'' + av + '\')" class="p-2.5 rounded-2xl text-2xl border transition ' +
-          (isSelected ? 'bg-brand-500/20 border-brand-500 scale-105 shadow-md shadow-brand-500/20 ring-2 ring-brand-500/50' : 'bg-gray-950 border-gray-800 hover:border-gray-700') + '">' +
+        return '<button type="button" onclick="selectAvatar(\'' + av + '\')" class="p-2.5 rounded-2xl text-2xl border transition-all ' +
+          (isSelected ? 'bg-emerald-500/20 border-emerald-400 scale-110 shadow-lg shadow-emerald-500/30 ring-2 ring-emerald-400/50' : 'bg-gray-950 border-gray-800 hover:border-gray-700') + '">' +
           av +
         '</button>';
       }).join('');
@@ -937,11 +938,11 @@
       const earned = me.last_earned_points || 0;
 
       if (isCorrect) {
-        card.className = 'bg-gray-900 border-2 border-emerald-500/60 rounded-3xl p-6 shadow-2xl space-y-3';
+        card.className = 'bg-gradient-to-b from-gray-900 via-gray-900 to-emerald-950/40 border-2 border-emerald-400 rounded-3xl p-6 shadow-2xl shadow-emerald-500/20 ring-4 ring-emerald-500/20 space-y-3';
         icon.textContent = '🎉';
         title.textContent = 'RICHTIG!';
-        title.className = 'text-2xl font-black text-emerald-400';
-        ptsBadge.className = 'inline-block px-4 py-1.5 rounded-full text-base font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow';
+        title.className = 'text-2xl font-black text-emerald-400 drop-shadow-[0_0_12px_rgba(52,211,153,0.4)]';
+        ptsBadge.className = 'inline-block px-4 py-1.5 rounded-full text-base font-black bg-gradient-to-r from-emerald-500 to-teal-500 text-gray-950 shadow-lg shadow-emerald-500/30';
         ptsBadge.textContent = '+' + earned + ' Punkte';
         if (dangerAlert) dangerAlert.classList.add('hidden');
       } else {
@@ -1003,23 +1004,29 @@
 
       if (pts) pts.textContent = (me?.score || 0) + ' Punkte';
 
+      const emeraldConfetti = ['#10b981', '#34d399', '#059669', '#6ee7b7', '#f59e0b', '#fbbf24'];
+
       if (myRank === 1) {
         trophy.textContent = '🥇';
         heading.textContent = '1. PLATZ! BATTLE-CHAMPION!';
+        heading.className = 'text-2xl font-black text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.5)]';
         sub.textContent = 'Wahnsinnige Leistung! Du hast das Quiz-Battle gewonnen!';
-        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 }, colors: emeraldConfetti });
       } else if (myRank === 2) {
         trophy.textContent = '🥈';
         heading.textContent = '2. PLATZ!';
+        heading.className = 'text-2xl font-black text-gray-200';
         sub.textContent = 'Silbermedaille! Hervorragendes Eisenbahn-Wissen!';
-        confetti({ particleCount: 50, spread: 50, origin: { y: 0.6 } });
+        confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 }, colors: emeraldConfetti });
       } else if (myRank === 3) {
         trophy.textContent = '🥉';
         heading.textContent = '3. PLATZ!';
+        heading.className = 'text-2xl font-black text-amber-500';
         sub.textContent = 'Auf dem Treppchen! Starke Leistung!';
       } else {
         trophy.textContent = '🚂';
         heading.textContent = '#' + myRank + ' von ' + sorted.length + ' Spielern';
+        heading.className = 'text-2xl font-black text-white';
         sub.textContent = 'Tolles Match! Weiter so im Unterricht!';
       }
     }
