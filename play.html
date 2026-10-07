@@ -149,6 +149,15 @@
         <h3 class="text-xs sm:text-sm font-bold text-white leading-snug break-words" id="questionTextMobile">Frage auf dem Beamer beachten!</h3>
       </div>
 
+      <!-- MEHRFACHAUSWAHL HINWEIS -->
+      <div id="battleMultipleAlert" class="hidden p-3 rounded-2xl bg-purple-950/80 border-2 border-purple-500/60 text-purple-200 text-xs font-bold items-center gap-2.5 shadow-lg mb-2 shrink-0 animate-pulse">
+        <span class="text-lg">✨</span>
+        <div class="flex-1 leading-snug">
+          <div class="text-[11px] uppercase tracking-wider text-purple-300 font-black">Mehrfachauswahl</div>
+          <div>Wähle <strong>alle richtigen Antworten</strong> aus und tippe anschließend auf 'Antworten einloggen'.</div>
+        </div>
+      </div>
+
       <div id="battleOptionsContainer" class="grid gap-2.5 flex-1 min-h-0 overflow-y-auto custom-scrollbar p-0.5 pb-2">
         <button onclick="handleSelectOption(0)" id="btn_opt_0" class="touch-btn p-3.5 rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 active:from-red-700 active:to-rose-700 text-white font-black flex items-center shadow-xl shadow-red-600/25 border border-red-400/30">
           <div id="opt_badge_0" class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-base font-black shrink-0 shadow mr-3">▲ A</div>
@@ -190,6 +199,13 @@
           <span class="text-xs sm:text-sm font-bold leading-snug break-words flex-1 text-left" id="opt_text_7">Option H</span>
         </button>
       </div>
+
+      <!-- MEHRFACHAUSWAHL ABSENDE-BUTTON -->
+      <button type="button" onclick="handleSubmitMultiple()" id="btnSubmitMultiple" class="hidden w-full py-3.5 mt-2 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-emerald-600 hover:from-purple-500 hover:to-emerald-500 active:scale-95 text-white font-black text-sm tracking-wide shadow-xl shadow-purple-600/30 transition items-center justify-center gap-2 shrink-0">
+        <i data-lucide="check-circle" class="w-4 h-4"></i>
+        <span id="btnSubmitMultipleText">Antworten einloggen (0 ausgewählt)</span>
+      </button>
+
 
       <!-- REIHENFOLGE SORTIER-CONTAINER FÜR SMARTPHONE -->
       <div id="battleOrderContainer" class="hidden flex-col gap-2 flex-1 min-h-0 overflow-y-auto custom-scrollbar p-0.5 pb-2">
@@ -306,6 +322,50 @@
     let userLayoutPreference = null; // null = auto, 'list' = force list, 'grid' = force grid
     let currentOrderPermutation = [];
     let currentOrderQIndex = -1;
+    let selectedMultipleIndices = new Set();
+    let questionTimerInterval = null;
+
+    function extractPlayQuestionMetadata(q) {
+      if (!q) return {};
+      let meta = {};
+      if (q.explanation && typeof q.explanation === 'string') {
+        const match = q.explanation.match(/<!--RT_META:(.*?)-->/);
+        if (match && match[1]) {
+          try { meta = JSON.parse(match[1]); } catch(e){}
+        }
+      }
+      return meta;
+    }
+
+    function extractPlayQuestionType(q) {
+      if (!q) return 'single';
+      const meta = extractPlayQuestionMetadata(q);
+      if (q.question_type === 'order' || q.questionType === 'order' || meta.qt === 'order') return 'order';
+      if (q.question_type === 'multiple' || q.questionType === 'multiple' || meta.qt === 'multiple') return 'multiple';
+      const ci = extractPlayQuestionCorrectIndices(q);
+      if (Array.isArray(ci) && ci.length > 1) return 'multiple';
+      return 'single';
+    }
+
+    function extractPlayQuestionCorrectIndices(q) {
+      if (!q) return [];
+      const meta = extractPlayQuestionMetadata(q);
+      if (Array.isArray(meta.ci)) return meta.ci;
+      if (Array.isArray(q.correct_indices)) return q.correct_indices;
+      if (Array.isArray(q.correctIndices)) return q.correctIndices;
+      const single = q.correct_index !== undefined ? q.correct_index : q.correctIndex;
+      if (single !== undefined && single !== null && !isNaN(single)) return [Number(single)];
+      return [];
+    }
+
+    function extractPlayQuestionDangerIndices(q) {
+      if (!q) return [];
+      const meta = extractPlayQuestionMetadata(q);
+      if (Array.isArray(meta.di)) return meta.di;
+      if (Array.isArray(q.danger_indices)) return q.danger_indices;
+      if (Array.isArray(q.dangerIndices)) return q.dangerIndices;
+      return [];
+    }
 
     function generateAntiIdentityShuffle(count) {
       if (count <= 1) return [0];
@@ -535,6 +595,30 @@
     let lastKnownStatus = '';
     let lastKnownQIndex = -1;
 
+    function startMobileQuestionTimer() {
+      if (questionTimerInterval) clearInterval(questionTimerInterval);
+      const updateTimerUI = () => {
+        const timerEl = document.getElementById('questionTimer');
+        if (!timerEl || !currentSession || currentSession.status !== 'question') return;
+        const limit = currentSession.time_limit || 20;
+        if (!currentSession.first_answer_time) {
+          timerEl.textContent = limit + 's';
+          timerEl.className = 'text-amber-400 font-extrabold';
+          return;
+        }
+        const elapsed = Math.floor((Date.now() - currentSession.first_answer_time) / 1000);
+        const rem = Math.max(0, limit - elapsed);
+        timerEl.textContent = rem + 's';
+        if (rem <= 5) {
+          timerEl.className = 'text-red-400 animate-pulse font-black';
+        } else {
+          timerEl.className = 'text-amber-400 font-extrabold';
+        }
+      };
+      updateTimerUI();
+      questionTimerInterval = setInterval(updateTimerUI, 500);
+    }
+
     function handleSessionUpdate(session) {
       currentSession = session;
       const status = session.status;
@@ -545,15 +629,20 @@
         lastKnownQIndex = qIndex;
 
         if (status === 'lobby') {
+          if (questionTimerInterval) clearInterval(questionTimerInterval);
           showScreen('screen-waiting');
         } else if (status === 'question') {
           hasAnsweredCurrentQ = false;
+          selectedMultipleIndices.clear();
           renderQuestionScreen(session);
           showScreen('screen-question');
+          startMobileQuestionTimer();
         } else if (status === 'round_result') {
+          if (questionTimerInterval) clearInterval(questionTimerInterval);
           renderRoundResultScreen(session);
           showScreen('screen-round-result');
         } else if (status === 'podium' || status === 'finished') {
+          if (questionTimerInterval) clearInterval(questionTimerInterval);
           renderFinalScreen(session);
           showScreen('screen-game-over');
         }
@@ -584,19 +673,40 @@
       const q = session.current_question_data;
       if (!q) return;
 
+      const qType = extractPlayQuestionType(q);
+      const isOrder = qType === 'order';
+      const isMultiple = qType === 'multiple';
+
       document.getElementById('qNumBadge').textContent = (session.current_q_index + 1);
-      document.getElementById('qCategoryBadge').textContent = '#' + (q.category || 'Signale');
+      
+      const catEl = document.getElementById('qCategoryBadge');
+      if (catEl) {
+        let typeSuffix = '';
+        if (isOrder) typeSuffix = ' (Reihenfolge)';
+        else if (isMultiple) typeSuffix = ' (Mehrfachauswahl)';
+        catEl.textContent = '#' + (q.category || 'Signale') + typeSuffix;
+        if (isMultiple) {
+          catEl.className = 'text-xs font-black text-purple-300 bg-purple-950/80 border border-purple-500/50 px-2.5 py-0.5 rounded-full';
+        } else {
+          catEl.className = 'text-xs font-bold text-emerald-300 bg-emerald-950/60 border border-emerald-500/30 px-2.5 py-0.5 rounded-full';
+        }
+      }
+
       document.getElementById('questionTextMobile').innerHTML = q.text || 'Frage auf dem Beamer beachten!';
 
       const options = Array.isArray(q.options) ? q.options : [];
-      const isOrder = q.question_type === 'order' || q.questionType === 'order' || ((q.explanation || '').includes('"qt":"order"'));
 
       const container = document.getElementById('battleOptionsContainer');
       const orderContainer = document.getElementById('battleOrderContainer');
       const toggleBtn = document.getElementById('btnToggleMobileLayout');
+      const multiAlert = document.getElementById('battleMultipleAlert');
+      const multiSubmit = document.getElementById('btnSubmitMultiple');
+      const multiSubmitText = document.getElementById('btnSubmitMultipleText');
 
       if (isOrder) {
         if (container) container.classList.add('hidden');
+        if (multiAlert) multiAlert.classList.add('hidden');
+        if (multiSubmit) multiSubmit.classList.add('hidden');
         if (orderContainer) {
           orderContainer.classList.remove('hidden');
           orderContainer.classList.add('flex');
@@ -613,13 +723,34 @@
         return;
       }
 
-      // Normaler Single-Choice Modus
+      // Normaler Single-Choice oder Mehrfachauswahl Modus
       if (orderContainer) {
         orderContainer.classList.add('hidden');
         orderContainer.classList.remove('flex');
       }
       if (container) container.classList.remove('hidden');
       if (toggleBtn) toggleBtn.classList.remove('hidden');
+
+      // Mehrfachauswahl Banner & Button steuern
+      if (multiAlert) {
+        if (isMultiple) {
+          multiAlert.classList.remove('hidden');
+          multiAlert.classList.add('flex');
+        } else {
+          multiAlert.classList.add('hidden');
+          multiAlert.classList.remove('flex');
+        }
+      }
+      if (multiSubmit) {
+        if (isMultiple) {
+          multiSubmit.classList.remove('hidden');
+          multiSubmit.classList.add('flex', 'opacity-50', 'pointer-events-none');
+          if (multiSubmitText) multiSubmitText.textContent = 'Antworten einloggen (0 ausgewählt)';
+        } else {
+          multiSubmit.classList.add('hidden');
+          multiSubmit.classList.remove('flex');
+        }
+      }
 
       const maxOptLen = Math.max(0, ...options.map(o => (typeof o === 'string' ? o.trim().length : 0)));
 
@@ -661,7 +792,14 @@
 
         if (options[i]) {
           btn.classList.remove('hidden');
+          btn.classList.remove('ring-4', 'ring-emerald-300', 'ring-emerald-400', 'scale-[1.02]', 'shadow-emerald-500/50');
           txt.textContent = options[i];
+
+          if (isMultiple) {
+            btn.onclick = () => window.handleToggleMultipleOption(i);
+          } else {
+            btn.onclick = () => window.handleSelectOption(i);
+          }
 
           if (isListMode) {
             // Liste: volle Breite, Icon links, Text rechts, Zeilenumbruch ohne Abschneiden
@@ -833,7 +971,7 @@
       const isCorrect = (currentOrderPermutation.length === options.length && currentOrderPermutation.every((val, i) => val === i));
 
       const timeLimitSecs = currentSession.time_limit || 20;
-      const elapsedSecs = Math.max(0, (answerTime - (currentSession.question_start_time || answerTime)) / 1000);
+      const elapsedSecs = currentSession.first_answer_time ? Math.max(0, (answerTime - currentSession.first_answer_time) / 1000) : 0;
       const remainingSecs = Math.max(0, timeLimitSecs - elapsedSecs);
       let earnedPoints = 0;
 
@@ -887,7 +1025,7 @@
       const isDanger = (q && (q.danger_indices || q.dangerIndices || []).includes(idx));
 
       const timeLimitSecs = currentSession.time_limit || 20;
-      const elapsedSecs = Math.max(0, (answerTime - (currentSession.question_start_time || answerTime)) / 1000);
+      const elapsedSecs = currentSession.first_answer_time ? Math.max(0, (answerTime - currentSession.first_answer_time) / 1000) : 0;
       const remainingSecs = Math.max(0, timeLimitSecs - elapsedSecs);
       let earnedPoints = 0;
 
@@ -922,6 +1060,102 @@
       }
     };
 
+    window.handleToggleMultipleOption = function(idx) {
+      if (hasAnsweredCurrentQ) return;
+      if (selectedMultipleIndices.has(idx)) {
+        selectedMultipleIndices.delete(idx);
+      } else {
+        selectedMultipleIndices.add(idx);
+      }
+
+      for (let i = 0; i <= 7; i++) {
+        const btn = document.getElementById('btn_opt_' + i);
+        if (!btn) continue;
+        if (selectedMultipleIndices.has(i)) {
+          btn.classList.add('ring-4', 'ring-emerald-300', 'scale-[1.02]', 'shadow-emerald-500/50');
+        } else {
+          btn.classList.remove('ring-4', 'ring-emerald-300', 'scale-[1.02]', 'shadow-emerald-500/50');
+        }
+      }
+
+      const submitBtn = document.getElementById('btnSubmitMultiple');
+      const submitText = document.getElementById('btnSubmitMultipleText');
+      const count = selectedMultipleIndices.size;
+      if (submitText) {
+        submitText.textContent = 'Antworten einloggen (' + count + ' ausgewählt)';
+      }
+      if (submitBtn) {
+        if (count > 0) {
+          submitBtn.classList.remove('opacity-50', 'pointer-events-none');
+        } else {
+          submitBtn.classList.add('opacity-50', 'pointer-events-none');
+        }
+      }
+    };
+
+    window.handleSubmitMultiple = async function() {
+      if (hasAnsweredCurrentQ || !currentSession || selectedMultipleIndices.size === 0) return;
+      hasAnsweredCurrentQ = true;
+
+      const optLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+      const q = currentSession.current_question_data;
+      const options = (q && Array.isArray(q.options)) ? q.options : [];
+      const chosenIndices = Array.from(selectedMultipleIndices).sort((a, b) => a - b);
+
+      const subChoice = document.getElementById('submittedChoiceText');
+      if (subChoice) {
+        const letters = chosenIndices.map(i => optLetters[i] || (i + 1)).join(', ');
+        const chosenListHtml = chosenIndices.map(i => {
+          return '<div class="flex items-center gap-2 py-0.5"><span class="w-4 h-4 rounded text-[10px] bg-purple-600 text-white font-black flex items-center justify-center shrink-0">' + (optLetters[i] || (i + 1)) + '</span><span class="text-gray-200 truncate">' + escapeHtml(options[i] || '') + '</span></div>';
+        }).join('');
+        subChoice.innerHTML = '<span class="text-purple-400 font-black text-sm">Deine Auswahl: ' + letters + '</span>' +
+          '<div class="text-gray-300 font-medium text-xs mt-1.5 text-left bg-gray-950 p-2.5 rounded-2xl border border-gray-800 space-y-1">' + chosenListHtml + '</div>';
+      }
+      showScreen('screen-submitted');
+
+      const answerTime = Date.now();
+      const correctIndices = extractPlayQuestionCorrectIndices(q);
+      const dangerIndices = extractPlayQuestionDangerIndices(q);
+
+      const isCorrect = (chosenIndices.length === correctIndices.length && chosenIndices.every(idx => correctIndices.includes(idx)));
+      const isDanger = chosenIndices.some(idx => dangerIndices.includes(idx));
+
+      const timeLimitSecs = currentSession.time_limit || 20;
+      const elapsedSecs = currentSession.first_answer_time ? Math.max(0, (answerTime - currentSession.first_answer_time) / 1000) : 0;
+      const remainingSecs = Math.max(0, timeLimitSecs - elapsedSecs);
+      let earnedPoints = 0;
+
+      if (isCorrect) {
+        const speedBonus = Math.round((remainingSecs / timeLimitSecs) * 500);
+        earnedPoints = 500 + speedBonus;
+      }
+
+      try {
+        const freshSession = await fetchSessionByPin(currentPin);
+        if (!freshSession) return;
+        const players = freshSession.players || [];
+        const meIdx = players.findIndex(p => p.id === myPlayerId);
+
+        if (meIdx !== -1) {
+          const prevScore = players[meIdx].score || 0;
+          const prevStreak = isCorrect ? ((players[meIdx].streak || 0) + 1) : 0;
+          players[meIdx] = {
+            ...players[meIdx],
+            score: prevScore + earnedPoints,
+            streak: prevStreak,
+            last_answer: chosenIndices,
+            last_answer_time: answerTime,
+            is_correct: isCorrect,
+            is_danger: isDanger,
+            last_earned_points: earnedPoints
+          };
+          await updateSessionPlayers(freshSession.id, players);
+        }
+      } catch (e) {
+        console.error('Multiple submit error', e);
+      }
+    };
+
     function renderRoundResultScreen(session) {
       const players = session.players || [];
       const me = players.find(p => p.id === myPlayerId);
@@ -932,6 +1166,17 @@
       const title = document.getElementById('roundResultTitle');
       const ptsBadge = document.getElementById('roundResultPointsBadge');
       const dangerAlert = document.getElementById('roundResultDangerAlert');
+
+      // Weiche, sanfte Animation für das Ergebnis-Kärtchen
+      if (card) {
+        card.style.opacity = '0';
+        card.style.transform = 'scale(0.96) translateY(8px)';
+        card.style.transition = 'opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+        requestAnimationFrame(() => {
+          card.style.opacity = '1';
+          card.style.transform = 'scale(1) translateY(0)';
+        });
+      }
 
       const isCorrect = me.is_correct;
       const isDanger = me.is_danger;
@@ -962,17 +1207,26 @@
       // Richtige Lösung im Klartext anzeigen
       const q = session.current_question_data;
       if (q && q.options) {
-        const isOrder = q.question_type === 'order' || q.questionType === 'order' || ((q.explanation || '').includes('"qt":"order"'));
+        const qType = extractPlayQuestionType(q);
         const optLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
         const corrLetterEl = document.getElementById('roundResultCorrectLetter');
         const corrTextEl = document.getElementById('roundResultCorrectText');
         const sumBox = document.getElementById('roundResultAnswerSummary');
 
-        if (isOrder) {
+        if (qType === 'order') {
           if (corrLetterEl) corrLetterEl.textContent = 'Korrekte Soll-Reihenfolge:';
           if (corrTextEl) {
             corrTextEl.innerHTML = q.options.map((opt, oIdx) => {
               return '<div class="flex items-center gap-2 py-0.5"><span class="w-4 h-4 rounded text-[10px] bg-emerald-600 text-white font-black flex items-center justify-center shrink-0">' + (oIdx + 1) + '</span><span class="text-gray-200">' + escapeHtml(opt) + '</span></div>';
+            }).join('');
+          }
+        } else if (qType === 'multiple') {
+          const correctIndices = extractPlayQuestionCorrectIndices(q);
+          const letters = correctIndices.map(idx => optLetters[idx] || (idx + 1)).join(', ');
+          if (corrLetterEl) corrLetterEl.textContent = 'Richtige Antworten: ' + letters;
+          if (corrTextEl) {
+            corrTextEl.innerHTML = correctIndices.map(idx => {
+              return '<div class="flex items-center gap-2 py-0.5"><span class="w-4 h-4 rounded text-[10px] bg-emerald-600 text-white font-black flex items-center justify-center shrink-0">' + (optLetters[idx] || (idx + 1)) + '</span><span class="text-gray-200 font-medium">' + escapeHtml(q.options[idx] || '') + '</span></div>';
             }).join('');
           }
         } else {

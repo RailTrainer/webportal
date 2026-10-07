@@ -1325,10 +1325,13 @@
               </button>
             </div>
             <!-- Countdown -->
-            <div class="flex items-center gap-4">
-              <div class="flex items-center gap-2 text-sm font-black text-white bg-gray-950/80 px-3.5 py-1.5 rounded-xl border border-gray-800 shadow-inner">
-                <i data-lucide="users" class="w-4 h-4 text-emerald-400"></i>
-                <span id="battleAnsweredStats" class="text-emerald-400 font-mono font-black">0 / 0 geantwortet</span>
+            <div class="flex items-center gap-3">
+              <div class="flex flex-col items-end">
+                <div class="flex items-center gap-2 text-sm font-black text-white bg-gray-950/80 px-3.5 py-1.5 rounded-xl border border-gray-800 shadow-inner">
+                  <i data-lucide="users" class="w-4 h-4 text-emerald-400"></i>
+                  <span id="battleAnsweredStats" class="text-emerald-400 font-mono font-black">0 / 0 geantwortet</span>
+                </div>
+                <span id="battleTimerSubtext" class="text-[10px] font-bold text-emerald-400/80 uppercase tracking-wider mt-0.5">Wartet auf 1. Antwort</span>
               </div>
               <div class="w-13 h-13 rounded-full border-4 border-emerald-400 bg-gray-950 flex items-center justify-center text-xl font-black text-emerald-400 shadow-xl shadow-emerald-400/30 animate-pulse" id="battleTimerBox">
                 20
@@ -1337,13 +1340,23 @@
           </div>
 
           <!-- Question Content Card -->
-          <div class="bg-gradient-to-b from-gray-900/95 to-gray-950/95 border-2 border-emerald-500/25 rounded-3xl p-6 md:p-8 shadow-2xl shadow-emerald-950/40 space-y-4 backdrop-blur-xl">
+          <div class="bg-gradient-to-b from-gray-900/95 to-gray-950/95 border-2 border-emerald-500/25 rounded-3xl p-6 md:p-8 shadow-2xl shadow-emerald-950/40 space-y-4 backdrop-blur-xl transition-all duration-300">
             <div id="battleQuestionImageContainer" class="hidden justify-center mb-2">
-              <div class="max-h-64 max-w-md rounded-2xl bg-gray-950 border-2 border-emerald-500/30 p-2 overflow-hidden shadow-2xl shadow-emerald-950/50">
-                <img id="battleQuestionImage" src="" alt="Signalabbildung" class="max-h-60 object-contain mx-auto rounded-xl">
+              <div id="battleQuestionImageBox" onclick="window.toggleBattleImageFocus()" class="relative group cursor-pointer max-h-64 max-w-md rounded-2xl bg-gray-950 border-2 border-emerald-500/30 hover:border-emerald-400 p-2 overflow-hidden shadow-2xl shadow-emerald-950/50 transition-all duration-300 hover:scale-[1.01]" title="Klicken, um Bild zu vergrößern und Antwortkacheln auszublenden">
+                <img id="battleQuestionImage" src="" alt="Signalabbildung" class="max-h-60 object-contain mx-auto rounded-xl transition-all duration-300">
+                <div id="battleImageZoomHint" class="absolute bottom-2 right-2 px-2.5 py-1 rounded-xl bg-gray-950/85 backdrop-blur border border-emerald-500/40 text-[11px] font-bold text-emerald-300 flex items-center gap-1.5 opacity-90 group-hover:opacity-100 transition shadow-lg">
+                  <i data-lucide="maximize-2" class="w-3.5 h-3.5 text-emerald-400"></i>
+                  <span id="battleImageZoomHintText">Großansicht (Klick)</span>
+                </div>
               </div>
             </div>
             <h2 class="text-2xl md:text-3xl font-black text-white text-center leading-snug tracking-tight" id="battleQuestionText">Fragentext lädt...</h2>
+          </div>
+
+          <!-- Mehrfachauswahl Banner (wird nur bei Multiple-Choice-Fragen eingeblendet) -->
+          <div id="battleMultipleBanner" class="hidden p-4 rounded-2xl bg-gradient-to-r from-purple-950/80 via-indigo-950/80 to-purple-950/80 border-2 border-purple-500/60 text-purple-200 font-black text-sm md:text-base shadow-xl flex items-center justify-center gap-3 animate-pulse">
+            <span class="text-xl">✨</span>
+            <span id="battleMultipleBannerText">MEHRFACHAUSWAHL: Mehrere Antworten sind richtig! Wähle alle zutreffenden Optionen auf deinem Smartphone.</span>
           </div>
 
           <!-- Reihenfolge Banner (wird nur bei Order-Fragen eingeblendet) -->
@@ -2683,6 +2696,50 @@ let battleQuestions = [];
 let battleCurrentQIdx = 0;
 let battleTimeLimit = 20;
 let battleRemainingTime = 20;
+let battleTimerStarted = false;
+let isBattleImageFocused = false;
+
+function extractQuestionMetadata(q) {
+  if (!q) return {};
+  let meta = {};
+  if (q.explanation && typeof q.explanation === 'string') {
+    const match = q.explanation.match(/<!--RT_META:(.*?)-->/);
+    if (match && match[1]) {
+      try { meta = JSON.parse(match[1]); } catch(e){}
+    }
+  }
+  return meta;
+}
+
+function extractQuestionType(q) {
+  if (!q) return 'single';
+  const meta = extractQuestionMetadata(q);
+  if (q.question_type === 'order' || q.questionType === 'order' || meta.qt === 'order') return 'order';
+  if (q.question_type === 'multiple' || q.questionType === 'multiple' || meta.qt === 'multiple') return 'multiple';
+  const ci = extractQuestionCorrectIndices(q);
+  if (Array.isArray(ci) && ci.length > 1) return 'multiple';
+  return 'single';
+}
+
+function extractQuestionCorrectIndices(q) {
+  if (!q) return [];
+  const meta = extractQuestionMetadata(q);
+  if (Array.isArray(meta.ci)) return meta.ci;
+  if (Array.isArray(q.correct_indices)) return q.correct_indices;
+  if (Array.isArray(q.correctIndices)) return q.correctIndices;
+  const single = q.correct_index !== undefined ? q.correct_index : q.correctIndex;
+  if (single !== undefined && single !== null && !isNaN(single)) return [Number(single)];
+  return [];
+}
+
+function extractQuestionDangerIndices(q) {
+  if (!q) return [];
+  const meta = extractQuestionMetadata(q);
+  if (Array.isArray(meta.di)) return meta.di;
+  if (Array.isArray(q.danger_indices)) return q.danger_indices;
+  if (Array.isArray(q.dangerIndices)) return q.dangerIndices;
+  return [];
+}
 
 window.initBattleCategories = function() {
   const sel = document.getElementById('battleCategorySelect');
@@ -3137,6 +3194,11 @@ function updateHostUIFromState() {
     const statsEl = document.getElementById('battleAnsweredStats');
     if (statsEl) statsEl.textContent = answeredCount + ' / ' + players.length + ' geantwortet';
 
+    // Timer erst starten, sobald der 1. Teilnehmer geantwortet hat!
+    if (answeredCount >= 1 && !battleTimerStarted) {
+      startBattleTimerCountdown();
+    }
+
     // Sobald alle Teilnehmer geantwortet haben -> Automatisch und sofort auflösen!
     if (players.length > 0 && answeredCount >= players.length && !isAutoRevealing) {
       isAutoRevealing = true;
@@ -3147,6 +3209,93 @@ function updateHostUIFromState() {
   }
 }
 
+function startBattleTimerCountdown() {
+  if (battleTimerStarted) return;
+  battleTimerStarted = true;
+
+  if (battleSession) {
+    if (!battleSession.first_answer_time) {
+      battleSession.first_answer_time = Date.now();
+    }
+    battleSession.timer_active = true;
+    syncBattleSession(battleSession);
+  }
+
+  const subText = document.getElementById('battleTimerSubtext');
+  if (subText) {
+    subText.textContent = 'Timer läuft!';
+    subText.className = 'text-[10px] font-black text-emerald-400 uppercase tracking-wider mt-0.5 animate-pulse';
+  }
+
+  const timerBox = document.getElementById('battleTimerBox');
+  if (timerBox) {
+    timerBox.textContent = battleRemainingTime;
+    timerBox.className = 'w-13 h-13 rounded-full border-4 border-emerald-400 bg-gray-950 flex items-center justify-center text-xl font-black text-emerald-400 shadow-xl shadow-emerald-400/30 animate-pulse';
+  }
+
+  if (battleTimerInterval) clearInterval(battleTimerInterval);
+  battleTimerInterval = setInterval(() => {
+    battleRemainingTime--;
+    if (timerBox) {
+      timerBox.textContent = Math.max(0, battleRemainingTime);
+      if (battleRemainingTime <= 5 && battleRemainingTime > 0) {
+        battleSound.playTick();
+        timerBox.className = 'w-13 h-13 rounded-full border-4 border-red-500 bg-gray-950 flex items-center justify-center text-xl font-black text-red-400 shadow-xl shadow-red-500/40 animate-ping';
+      } else if (battleRemainingTime <= 10) {
+        timerBox.className = 'w-13 h-13 rounded-full border-4 border-amber-400 bg-gray-950 flex items-center justify-center text-xl font-black text-amber-400 shadow-xl shadow-amber-400/30 animate-pulse';
+      } else {
+        timerBox.className = 'w-13 h-13 rounded-full border-4 border-emerald-400 bg-gray-950 flex items-center justify-center text-xl font-black text-emerald-400 shadow-xl shadow-emerald-400/30 animate-pulse';
+      }
+    }
+
+    if (battleRemainingTime <= 0) {
+      clearInterval(battleTimerInterval);
+      revealBattleRoundResults();
+    }
+  }, 1000);
+}
+
+window.toggleBattleImageFocus = function() {
+  isBattleImageFocused = !isBattleImageFocused;
+  const imgBox = document.getElementById('battleQuestionImageBox');
+  const imgEl = document.getElementById('battleQuestionImage');
+  const zoomHintText = document.getElementById('battleImageZoomHintText');
+  const optGrid = document.getElementById('battleOptionsGrid');
+  const orderBanner = document.getElementById('battleOrderBanner');
+  const multiBanner = document.getElementById('battleMultipleBanner');
+  const q = battleQuestions[battleCurrentQIdx];
+  const qType = extractQuestionType(q);
+
+  if (isBattleImageFocused) {
+    if (optGrid) optGrid.classList.add('hidden');
+    if (orderBanner) { orderBanner.classList.add('hidden'); orderBanner.classList.remove('flex'); }
+    if (multiBanner) { multiBanner.classList.add('hidden'); multiBanner.classList.remove('flex'); }
+    if (imgBox) {
+      imgBox.classList.remove('max-h-64', 'max-w-md');
+      imgBox.classList.add('max-h-[70vh]', 'max-w-5xl', 'w-full', 'ring-4', 'ring-emerald-400/40');
+    }
+    if (imgEl) {
+      imgEl.classList.remove('max-h-60');
+      imgEl.classList.add('max-h-[66vh]', 'w-auto');
+    }
+    if (zoomHintText) zoomHintText.textContent = 'Verkleinern (Antworten wieder anzeigen)';
+  } else {
+    if (optGrid) optGrid.classList.remove('hidden');
+    if (orderBanner && qType === 'order') { orderBanner.classList.remove('hidden'); orderBanner.classList.add('flex'); }
+    if (multiBanner && qType === 'multiple') { multiBanner.classList.remove('hidden'); multiBanner.classList.add('flex'); }
+    if (imgBox) {
+      imgBox.classList.add('max-h-64', 'max-w-md');
+      imgBox.classList.remove('max-h-[70vh]', 'max-w-5xl', 'w-full', 'ring-4', 'ring-emerald-400/40');
+    }
+    if (imgEl) {
+      imgEl.classList.add('max-h-60');
+      imgEl.classList.remove('max-h-[66vh]', 'w-auto');
+    }
+    if (zoomHintText) zoomHintText.textContent = 'Großansicht (Klick)';
+  }
+  if (window.lucide) lucide.createIcons();
+};
+
 window.startLiveBattleGame = async function() {
   if (!battleSession || battleQuestions.length === 0) return;
   battleCurrentQIdx = 0;
@@ -3155,6 +3304,8 @@ window.startLiveBattleGame = async function() {
 
 async function presentBattleQuestion(qIdx) {
   isAutoRevealing = false;
+  battleTimerStarted = false;
+  isBattleImageFocused = false;
   battleCurrentQIdx = qIdx;
   const q = battleQuestions[qIdx];
   if (!q) {
@@ -3172,16 +3323,21 @@ async function presentBattleQuestion(qIdx) {
     last_earned_points: 0
   }));
 
-  const isOrder = q.questionType === 'order' || q.question_type === 'order' || ((q.explanation || '').includes('"qt":"order"'));
+  const qType = extractQuestionType(q);
+  const isOrder = qType === 'order';
+  const isMultiple = qType === 'multiple';
+  const correctIndices = extractQuestionCorrectIndices(q);
+  const dangerIndices = extractQuestionDangerIndices(q);
 
   const qData = {
     id: q.id,
     text: q.text,
     options: q.options,
-    question_type: isOrder ? 'order' : 'single',
-    questionType: isOrder ? 'order' : 'single',
-    correct_index: q.correct_index !== undefined ? q.correct_index : q.correctIndex,
-    danger_indices: q.danger_indices || q.dangerIndices || [],
+    question_type: qType,
+    questionType: qType,
+    correct_index: correctIndices[0] !== undefined ? correctIndices[0] : (q.correct_index !== undefined ? q.correct_index : q.correctIndex),
+    correct_indices: correctIndices,
+    danger_indices: dangerIndices,
     explanation: q.explanation || '',
     category: q.category || 'Signale',
     image_url: q.image_url || q.imageUrl || ''
@@ -3192,12 +3348,19 @@ async function presentBattleQuestion(qIdx) {
   battleSession.current_q_index = qIdx;
   battleSession.current_question_data = qData;
   battleSession.question_start_time = startTime;
+  battleSession.first_answer_time = null;
+  battleSession.timer_active = false;
   battleSession.players = players;
 
   // Session synchronisieren
   syncBattleSession(battleSession);
 
-  // Screens wechseln
+  // Screens wechseln (Sicherstellen, dass Opacity und Skalierung voll sichtbar sind)
+  const qScreen = document.getElementById('battleQuestionScreen');
+  if (qScreen) {
+    qScreen.style.opacity = '1';
+    qScreen.style.transform = 'scale(1)';
+  }
   document.getElementById('battleLobbyScreen')?.classList.add('hidden');
   document.getElementById('battleRoundResultScreen')?.classList.add('hidden');
   document.getElementById('battleRoundResultScreen')?.classList.remove('flex');
@@ -3216,6 +3379,22 @@ async function presentBattleQuestion(qIdx) {
     document.getElementById('battle_opt_box_' + b)?.classList.remove('ring-4', 'ring-emerald-400', 'scale-[1.02]');
   }
 
+  // Bildbox & Antwortkacheln zurücksetzen (falls vorher vergrößert)
+  const imgBox = document.getElementById('battleQuestionImageBox');
+  const imgEl = document.getElementById('battleQuestionImage');
+  const zoomHintText = document.getElementById('battleImageZoomHintText');
+  const optGrid = document.getElementById('battleOptionsGrid');
+  if (imgBox) {
+    imgBox.classList.remove('max-h-[70vh]', 'max-w-5xl', 'w-full', 'ring-4', 'ring-emerald-400/40');
+    imgBox.classList.add('max-h-64', 'max-w-md');
+  }
+  if (imgEl) {
+    imgEl.classList.remove('max-h-[66vh]', 'w-auto');
+    imgEl.classList.add('max-h-60');
+  }
+  if (zoomHintText) zoomHintText.textContent = 'Großansicht (Klick)';
+  if (optGrid) optGrid.classList.remove('hidden');
+
   // Banner für Reihenfolge-Modus
   const orderBanner = document.getElementById('battleOrderBanner');
   if (orderBanner) {
@@ -3228,13 +3407,35 @@ async function presentBattleQuestion(qIdx) {
     }
   }
 
+  // Banner für Mehrfachauswahl-Modus
+  const multiBanner = document.getElementById('battleMultipleBanner');
+  if (multiBanner) {
+    if (isMultiple) {
+      multiBanner.classList.remove('hidden');
+      multiBanner.classList.add('flex');
+    } else {
+      multiBanner.classList.add('hidden');
+      multiBanner.classList.remove('flex');
+    }
+  }
+
   // Frage im DOM befüllen
   document.getElementById('battleQNumBadge').textContent = 'Frage ' + (qIdx + 1) + ' / ' + battleQuestions.length;
-  document.getElementById('battleQCatBadge').textContent = '#' + (q.category || 'Signale') + (isOrder ? ' (Reihenfolge)' : '');
+  const catBadge = document.getElementById('battleQCatBadge');
+  if (catBadge) {
+    let typeSuffix = '';
+    if (isOrder) typeSuffix = ' (Reihenfolge)';
+    else if (isMultiple) typeSuffix = ' (Mehrfachauswahl)';
+    catBadge.textContent = '#' + (q.category || 'Signale') + typeSuffix;
+    if (isMultiple) {
+      catBadge.className = 'text-xs font-black text-purple-300 bg-purple-950/80 border border-purple-500/50 px-3 py-1 rounded-xl shadow';
+    } else {
+      catBadge.className = 'text-xs font-extrabold text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-3 py-1 rounded-xl';
+    }
+  }
   document.getElementById('battleQuestionText').innerHTML = q.text;
 
   const imgCont = document.getElementById('battleQuestionImageContainer');
-  const imgEl = document.getElementById('battleQuestionImage');
   if (imgCont && imgEl) {
     if (q.image_url || q.imageUrl) {
       imgEl.src = q.image_url || q.imageUrl;
@@ -3306,37 +3507,25 @@ async function presentBattleQuestion(qIdx) {
   // Kahoot Hintergrundmusik starten
   battleSound.startGroove();
 
-  // Countdown starten
+  // Timer vorerst im Wartezustand belassen - Countdown startet erst, sobald der erste Schüler antwortet!
+  if (battleTimerInterval) clearInterval(battleTimerInterval);
   battleRemainingTime = battleTimeLimit;
   const timerBox = document.getElementById('battleTimerBox');
   if (timerBox) {
     timerBox.textContent = battleRemainingTime;
-    timerBox.className = 'w-12 h-12 rounded-full border-4 border-emerald-400 bg-gray-950 flex items-center justify-center text-lg font-black text-emerald-400 shadow-lg shadow-emerald-400/30 animate-pulse';
+    timerBox.className = 'w-13 h-13 rounded-full border-4 border-emerald-400/60 bg-gray-950 flex items-center justify-center text-xl font-black text-emerald-400/80 shadow-lg shadow-emerald-400/20';
   }
-
-  if (battleTimerInterval) clearInterval(battleTimerInterval);
-  battleTimerInterval = setInterval(() => {
-    battleRemainingTime--;
-    if (timerBox) {
-      timerBox.textContent = Math.max(0, battleRemainingTime);
-      if (battleRemainingTime <= 5 && battleRemainingTime > 0) {
-        battleSound.playTick();
-        timerBox.className = 'w-12 h-12 rounded-full border-4 border-red-500 bg-gray-950 flex items-center justify-center text-lg font-black text-red-400 shadow-lg shadow-red-500/40 animate-ping';
-      } else if (battleRemainingTime <= 10) {
-        timerBox.className = 'w-12 h-12 rounded-full border-4 border-amber-400 bg-gray-950 flex items-center justify-center text-lg font-black text-amber-400 shadow-lg shadow-amber-400/30 animate-pulse';
-      } else {
-        timerBox.className = 'w-12 h-12 rounded-full border-4 border-emerald-400 bg-gray-950 flex items-center justify-center text-lg font-black text-emerald-400 shadow-lg shadow-emerald-400/30 animate-pulse';
-      }
-    }
-
-    if (battleRemainingTime <= 0) {
-      clearInterval(battleTimerInterval);
-      revealBattleRoundResults();
-    }
-  }, 1000);
+  const timerSubtext = document.getElementById('battleTimerSubtext');
+  if (timerSubtext) {
+    timerSubtext.textContent = 'Wartet auf 1. Antwort';
+    timerSubtext.className = 'text-[10px] font-bold text-amber-400 uppercase tracking-wider mt-0.5 animate-pulse';
+  }
+  const statsEl = document.getElementById('battleAnsweredStats');
+  if (statsEl) statsEl.textContent = '0 / ' + players.length + ' geantwortet';
 
   if (window.lucide) lucide.createIcons();
 }
+
 
 window.revealBattleRoundResults = async function() {
   if (battleTimerInterval) clearInterval(battleTimerInterval);
@@ -3362,17 +3551,44 @@ window.revealBattleRoundResults = async function() {
   battleSession.status = 'round_result';
   syncBattleSession(battleSession);
 
-  // UI Umschalten auf Auswertungs-Screen
-  document.getElementById('battleQuestionScreen')?.classList.add('hidden');
-  document.getElementById('battleQuestionScreen')?.classList.remove('flex');
-  document.getElementById('battleRoundResultScreen')?.classList.remove('hidden');
-  document.getElementById('battleRoundResultScreen')?.classList.add('flex');
+  // Weicher, eleganter Übergang (Smooth Fade & Scale Transition)
+  const qScreen = document.getElementById('battleQuestionScreen');
+  const rScreen = document.getElementById('battleRoundResultScreen');
+  if (qScreen && rScreen) {
+    qScreen.style.transition = 'opacity 0.22s ease-out, transform 0.22s ease-out';
+    qScreen.style.opacity = '0';
+    qScreen.style.transform = 'scale(0.98)';
+    setTimeout(() => {
+      qScreen.classList.add('hidden');
+      qScreen.classList.remove('flex');
+      qScreen.style.opacity = '1';
+      qScreen.style.transform = 'scale(1)';
+
+      rScreen.classList.remove('hidden');
+      rScreen.classList.add('flex');
+      rScreen.style.opacity = '0';
+      rScreen.style.transform = 'scale(0.98)';
+      rScreen.style.transition = 'opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+      requestAnimationFrame(() => {
+        rScreen.style.opacity = '1';
+        rScreen.style.transform = 'scale(1)';
+      });
+    }, 220);
+  } else {
+    qScreen?.classList.add('hidden');
+    qScreen?.classList.remove('flex');
+    rScreen?.classList.remove('hidden');
+    rScreen?.classList.add('flex');
+  }
 
   const q = battleQuestions[battleCurrentQIdx];
   if (!q) return;
 
-  const isOrder = q.questionType === 'order' || q.question_type === 'order' || ((q.explanation || '').includes('"qt":"order"'));
-  const correctIdx = q.correct_index !== undefined ? q.correct_index : q.correctIndex;
+  const qType = extractQuestionType(q);
+  const isOrder = qType === 'order';
+  const isMultiple = qType === 'multiple';
+  const correctIndices = extractQuestionCorrectIndices(q);
+  const dangerIndices = extractQuestionDangerIndices(q);
   const optLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
   const optSymbols = ['▲ A', '◆ B', '● C', '■ D', '★ E', '✦ F', '✿ G', '❖ H'];
 
@@ -3384,7 +3600,17 @@ window.revealBattleRoundResults = async function() {
   if (numBadge) numBadge.textContent = 'Frage ' + (battleCurrentQIdx + 1) + ' / ' + battleQuestions.length;
 
   const catBadge = document.getElementById('battleRoundCatBadge');
-  if (catBadge) catBadge.textContent = '#' + (q.category || 'Signale') + (isOrder ? ' (Reihenfolge)' : '');
+  if (catBadge) {
+    let typeSuffix = '';
+    if (isOrder) typeSuffix = ' (Reihenfolge)';
+    else if (isMultiple) typeSuffix = ' (Mehrfachauswahl)';
+    catBadge.textContent = '#' + (q.category || 'Signale') + typeSuffix;
+    if (isMultiple) {
+      catBadge.className = 'text-xs font-black text-purple-300 bg-purple-950/80 border border-purple-500/50 px-3 py-1 rounded-xl shadow';
+    } else {
+      catBadge.className = 'text-xs font-extrabold text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-3 py-1 rounded-xl';
+    }
+  }
 
   const ansCountEl = document.getElementById('battleResultAnswerCount');
   if (ansCountEl) ansCountEl.textContent = answeredCount + ' / ' + players.length + ' geantwortet';
@@ -3424,8 +3650,8 @@ window.revealBattleRoundResults = async function() {
   // Fallback für evtl. altes Feld
   const oldCorrectTextEl = document.getElementById('battleCorrectAnswerText');
   if (oldCorrectTextEl) {
-    const correctText = (q.options && q.options[correctIdx]) ? q.options[correctIdx] : '';
-    oldCorrectTextEl.innerHTML = 'Richtige Antwort: <span class="text-emerald-400 font-extrabold">' + (optLetters[correctIdx] || 'A') + ' • ' + escapeHtml(correctText) + '</span>';
+    const correctText = correctIndices.map(idx => (optLetters[idx] || (idx + 1)) + ' • ' + escapeHtml(q.options?.[idx] || '')).join(' | ');
+    oldCorrectTextEl.innerHTML = 'Richtige Antwort: <span class="text-emerald-400 font-extrabold">' + correctText + '</span>';
   }
 
   // 3. Antwortoptionen & Schülerverteilung
@@ -3471,7 +3697,13 @@ window.revealBattleRoundResults = async function() {
       const numOptions = Math.min(8, (q.options || []).length || 4);
       const dist = Array(numOptions).fill(0);
       players.forEach(p => {
-        if (typeof p.last_answer === 'number' && dist[p.last_answer] !== undefined) {
+        if (Array.isArray(p.last_answer)) {
+          p.last_answer.forEach(idx => {
+            if (typeof idx === 'number' && dist[idx] !== undefined) {
+              dist[idx]++;
+            }
+          });
+        } else if (typeof p.last_answer === 'number' && dist[p.last_answer] !== undefined) {
           dist[p.last_answer]++;
         }
       });
@@ -3500,12 +3732,12 @@ window.revealBattleRoundResults = async function() {
       distContainer.innerHTML = (q.options || []).slice(0, numOptions).map((optText, i) => {
         const count = dist[i] || 0;
         const pct = players.length > 0 ? Math.round((count / players.length) * 100) : 0;
-        const isCorrectOption = (i === correctIdx);
-        const isDangerOption = (q.danger_indices || q.dangerIndices || []).includes(i);
+        const isCorrectOption = correctIndices.includes(i);
+        const isDangerOption = dangerIndices.includes(i);
 
         const cardBorder = isCorrectOption 
           ? 'border-2 border-emerald-500/90 bg-emerald-950/40 shadow-lg shadow-emerald-500/20 ring-1 ring-emerald-500/30' 
-          : 'border border-gray-800/90 bg-gray-950/70';
+          : (isDangerOption ? 'border border-red-500/60 bg-red-950/20' : 'border border-gray-800/90 bg-gray-950/70');
 
         let statusBadge = '';
         if (isCorrectOption) {
@@ -3518,7 +3750,7 @@ window.revealBattleRoundResults = async function() {
 
         const barFillColor = isCorrectOption 
           ? 'bg-emerald-400 shadow-sm shadow-emerald-400/50' 
-          : barFillColors[i] || 'bg-gray-600';
+          : (barFillColors[i] || 'bg-gray-600');
 
         return '<div class="p-3.5 rounded-2xl transition ' + cardBorder + ' space-y-2">' +
           '<div class="flex items-start justify-between gap-3">' +
@@ -3613,14 +3845,14 @@ window.toggleBattleQuestionView = function() {
     if (backBtn) backBtn.classList.remove('hidden');
     if (revealBtn) revealBtn.classList.add('hidden');
 
-    // Highlight correct answer box in battleQuestionScreen
+    // Highlight correct answer boxes in battleQuestionScreen (supports multi-choice)
     const q = battleQuestions[battleCurrentQIdx];
     if (q) {
-      const correctIdx = q.correct_index !== undefined ? q.correct_index : q.correctIndex;
+      const correctIndices = extractQuestionCorrectIndices(q);
       for (let i = 0; i <= 7; i++) {
         const box = document.getElementById('battle_opt_box_' + i);
         if (box) {
-          if (i === correctIdx) {
+          if (correctIndices.includes(i)) {
             box.classList.add('ring-4', 'ring-emerald-400', 'scale-[1.02]');
           } else {
             box.classList.remove('ring-4', 'ring-emerald-400', 'scale-[1.02]');
@@ -3631,6 +3863,7 @@ window.toggleBattleQuestionView = function() {
   }
   if (window.lucide) lucide.createIcons();
 };
+
 
 window.nextBattleQuestionOrPodium = function() {
   if (battleCurrentQIdx + 1 >= battleQuestions.length) {
@@ -7558,20 +7791,93 @@ function updateHeaderUserUI() {
   const role = document.getElementById('headerUserRole');
 
   if (avatar) {
-    avatar.textContent = (currentPortalUser.name || 'U').slice(0, 2).toUpperCase();
-    if (currentPortalUser.role === 'admin') avatar.className = 'w-9 h-9 rounded-full bg-red-600 text-white flex items-center justify-center font-bold text-sm shadow';
-    else if (currentPortalUser.role === 'moderator') avatar.className = 'w-9 h-9 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold text-sm shadow';
-    else avatar.className = 'w-9 h-9 rounded-full bg-brand-700 text-white flex items-center justify-center font-bold text-sm shadow';
+    const r = (currentPortalUser.role || '').toLowerCase();
+    if (r === 'admin') avatar.className = 'w-9 h-9 rounded-full bg-red-600 text-white flex items-center justify-center font-bold text-sm shadow';
+    else if (r === 'moderator' || r === 'mod') avatar.className = 'w-9 h-9 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold text-sm shadow';
+    else avatar.className = 'w-9 h-9 rounded-full bg-emerald-700 text-white flex items-center justify-center font-bold text-sm shadow';
   }
   if (name) name.textContent = currentPortalUser.name || currentPortalUser.email;
   if (role) {
+    const r = (currentPortalUser.role || '').toLowerCase();
     const roleText = currentPortalUser.title 
       ? currentPortalUser.title 
-      : (currentPortalUser.role === 'admin' ? 'Hauptausbilder' : currentPortalUser.role === 'moderator' ? 'Prüfer' : 'Schüler');
+      : (r === 'admin' ? 'Hauptausbilder' : (r === 'moderator' || r === 'mod') ? 'Moderator / Dozent' : 'Dozent');
     role.textContent = roleText;
-    role.className = currentPortalUser.role === 'admin' ? 'text-red-400 font-semibold' : currentPortalUser.role === 'moderator' ? 'text-amber-400 font-semibold' : 'text-blue-400 font-semibold';
+    role.className = r === 'admin' ? 'text-red-400 font-semibold' : (r === 'moderator' || r === 'mod') ? 'text-amber-400 font-semibold' : 'text-emerald-400 font-semibold';
   }
   if (window.lucide) lucide.createIcons();
+}
+
+// SHA-256 Hilfsfunktion für Webportal-Passwortprüfung
+async function computeSha256Hex(str) {
+  if (!str) return '';
+  const clean = str.trim();
+  try {
+    if (window.crypto && window.crypto.subtle && typeof TextEncoder !== 'undefined') {
+      const buf = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(clean));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+  } catch {}
+  // Pure JS Fallback
+  return fallbackSha256(clean);
+}
+
+function fallbackSha256(ascii) {
+  function rightRotate(value, amount) { return (value >>> amount) | (value << (32 - amount)); }
+  const mathPow = Math.pow;
+  const maxWord = mathPow(2, 32);
+  let result = '';
+  const words = [];
+  const asciiBitLength = ascii.length * 8;
+  const hash = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
+  const k = [
+    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+  ];
+  for (let i = 0; i < ascii.length; i++) {
+    const j = i >> 2;
+    words[j] = ((words[j] || 0) << 8) | ascii.charCodeAt(i);
+  }
+  words[ascii.length >> 2] |= 0x80 << (24 - (ascii.length % 4) * 8);
+  words[(((ascii.length + 8) >> 6) << 4) + 15] = asciiBitLength;
+  for (let j = 0; j < words.length; j += 16) {
+    const w = words.slice(j, j + 16);
+    const oldHash = hash.slice(0);
+    for (let i = 0; i < 64; i++) {
+      let w15 = w[i - 15], w2 = w[i - 2];
+      const s0 = rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3);
+      const s1 = rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10);
+      w[i] = (i < 16) ? w[i] : (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+      const s1b = rightRotate(hash[4], 6) ^ rightRotate(hash[4], 11) ^ rightRotate(hash[4], 25);
+      const ch = (hash[4] & hash[5]) ^ (~hash[4] & hash[6]);
+      const temp1 = (hash[7] + s1b + ch + k[i] + w[i]) | 0;
+      const s0b = rightRotate(hash[0], 2) ^ rightRotate(hash[0], 13) ^ rightRotate(hash[0], 22);
+      const maj = (hash[0] & hash[1]) ^ (hash[0] & hash[2]) ^ (hash[1] & hash[2]);
+      const temp2 = (s0b + maj) | 0;
+      hash[7] = hash[6];
+      hash[6] = hash[5];
+      hash[5] = hash[4];
+      hash[4] = (hash[3] + temp1) | 0;
+      hash[3] = hash[2];
+      hash[2] = hash[1];
+      hash[1] = hash[0];
+      hash[0] = (temp1 + temp2) | 0;
+    }
+    for (let i = 0; i < 8; i++) hash[i] = (hash[i] + oldHash[i]) | 0;
+  }
+  for (let i = 0; i < 8; i++) {
+    for (let j = 3; j >= 0; j--) {
+      const b = (hash[i] >> (j * 8)) & 255;
+      result += (b < 16 ? '0' : '') + b.toString(16);
+    }
+  }
+  return result;
 }
 
 window.handlePortalLogin = async function(e) {
@@ -7582,7 +7888,7 @@ window.handlePortalLogin = async function(e) {
   const submitBtn = document.getElementById('loginSubmitBtn');
 
   const clean = (emailInput?.value || '').trim().toLowerCase();
-  const password = passwordInput?.value || '';
+  const password = (passwordInput?.value || '').trim();
 
   if (errorBox) errorBox.classList.add('hidden');
   if (submitBtn) {
@@ -7594,17 +7900,52 @@ window.handlePortalLogin = async function(e) {
     const res = await fetch(SUPABASE_URL + '/rest/v1/users?select=*', { headers: restHeaders });
     if (!res.ok) throw new Error('Verbindungsfehler zur Datenbank');
     const users = await res.json();
-    const user = users.find(u => (u.email.toLowerCase() === clean || u.name.toLowerCase() === clean || (clean === 'admin' && u.role === 'admin')) && u.password === password);
+    const inputHash = await computeSha256Hex(password);
+
+    // Benutzer nach E-Mail, Name oder Admin-Alias suchen
+    const candidates = users.filter(u => {
+      const uEmail = (u.email || '').toLowerCase().trim();
+      const uName = (u.name || '').toLowerCase().trim();
+      return uEmail === clean || uName === clean || (clean === 'admin' && u.role === 'admin');
+    });
+
+    if (candidates.length === 0) {
+      throw new Error('E-Mail / Benutzername oder Passwort ungültig.');
+    }
+
+    // Passwort prüfen (unterstützt sowohl SHA-256 Hashes der App als auch Klartext)
+    const user = candidates.find(u => {
+      const stored = (u.password || '').trim();
+      if (!stored) return false;
+      if (stored === password) return true;
+      if (stored.toLowerCase() === inputHash.toLowerCase()) return true;
+      return false;
+    });
 
     if (!user) {
       throw new Error('E-Mail / Benutzername oder Passwort ungültig.');
+    }
+
+    // Rollenprüfung: Admins, Moderatoren und Dozenten zulassen
+    const role = (user.role || '').toLowerCase();
+    const title = (user.title || '').toLowerCase();
+    const isAllowed = role === 'admin' || 
+      role === 'moderator' || 
+      role === 'mod' ||
+      title.includes('ausbilder') || 
+      title.includes('dozent') || 
+      title.includes('prüfer') || 
+      title.includes('lehrer');
+
+    if (!isAllowed) {
+      throw new Error('Zugriff verweigert: Das Webportal ist für Ausbilder, Moderatoren und Administratoren reserviert. Bitte nutze als Teilnehmer die App.');
     }
 
     currentPortalUser = {
       id: user.id,
       name: user.name,
       email: user.email,
-      role: user.role,
+      role: (role === 'mod' ? 'moderator' : user.role) || 'moderator',
       title: user.title || ''
     };
     localStorage.setItem('railtrainer_portal_user', JSON.stringify(currentPortalUser));
@@ -7619,7 +7960,7 @@ window.handlePortalLogin = async function(e) {
     const loginOverlay = document.getElementById('loginOverlay');
     if (loginOverlay) loginOverlay.classList.add('hidden');
     updateHeaderUserUI();
-    showToast('Erfolgreich angemeldet als ' + currentPortalUser.name + '! 👋');
+    showToast('Erfolgreich angemeldet als ' + currentPortalUser.name + ' (' + (currentPortalUser.role === 'admin' ? 'Admin' : 'Mod / Dozent') + ')! 👋');
     await window.loadAllData();
   } catch (err) {
     if (errorBox) {
