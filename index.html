@@ -1199,6 +1199,24 @@
               </select>
             </div>
 
+            <!-- SPIELMODUS AUSWAHL (KLASSISCH VS. HANGMAN KNOCK-OUT) -->
+            <div>
+              <label class="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                <i data-lucide="swords" class="w-3.5 h-3.5 text-emerald-400"></i>
+                <span>Spielmodus</span>
+              </label>
+              <select id="battleModeSelect" onchange="window.handleBattleModeChange()" class="w-full px-4 py-3 bg-gray-950/90 border border-gray-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-2xl text-sm font-semibold text-gray-100 focus:outline-none transition shadow-inner">
+                <option value="classic" selected>🏆 Klassisch (Punkte, Highscore & Tempo)</option>
+                <option value="hangman">🪢 Hangman Knock-Out (Galgenmännchen Überlebenskampf)</option>
+              </select>
+              <div id="battleModeDescriptionBox" class="mt-2 p-3 rounded-2xl bg-gray-950/80 border border-gray-800 text-xs text-gray-300 flex items-start gap-2.5 shadow-inner">
+                <span class="text-base leading-none" id="battleModeIcon">🏆</span>
+                <div class="leading-relaxed text-[11px]" id="battleModeDescText">
+                  <strong>Klassisches Quiz-Battle:</strong> Alle spielen bis zum Schluss mit. Punkte für richtige Antworten, Bonuspunkte für Tempo und Antwort-Streaks.
+                </div>
+              </div>
+            </div>
+
             <div class="grid grid-cols-2 gap-3.5">
               <div>
                 <label class="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
@@ -1513,11 +1531,11 @@
               <!-- Rangliste Top 5 -->
               <div class="bg-gradient-to-b from-gray-900/95 to-gray-950/95 border-2 border-emerald-500/30 rounded-3xl p-5 shadow-xl shadow-emerald-950/30 space-y-3 backdrop-blur-xl">
                 <div class="flex items-center justify-between pb-2 border-b border-gray-800/80">
-                  <h4 class="text-xs font-black text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <i data-lucide="trophy" class="w-4 h-4 text-amber-400"></i>
-                    <span>Top 5 Rangliste</span>
+                  <h4 class="text-xs font-black text-gray-300 uppercase tracking-wider flex items-center gap-1.5" id="battleLeaderboardHeading">
+                    <i data-lucide="trophy" class="w-4 h-4 text-amber-400" id="battleLeaderboardIcon"></i>
+                    <span id="battleLeaderboardTitleText">Top 5 Rangliste</span>
                   </h4>
-                  <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Zwischenstand</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" id="battleLeaderboardBadgeText">Zwischenstand</span>
                 </div>
                 <div class="space-y-2 pt-1" id="battleLeaderboardTop5">
                   <!-- Dynamische Spielerzeilen -->
@@ -2741,6 +2759,122 @@ function extractQuestionDangerIndices(q) {
   return [];
 }
 
+window.handleBattleModeChange = function() {
+  const mode = document.getElementById('battleModeSelect')?.value || 'classic';
+  const icon = document.getElementById('battleModeIcon');
+  const desc = document.getElementById('battleModeDescText');
+  if (mode === 'hangman') {
+    if (icon) icon.textContent = '🪢';
+    if (desc) desc.innerHTML = '<strong>Hangman Knock-Out:</strong> Jeder Spieler hat sein eigenes Galgenmännchen mit <strong>6 Strichen</strong>. Wer als <strong>Letzter antwortet</strong>, eine <strong>Betriebsgefahr (BG)</strong> wählt oder <strong>keine Antwort abgibt</strong>, erhält je einen Strich. Bei 6 Strichen scheidet der Spieler aus!';
+  } else {
+    if (icon) icon.textContent = '🏆';
+    if (desc) desc.innerHTML = '<strong>Klassisches Quiz-Battle:</strong> Alle spielen bis zum Schluss mit. Punkte für richtige Antworten, Bonuspunkte für Tempo und Antwort-Streaks.';
+  }
+};
+
+window.renderHangmanSvg = function(strikes, size = 64, isEliminated = false) {
+  const s = Math.min(6, Math.max(0, Number(strikes) || 0));
+  const isDead = isEliminated || s >= 6;
+  const gallowsColor = "#64748b";
+  const ropeColor = "#d97706";
+  const bodyColor = isDead ? "#ef4444" : (s >= 4 ? "#f97316" : (s >= 2 ? "#eab308" : "#10b981"));
+  
+  let headContent = '';
+  if (s >= 1) {
+    if (isDead) {
+      headContent = '<circle cx="68" cy="34" r="8" fill="#ef444422" stroke="' + bodyColor + '" stroke-width="2.5"/>' +
+        '<line x1="64" y1="31" x2="67" y2="34" stroke="' + bodyColor + '" stroke-width="1.5"/>' +
+        '<line x1="67" y1="31" x2="64" y2="34" stroke="' + bodyColor + '" stroke-width="1.5"/>' +
+        '<line x1="69" y1="31" x2="72" y2="34" stroke="' + bodyColor + '" stroke-width="1.5"/>' +
+        '<line x1="72" y1="31" x2="69" y2="34" stroke="' + bodyColor + '" stroke-width="1.5"/>' +
+        '<path d="M65 39 Q68 36 71 39" fill="none" stroke="' + bodyColor + '" stroke-width="1.5"/>';
+    } else {
+      headContent = '<circle cx="68" cy="34" r="8" fill="#10b98115" stroke="' + bodyColor + '" stroke-width="2.5"/>' +
+        '<circle cx="65" cy="33" r="1.2" fill="' + bodyColor + '"/>' +
+        '<circle cx="71" cy="33" r="1.2" fill="' + bodyColor + '"/>' +
+        '<path d="M65 37 Q68 40 71 37" fill="none" stroke="' + bodyColor + '" stroke-width="1.5"/>';
+    }
+  }
+
+  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 100 100" class="shrink-0 drop-shadow">' +
+    '<!-- Galgen -->' +
+    '<line x1="12" y1="92" x2="56" y2="92" stroke="' + gallowsColor + '" stroke-width="3.5" stroke-linecap="round"/>' +
+    '<line x1="28" y1="92" x2="28" y2="12" stroke="' + gallowsColor + '" stroke-width="3.5" stroke-linecap="round"/>' +
+    '<line x1="28" y1="12" x2="68" y2="12" stroke="' + gallowsColor + '" stroke-width="3.5" stroke-linecap="round"/>' +
+    '<line x1="28" y1="26" x2="42" y2="12" stroke="' + gallowsColor + '" stroke-width="2.5" stroke-linecap="round"/>' +
+    '<line x1="68" y1="12" x2="68" y2="26" stroke="' + ropeColor + '" stroke-width="2" stroke-linecap="round"/>' +
+    headContent +
+    (s >= 2 ? '<line x1="68" y1="42" x2="68" y2="64" stroke="' + bodyColor + '" stroke-width="2.8" stroke-linecap="round"/>' : '') +
+    (s >= 3 ? '<line x1="68" y1="48" x2="55" y2="58" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round"/>' : '') +
+    (s >= 4 ? '<line x1="68" y1="48" x2="81" y2="58" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round"/>' : '') +
+    (s >= 5 ? '<line x1="68" y1="64" x2="55" y2="82" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round"/>' : '') +
+    (s >= 6 ? '<line x1="68" y1="64" x2="81" y2="82" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round"/>' : '') +
+  '</svg>';
+};
+
+function processHangmanRound(session, qIdx) {
+  if (!session || !Array.isArray(session.players)) return;
+  
+  // Nur aktive, noch nicht ausgeschiedene Spieler bewerten
+  const activePlayers = session.players.filter(p => !p.is_eliminated);
+  if (activePlayers.length === 0) return;
+
+  // Welche aktiven Spieler haben in dieser Runde geantwortet?
+  const answered = activePlayers.filter(p => 
+    p.last_answered_q_index === qIdx && 
+    p.last_answer !== null && 
+    p.last_answer !== undefined
+  );
+
+  // Den langsamsten Spieler ermitteln (wer als Letzter geantwortet hat)
+  let slowestPlayerId = null;
+  if (answered.length > 0) {
+    const sortedByTimeDesc = [...answered].sort((a, b) => (b.last_answer_time || 0) - (a.last_answer_time || 0));
+    slowestPlayerId = sortedByTimeDesc[0]?.id;
+  }
+
+  session.players.forEach(p => {
+    // Bereits vor dieser Runde ausgeschiedene Spieler überspringen
+    if (p.is_eliminated) {
+      p.got_strike_this_round = false;
+      p.last_round_strike_reason = null;
+      return;
+    }
+
+    p.hangman_strikes = p.hangman_strikes || 0;
+    const hasAnswered = (p.last_answered_q_index === qIdx && p.last_answer !== null && p.last_answer !== undefined);
+
+    let gotStrike = false;
+    let strikeReason = null;
+
+    if (!hasAnswered) {
+      // 1. Nicht geantwortet / Zeit abgelaufen
+      gotStrike = true;
+      strikeReason = 'timeout';
+    } else if (p.is_danger) {
+      // 2. Betriebsgefährdende Antwort (BG)
+      gotStrike = true;
+      strikeReason = 'danger';
+    } else if (p.id === slowestPlayerId && answered.length > 1) {
+      // 3. Als Letzter geantwortet (bei mind. 2 antwortenden Spielern)
+      gotStrike = true;
+      strikeReason = 'slowest';
+    }
+
+    if (gotStrike) {
+      p.hangman_strikes = Math.min(6, (p.hangman_strikes || 0) + 1);
+      p.got_strike_this_round = true;
+      p.last_round_strike_reason = strikeReason;
+      if (p.hangman_strikes >= 6) {
+        p.is_eliminated = true;
+      }
+    } else {
+      p.got_strike_this_round = false;
+      p.last_round_strike_reason = null;
+    }
+  });
+}
+
 window.initBattleCategories = function() {
   const sel = document.getElementById('battleCategorySelect');
   if (!sel) return;
@@ -2754,11 +2888,13 @@ window.createLiveBattleLobby = async function() {
   const catSel = document.getElementById('battleCategorySelect');
   const countSel = document.getElementById('battleCountSelect');
   const timerSel = document.getElementById('battleTimerSelect');
+  const modeSel = document.getElementById('battleModeSelect');
   const createBtn = document.getElementById('btnCreateLobby');
 
   const selectedCat = catSel ? catSel.value : 'all';
   const qCount = countSel ? parseInt(countSel.value, 10) : 10;
   battleTimeLimit = timerSel ? parseInt(timerSel.value, 10) : 20;
+  const gameMode = modeSel ? modeSel.value : 'classic';
 
   // Fragen zusammenstellen (Inklusive Reihenfolge-Aufgaben)
   let pool = allQuestions.filter(q => (selectedCat === 'all' || q.category === selectedCat));
@@ -2780,6 +2916,7 @@ window.createLiveBattleLobby = async function() {
     id: sessionId,
     pin: pin,
     status: 'lobby',
+    game_mode: gameMode,
     category: selectedCat,
     time_limit: battleTimeLimit,
     current_q_index: 0,
@@ -3337,6 +3474,10 @@ async function presentBattleQuestion(qIdx) {
   // Reset answer states in players
   const players = (battleSession.players || []).map(p => ({
     ...p,
+    hangman_strikes: p.hangman_strikes || 0,
+    is_eliminated: p.is_eliminated || false,
+    got_strike_this_round: false,
+    last_round_strike_reason: null,
     last_answer: null,
     last_answered_q_index: null,
     last_answer_time: null,
@@ -3569,6 +3710,11 @@ window.revealBattleRoundResults = async function() {
       }
     }
   } catch {}
+
+  // Hangman Runden-Auswertung falls Hangman Modus
+  if (battleSession.game_mode === 'hangman') {
+    processHangmanRound(battleSession, battleCurrentQIdx);
+  }
 
   // Session auf round_result setzen
   battleSession.status = 'round_result';
@@ -3806,31 +3952,112 @@ window.revealBattleRoundResults = async function() {
     expEl.innerHTML = q.explanation ? ('<strong>Erklärung:</strong> ' + escapeHtml((q.explanation || '').replace(/\s*<!--RT_META:.*?-->/gs, '').trim())) : 'Keine weitere Erklärung hinterlegt.';
   }
 
-  // 5. Leaderboard Top 5
-  const sorted = [...players].sort((a, b) => (b.score || 0) - (a.score || 0));
+  // 5. Leaderboard / Hangman Knock-Out Arena
+  const isHangman = battleSession.game_mode === 'hangman';
   const top5Container = document.getElementById('battleLeaderboardTop5');
-  if (top5Container) {
-    if (sorted.length === 0) {
-      top5Container.innerHTML = '<div class="text-xs text-gray-500 italic py-4 text-center">Keine Spielerpunkte vorhanden.</div>';
-    } else {
-      top5Container.innerHTML = sorted.slice(0, 5).map((p, idx) => {
-        const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : ('#' + (idx + 1));
-        const gain = p.last_earned_points ? ('+' + p.last_earned_points + ' Pkt') : '';
-        const streakBadge = (p.streak && p.streak > 1) ? ('<span class="px-1.5 py-0.5 rounded-full text-[10px] bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">🔥 ' + p.streak + 'x</span>') : '';
+  const titleTextEl = document.getElementById('battleLeaderboardTitleText');
+  const badgeTextEl = document.getElementById('battleLeaderboardBadgeText');
+  const iconEl = document.getElementById('battleLeaderboardIcon');
 
-        return '<div class="flex items-center justify-between p-2.5 rounded-2xl ' + (idx === 0 ? 'bg-gradient-to-r from-emerald-950/40 to-gray-950 border border-emerald-500/40 shadow-emerald-950/30' : 'bg-gray-950 border border-gray-800') + ' shadow">' +
-          '<div class="flex items-center gap-2.5">' +
-            '<span class="font-black text-sm w-6 text-center ' + (idx === 0 ? 'text-emerald-400' : 'text-gray-400') + '">' + medal + '</span>' +
-            '<span class="text-lg">' + (p.avatar || '🚂') + '</span>' +
-            '<span class="font-bold text-xs text-white truncate max-w-[120px]">' + escapeHtml(p.name || 'Spieler') + '</span>' +
-            streakBadge +
-          '</div>' +
-          '<div class="text-right">' +
-            '<div class="font-extrabold text-xs ' + (idx === 0 ? 'text-emerald-400' : 'text-emerald-300/80') + '">' + (p.score || 0) + ' Pkt</div>' +
-            (gain ? '<div class="text-[10px] text-emerald-400 font-bold">' + gain + '</div>' : '') +
-          '</div>' +
-        '</div>';
-      }).join('');
+  if (isHangman) {
+    if (titleTextEl) titleTextEl.textContent = 'Hangman Knock-Out Arena';
+    if (badgeTextEl) {
+      badgeTextEl.textContent = '6 Striche = Aus';
+      badgeTextEl.className = 'px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-500/20 text-purple-300 border border-purple-500/30';
+    }
+    if (iconEl) iconEl.setAttribute('data-lucide', 'swords');
+
+    // Sortiere: Noch aktive Spieler zuerst (nach wenigsten Strichen, dann Punkte), dann ausgeschiedene
+    const hangmanSorted = [...players].sort((a, b) => {
+      const aDead = a.is_eliminated || (a.hangman_strikes || 0) >= 6;
+      const bDead = b.is_eliminated || (b.hangman_strikes || 0) >= 6;
+      if (aDead !== bDead) return aDead ? 1 : -1;
+      const strikesDiff = (a.hangman_strikes || 0) - (b.hangman_strikes || 0);
+      if (strikesDiff !== 0) return strikesDiff;
+      return (b.score || 0) - (a.score || 0);
+    });
+
+    if (top5Container) {
+      if (hangmanSorted.length === 0) {
+        top5Container.innerHTML = '<div class="text-xs text-gray-500 italic py-4 text-center">Keine Spieler vorhanden.</div>';
+      } else {
+        top5Container.innerHTML = hangmanSorted.map(p => {
+          const strikes = Math.min(6, Math.max(0, p.hangman_strikes || 0));
+          const isDead = p.is_eliminated || strikes >= 6;
+
+          let strikeReasonHtml = '';
+          if (p.got_strike_this_round) {
+            if (p.last_round_strike_reason === 'slowest') {
+              strikeReasonHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/25 text-amber-300 border border-amber-500/50 animate-pulse">🐌 Langsamster (+1)</span>';
+            } else if (p.last_round_strike_reason === 'danger') {
+              strikeReasonHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-500/25 text-red-300 border border-red-500/50 animate-pulse">⚠️ Betriebsgefahr (+1)</span>';
+            } else if (p.last_round_strike_reason === 'timeout') {
+              strikeReasonHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-500/25 text-red-300 border border-red-500/50 animate-pulse">⏱️ Keine Antwort (+1)</span>';
+            }
+          } else if (!isDead) {
+            strikeReasonHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">🛡️ Überlebt</span>';
+          }
+
+          const statusBadge = isDead 
+            ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-600/30 text-red-400 border border-red-500">☠️ AUSGESCHIEDEN</span>'
+            : ('<span class="font-mono font-black text-xs ' + (strikes >= 4 ? 'text-orange-400' : 'text-emerald-400') + '">' + strikes + ' / 6 Striche</span>');
+
+          const cardBorder = isDead 
+            ? 'bg-red-950/20 border border-red-900/60 opacity-60' 
+            : (p.got_strike_this_round ? 'bg-gradient-to-r from-amber-950/30 to-gray-950 border border-amber-500/50 shadow-amber-950/20' : 'bg-gray-950 border border-gray-800');
+
+          return '<div class="flex items-center justify-between p-2 rounded-2xl ' + cardBorder + ' shadow transition">' +
+            '<div class="flex items-center gap-2.5 min-w-0 flex-1">' +
+              '<div class="w-11 h-11 flex items-center justify-center shrink-0 bg-gray-900 rounded-xl border border-gray-800 p-0.5">' +
+                window.renderHangmanSvg(strikes, 42, isDead) +
+              '</div>' +
+              '<div class="min-w-0 flex-1">' +
+                '<div class="flex items-center gap-1.5">' +
+                  '<span class="text-base">' + (p.avatar || '🚂') + '</span>' +
+                  '<span class="font-bold text-xs text-white truncate max-w-[130px]">' + escapeHtml(p.name || 'Spieler') + '</span>' +
+                '</div>' +
+                '<div class="flex items-center gap-1.5 mt-0.5 flex-wrap">' +
+                  statusBadge +
+                  strikeReasonHtml +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+      }
+    }
+  } else {
+    if (titleTextEl) titleTextEl.textContent = 'Top 5 Rangliste';
+    if (badgeTextEl) {
+      badgeTextEl.textContent = 'Zwischenstand';
+      badgeTextEl.className = 'px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+    }
+    if (iconEl) iconEl.setAttribute('data-lucide', 'trophy');
+
+    const sorted = [...players].sort((a, b) => (b.score || 0) - (a.score || 0));
+    if (top5Container) {
+      if (sorted.length === 0) {
+        top5Container.innerHTML = '<div class="text-xs text-gray-500 italic py-4 text-center">Keine Spielerpunkte vorhanden.</div>';
+      } else {
+        top5Container.innerHTML = sorted.slice(0, 5).map((p, idx) => {
+          const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : ('#' + (idx + 1));
+          const gain = p.last_earned_points ? ('+' + p.last_earned_points + ' Pkt') : '';
+          const streakBadge = (p.streak && p.streak > 1) ? ('<span class="px-1.5 py-0.5 rounded-full text-[10px] bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">🔥 ' + p.streak + 'x</span>') : '';
+
+          return '<div class="flex items-center justify-between p-2.5 rounded-2xl ' + (idx === 0 ? 'bg-gradient-to-r from-emerald-950/40 to-gray-950 border border-emerald-500/40 shadow-emerald-950/30' : 'bg-gray-950 border border-gray-800') + ' shadow">' +
+            '<div class="flex items-center gap-2.5">' +
+              '<span class="font-black text-sm w-6 text-center ' + (idx === 0 ? 'text-emerald-400' : 'text-gray-400') + '">' + medal + '</span>' +
+              '<span class="text-lg">' + (p.avatar || '🚂') + '</span>' +
+              '<span class="font-bold text-xs text-white truncate max-w-[120px]">' + escapeHtml(p.name || 'Spieler') + '</span>' +
+              streakBadge +
+            '</div>' +
+            '<div class="text-right">' +
+              '<div class="font-extrabold text-xs ' + (idx === 0 ? 'text-emerald-400' : 'text-emerald-300/80') + '">' + (p.score || 0) + ' Pkt</div>' +
+              (gain ? '<div class="text-[10px] text-emerald-400 font-bold">' + gain + '</div>' : '') +
+            '</div>' +
+          '</div>';
+        }).join('');
+      }
     }
   }
 
@@ -3921,35 +4148,61 @@ window.renderBattlePodium = function() {
   document.getElementById('battlePodiumScreen')?.classList.add('flex');
 
   const players = battleSession?.players || [];
-  const sorted = [...players].sort((a, b) => (b.score || 0) - (a.score || 0));
+  const isHangman = battleSession?.game_mode === 'hangman';
+
+  const sorted = [...players].sort((a, b) => {
+    if (isHangman) {
+      const aDead = a.is_eliminated || (a.hangman_strikes || 0) >= 6;
+      const bDead = b.is_eliminated || (b.hangman_strikes || 0) >= 6;
+      if (aDead !== bDead) return aDead ? 1 : -1;
+      const strikesDiff = (a.hangman_strikes || 0) - (b.hangman_strikes || 0);
+      if (strikesDiff !== 0) return strikesDiff;
+    }
+    return (b.score || 0) - (a.score || 0);
+  });
 
   const p1 = sorted[0];
   const p2 = sorted[1];
   const p3 = sorted[2];
 
+  const formatPodiumScore = (p) => {
+    if (!p) return '0 Pkt';
+    if (isHangman) {
+      const dead = p.is_eliminated || (p.hangman_strikes || 0) >= 6;
+      return dead ? '☠️ Ausgeschieden' : ('👑 Überlebt (' + (p.hangman_strikes || 0) + '/6)');
+    }
+    return (p.score || 0) + ' Pkt';
+  };
+
   document.getElementById('podiumName1').textContent = p1 ? (p1.name || 'Champion') : '-';
   document.getElementById('podiumAvatar1').textContent = p1 ? (p1.avatar || '🥇') : '🚂';
-  document.getElementById('podiumScore1').textContent = p1 ? ((p1.score || 0) + ' Pkt') : '0 Pkt';
+  document.getElementById('podiumScore1').textContent = formatPodiumScore(p1);
 
   document.getElementById('podiumName2').textContent = p2 ? (p2.name || 'Zweiter') : '-';
   document.getElementById('podiumAvatar2').textContent = p2 ? (p2.avatar || '🥈') : '🚂';
-  document.getElementById('podiumScore2').textContent = p2 ? ((p2.score || 0) + ' Pkt') : '0 Pkt';
+  document.getElementById('podiumScore2').textContent = formatPodiumScore(p2);
 
   document.getElementById('podiumName3').textContent = p3 ? (p3.name || 'Dritter') : '-';
   document.getElementById('podiumAvatar3').textContent = p3 ? (p3.avatar || '🥉') : '🚂';
-  document.getElementById('podiumScore3').textContent = p3 ? ((p3.score || 0) + ' Pkt') : '0 Pkt';
+  document.getElementById('podiumScore3').textContent = formatPodiumScore(p3);
 
   const fullList = document.getElementById('battleFinalFullLeaderboard');
   if (fullList) {
     fullList.innerHTML = sorted.map((p, idx) => {
       const medal = idx === 0 ? '🥇 1. Platz' : idx === 1 ? '🥈 2. Platz' : idx === 2 ? '🥉 3. Platz' : ('#' + (idx + 1));
+      const dead = isHangman && (p.is_eliminated || (p.hangman_strikes || 0) >= 6);
+      const rightCol = isHangman
+        ? (dead ? '<span class="font-bold text-xs text-red-400">☠️ Ausgeschieden (6/6)</span>' : '<span class="font-black text-xs text-emerald-400">👑 Überlebt (' + (p.hangman_strikes || 0) + '/6 Striche)</span>')
+        : ('<div class="font-black text-sm ' + (idx === 0 ? 'text-emerald-400' : 'text-emerald-300/80') + '">' + (p.score || 0) + ' Punkte</div>');
+
       return '<div class="flex items-center justify-between p-3 rounded-2xl ' + (idx === 0 ? 'bg-gradient-to-r from-emerald-950/40 to-gray-950 border border-emerald-500/40 shadow-lg shadow-emerald-950/20' : 'bg-gray-950 border border-gray-800') + ' shadow">' +
         '<div class="flex items-center gap-3">' +
           '<span class="font-extrabold text-xs w-20 ' + (idx === 0 ? 'text-emerald-400 font-black' : idx === 1 ? 'text-gray-300' : idx === 2 ? 'text-amber-600' : 'text-gray-500') + '">' + medal + '</span>' +
+          (isHangman ? ('<div class="w-8 h-8 flex items-center justify-center shrink-0">' + window.renderHangmanSvg(p.hangman_strikes, 32, dead) + '</div>') : '') +
           '<span class="text-xl filter drop-shadow">' + (p.avatar || '🚂') + '</span>' +
           '<span class="font-bold text-sm text-white">' + escapeHtml(p.name || 'Spieler') + '</span>' +
         '</div>' +
-        '<div class="font-black text-sm ' + (idx === 0 ? 'text-emerald-400' : 'text-emerald-300/80') + '">' + (p.score || 0) + ' Punkte</div>' +
+        rightCol +
       '</div>';
     }).join('');
   }

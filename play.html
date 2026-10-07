@@ -232,6 +232,17 @@
           <div class="text-[11px] text-emerald-400 uppercase font-bold mb-1">Deine Wahl:</div>
           <div class="text-emerald-300 text-sm font-black" id="submittedChoiceText">Antwort A</div>
         </div>
+
+        <!-- HANGMAN STATUS NACH ANTWORT-ABGABE -->
+        <div id="submittedHangmanBox" class="hidden p-3.5 rounded-2xl bg-gray-950/90 border border-purple-500/30 text-center space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-extrabold text-purple-300 flex items-center gap-1.5">🪢 Dein Galgenmännchen:</span>
+            <span class="font-mono font-black text-amber-400" id="submittedHangmanStrikesText">0 / 6 Striche</span>
+          </div>
+          <div id="submittedHangmanFigure" class="flex justify-center py-1"></div>
+          <p class="text-[11px] text-gray-400">Hoffentlich warst du nicht der Langsamste dieser Runde!</p>
+        </div>
+
         <p class="text-xs text-gray-400">Warte auf das Timer-Ende und die Beamer-Auflösung...</p>
       </div>
     </section>
@@ -239,13 +250,29 @@
     <!-- 5. ROUND RESULT SCREEN -->
     <section id="screen-round-result" class="hidden text-center space-y-4 max-w-sm mx-auto w-full">
       <div id="roundResultCard" class="bg-gradient-to-b from-gray-900 to-gray-950 border-2 rounded-3xl p-6 shadow-2xl space-y-3 transition-all">
-        <div id="roundResultIcon" class="text-5xl mx-auto mb-1">🎉</div>
+        <div id="roundResultIcon" class="flex items-center justify-center mx-auto mb-1">
+          <div class="w-20 h-20 rounded-full bg-emerald-500/20 border-2 border-emerald-400 text-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-500/30 ring-4 ring-emerald-500/20">
+            <svg class="w-12 h-12 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+        </div>
         <h2 id="roundResultTitle" class="text-2xl font-black text-white">RICHTIG!</h2>
         <div id="roundResultPointsBadge" class="inline-block px-4 py-1.5 rounded-full text-base font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow">
           +920 Punkte
         </div>
         <div id="roundResultDangerAlert" class="hidden p-2.5 rounded-xl bg-red-500/20 border border-red-500 text-red-200 text-xs font-bold">
           ⚠️ Betriebsgefährdende Antwort (BG) gewählt!
+        </div>
+
+        <!-- HANGMAN RUNDEN-FEEDBACK -->
+        <div id="roundResultHangmanAlert" class="hidden p-3 rounded-2xl border text-xs font-bold space-y-1.5 transition-all text-center">
+          <div class="flex items-center justify-between">
+            <span class="font-extrabold flex items-center gap-1.5" id="roundResultHangmanTitle">🪢 Hangman Knock-Out</span>
+            <span class="font-mono font-black text-amber-400" id="roundResultHangmanBadge">0 / 6 Striche</span>
+          </div>
+          <div id="roundResultHangmanFigure" class="flex justify-center py-1"></div>
+          <div class="text-[11px] leading-snug" id="roundResultHangmanDesc">Runde überlebt!</div>
         </div>
 
         <!-- Richtige Lösung im Klartext anzeigen -->
@@ -287,6 +314,27 @@
         <button onclick="handlePlayAgain()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-sm border border-emerald-500/40 shadow-xl shadow-emerald-600/25 active:scale-95 transition-all">
           Neues Spiel beitreten
         </button>
+      </div>
+    </section>
+
+    <!-- 7. SPECTATOR SCREEN (HANGMAN ELIMINATED) -->
+    <section id="screen-spectator" class="hidden flex-col items-center justify-between flex-1 max-w-sm mx-auto w-full text-center space-y-4">
+      <div class="bg-gradient-to-b from-gray-900 to-gray-950 border-2 border-red-500/50 rounded-3xl p-6 shadow-2xl space-y-4 w-full">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-red-500/20 text-red-300 border border-red-500/40">
+          <span>☠️ AUSGESCHIEDEN</span>
+        </div>
+        <div id="spectatorHangmanContainer" class="flex justify-center my-1"></div>
+        <h2 class="text-2xl font-black text-red-400">Am Galgen gelandet!</h2>
+        <p class="text-xs text-gray-300 leading-relaxed">
+          Dein Galgenmännchen hat die maximalen <strong>6 Striche</strong> erreicht. Du scheidest aus und nimmst nun als <strong>Zuschauer</strong> teil.
+        </p>
+        <div class="p-3 bg-gray-950 border border-gray-800 rounded-2xl text-left space-y-1 text-xs">
+          <div class="text-[10px] text-gray-400 uppercase font-bold">Aktuelle Frage auf dem Beamer:</div>
+          <div id="spectatorCurrentQuestionText" class="text-gray-200 font-semibold leading-snug">Frage beachten...</div>
+        </div>
+      </div>
+      <div class="p-3 text-gray-400 text-xs">
+        👀 Verfolge das Quiz Battle live auf dem Beamer!
       </div>
     </section>
 
@@ -350,20 +398,20 @@
     function extractPlayQuestionCorrectIndices(q) {
       if (!q) return [];
       const meta = extractPlayQuestionMetadata(q);
-      if (Array.isArray(meta.ci)) return meta.ci;
-      if (Array.isArray(q.correct_indices)) return q.correct_indices;
-      if (Array.isArray(q.correctIndices)) return q.correctIndices;
+      if (Array.isArray(meta.ci)) return meta.ci.map(Number);
+      if (Array.isArray(q.correct_indices)) return q.correct_indices.map(Number);
+      if (Array.isArray(q.correctIndices)) return q.correctIndices.map(Number);
       const single = q.correct_index !== undefined ? q.correct_index : q.correctIndex;
-      if (single !== undefined && single !== null && !isNaN(single)) return [Number(single)];
+      if (single !== undefined && single !== null && !isNaN(Number(single))) return [Number(single)];
       return [];
     }
 
     function extractPlayQuestionDangerIndices(q) {
       if (!q) return [];
       const meta = extractPlayQuestionMetadata(q);
-      if (Array.isArray(meta.di)) return meta.di;
-      if (Array.isArray(q.danger_indices)) return q.danger_indices;
-      if (Array.isArray(q.dangerIndices)) return q.dangerIndices;
+      if (Array.isArray(meta.di)) return meta.di.map(Number);
+      if (Array.isArray(q.danger_indices)) return q.danger_indices.map(Number);
+      if (Array.isArray(q.dangerIndices)) return q.dangerIndices.map(Number);
       return [];
     }
 
@@ -423,8 +471,48 @@
       renderAvatarPicker();
     };
 
+    window.renderHangmanSvg = function(strikes, size = 64, isEliminated = false) {
+      const s = Math.min(6, Math.max(0, Number(strikes) || 0));
+      const isDead = isEliminated || s >= 6;
+      const gallowsColor = "#64748b";
+      const ropeColor = "#d97706";
+      const bodyColor = isDead ? "#ef4444" : (s >= 4 ? "#f97316" : (s >= 2 ? "#eab308" : "#10b981"));
+      
+      let headContent = '';
+      if (s >= 1) {
+        if (isDead) {
+          headContent = '<circle cx="68" cy="34" r="8" fill="#ef444422" stroke="' + bodyColor + '" stroke-width="2.5"/>' +
+            '<line x1="64" y1="31" x2="67" y2="34" stroke="' + bodyColor + '" stroke-width="1.5"/>' +
+            '<line x1="67" y1="31" x2="64" y2="34" stroke="' + bodyColor + '" stroke-width="1.5"/>' +
+            '<line x1="69" y1="31" x2="72" y2="34" stroke="' + bodyColor + '" stroke-width="1.5"/>' +
+            '<line x1="72" y1="31" x2="69" y2="34" stroke="' + bodyColor + '" stroke-width="1.5"/>' +
+            '<path d="M65 39 Q68 36 71 39" fill="none" stroke="' + bodyColor + '" stroke-width="1.5"/>';
+        } else {
+          headContent = '<circle cx="68" cy="34" r="8" fill="#10b98115" stroke="' + bodyColor + '" stroke-width="2.5"/>' +
+            '<circle cx="65" cy="33" r="1.2" fill="' + bodyColor + '"/>' +
+            '<circle cx="71" cy="33" r="1.2" fill="' + bodyColor + '"/>' +
+            '<path d="M65 37 Q68 40 71 37" fill="none" stroke="' + bodyColor + '" stroke-width="1.5"/>';
+        }
+      }
+
+      return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 100 100" class="shrink-0 drop-shadow">' +
+        '<!-- Galgen -->' +
+        '<line x1="12" y1="92" x2="56" y2="92" stroke="' + gallowsColor + '" stroke-width="3.5" stroke-linecap="round"/>' +
+        '<line x1="28" y1="92" x2="28" y2="12" stroke="' + gallowsColor + '" stroke-width="3.5" stroke-linecap="round"/>' +
+        '<line x1="28" y1="12" x2="68" y2="12" stroke="' + gallowsColor + '" stroke-width="3.5" stroke-linecap="round"/>' +
+        '<line x1="28" y1="26" x2="42" y2="12" stroke="' + gallowsColor + '" stroke-width="2.5" stroke-linecap="round"/>' +
+        '<line x1="68" y1="12" x2="68" y2="26" stroke="' + ropeColor + '" stroke-width="2" stroke-linecap="round"/>' +
+        headContent +
+        (s >= 2 ? '<line x1="68" y1="42" x2="68" y2="64" stroke="' + bodyColor + '" stroke-width="2.8" stroke-linecap="round"/>' : '') +
+        (s >= 3 ? '<line x1="68" y1="48" x2="55" y2="58" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round"/>' : '') +
+        (s >= 4 ? '<line x1="68" y1="48" x2="81" y2="58" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round"/>' : '') +
+        (s >= 5 ? '<line x1="68" y1="64" x2="55" y2="82" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round"/>' : '') +
+        (s >= 6 ? '<line x1="68" y1="64" x2="81" y2="82" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round"/>' : '') +
+      '</svg>';
+    };
+
     function showScreen(screenId) {
-      const screens = ['screen-join', 'screen-waiting', 'screen-question', 'screen-submitted', 'screen-round-result', 'screen-game-over'];
+      const screens = ['screen-join', 'screen-waiting', 'screen-question', 'screen-submitted', 'screen-round-result', 'screen-game-over', 'screen-spectator'];
       screens.forEach(s => {
         const el = document.getElementById(s);
         if (!el) return;
@@ -437,6 +525,38 @@
         }
       });
       if (window.lucide) lucide.createIcons();
+    }
+
+    function updateSubmittedHangmanUI() {
+      const box = document.getElementById('submittedHangmanBox');
+      if (!box) return;
+      if (!currentSession || currentSession.game_mode !== 'hangman') {
+        box.classList.add('hidden');
+        return;
+      }
+      box.classList.remove('hidden');
+      const players = currentSession.players || [];
+      const me = players.find(p => p.id === myPlayerId);
+      const strikes = me ? (me.hangman_strikes || 0) : 0;
+      const textEl = document.getElementById('submittedHangmanStrikesText');
+      if (textEl) textEl.textContent = strikes + ' / 6 Striche';
+      const figEl = document.getElementById('submittedHangmanFigure');
+      if (figEl && window.renderHangmanSvg) {
+        figEl.innerHTML = window.renderHangmanSvg(strikes, 90, strikes >= 6);
+      }
+    }
+
+    function renderSpectatorScreen(session, me) {
+      const q = session && session.current_question_data;
+      const qTextEl = document.getElementById('spectatorCurrentQuestionText');
+      if (qTextEl) {
+        qTextEl.textContent = (q && q.text) ? q.text : 'Frage auf dem Beamer beachten!';
+      }
+      const hangmanFig = document.getElementById('spectatorHangmanContainer');
+      if (hangmanFig && window.renderHangmanSvg) {
+        const strikes = me ? (me.hangman_strikes || 6) : 6;
+        hangmanFig.innerHTML = window.renderHangmanSvg(strikes, 110, true);
+      }
     }
 
     window.handleJoinBattle = async function(e) {
@@ -475,12 +595,16 @@
           last_answer: null,
           last_answer_time: null,
           is_correct: false,
-          is_danger: false
+          is_danger: false,
+          hangman_strikes: 0,
+          is_eliminated: false,
+          got_strike_this_round: false,
+          last_round_strike_reason: null
         };
 
         if (existingIdx !== -1) {
           myPlayerId = players[existingIdx].id;
-          players[existingIdx] = { ...players[existingIdx], ...myPlayerData };
+          players[existingIdx] = { ...myPlayerData, ...players[existingIdx], name: name, avatar: selectedAvatar };
         } else {
           players.push(myPlayerData);
         }
@@ -636,6 +760,8 @@
       currentSession = session;
       const status = session.status;
       const qIndex = session.current_q_index || 0;
+      const players = session.players || [];
+      const me = players.find(p => p.id === myPlayerId);
 
       if (status !== lastKnownStatus || qIndex !== lastKnownQIndex) {
         lastKnownStatus = status;
@@ -647,9 +773,19 @@
         } else if (status === 'question') {
           hasAnsweredCurrentQ = false;
           selectedMultipleIndices.clear();
-          renderQuestionScreen(session);
-          showScreen('screen-question');
-          startMobileQuestionTimer();
+
+          const isHangman = session.game_mode === 'hangman';
+          const isEliminated = isHangman && me && (me.is_eliminated || (me.hangman_strikes || 0) >= 6);
+
+          if (isEliminated) {
+            if (questionTimerInterval) clearInterval(questionTimerInterval);
+            renderSpectatorScreen(session, me);
+            showScreen('screen-spectator');
+          } else {
+            renderQuestionScreen(session);
+            showScreen('screen-question');
+            startMobileQuestionTimer();
+          }
         } else if (status === 'round_result') {
           if (questionTimerInterval) clearInterval(questionTimerInterval);
           renderRoundResultScreen(session);
@@ -661,8 +797,6 @@
         }
       }
 
-      const players = session.players || [];
-      const me = players.find(p => p.id === myPlayerId);
       if (me) {
         myScore = me.score || 0;
         myStreak = me.streak || 0;
@@ -964,6 +1098,11 @@
 
     window.handleSubmitOrder = async function() {
       if (hasAnsweredCurrentQ || !currentSession) return;
+      if (currentSession.game_mode === 'hangman') {
+        const players = currentSession.players || [];
+        const me = players.find(p => p.id === myPlayerId);
+        if (me && (me.is_eliminated || (me.hangman_strikes || 0) >= 6)) return;
+      }
       hasAnsweredCurrentQ = true;
 
       const q = currentSession.current_question_data;
@@ -978,6 +1117,7 @@
           '<div class="text-gray-300 font-medium text-xs mt-1.5 text-left bg-gray-950 p-2.5 rounded-2xl border border-gray-800 space-y-1">' + listHtml + '</div>';
       }
       showScreen('screen-submitted');
+      updateSubmittedHangmanUI();
 
       const answerTime = Date.now();
       // Die korrekte Reihenfolge verlangt, dass die Indizes 0, 1, ..., N-1 in exakt aufsteigender Folge sortiert wurden
@@ -1028,21 +1168,30 @@
 
     window.handleSelectOption = async function(idx) {
       if (hasAnsweredCurrentQ || !currentSession) return;
+      if (currentSession.game_mode === 'hangman') {
+        const players = currentSession.players || [];
+        const me = players.find(p => p.id === myPlayerId);
+        if (me && (me.is_eliminated || (me.hangman_strikes || 0) >= 6)) return;
+      }
       hasAnsweredCurrentQ = true;
 
       const optLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+      const optSymbols = ['▲ A', '◆ B', '● C', '■ D', '★ E', '✦ F', '✿ G', '❖ H'];
       const q = currentSession.current_question_data;
       const chosenText = (q && q.options && q.options[idx]) ? q.options[idx] : '';
       const subChoice = document.getElementById('submittedChoiceText');
       if (subChoice) {
-        subChoice.innerHTML = '<span class="text-brand-400 font-black text-sm">Antwort ' + (optLetters[idx] || (idx + 1)) + '</span>' +
+        subChoice.innerHTML = '<span class="text-brand-400 font-black text-sm">' + (optSymbols[idx] || ('Antwort ' + (optLetters[idx] || (idx + 1)))) + '</span>' +
           (chosenText ? ('<div class="text-gray-300 font-medium text-xs mt-1.5 break-words max-h-24 overflow-y-auto custom-scrollbar">' + escapeHtml(chosenText) + '</div>') : '');
       }
       showScreen('screen-submitted');
+      updateSubmittedHangmanUI();
 
       const answerTime = Date.now();
-      const isCorrect = (q && q.correct_index === idx);
-      const isDanger = (q && (q.danger_indices || q.dangerIndices || []).includes(idx));
+      const correctIndices = extractPlayQuestionCorrectIndices(q);
+      const dangerIndices = extractPlayQuestionDangerIndices(q);
+      const isCorrect = correctIndices.includes(Number(idx));
+      const isDanger = dangerIndices.includes(Number(idx));
 
       const timeLimitSecs = currentSession.time_limit || 20;
       const elapsedSecs = currentSession.first_answer_time ? Math.max(0, (answerTime - currentSession.first_answer_time) / 1000) : 0;
@@ -1122,6 +1271,11 @@
 
     window.handleSubmitMultiple = async function() {
       if (hasAnsweredCurrentQ || !currentSession || selectedMultipleIndices.size === 0) return;
+      if (currentSession.game_mode === 'hangman') {
+        const players = currentSession.players || [];
+        const me = players.find(p => p.id === myPlayerId);
+        if (me && (me.is_eliminated || (me.hangman_strikes || 0) >= 6)) return;
+      }
       hasAnsweredCurrentQ = true;
 
       const optLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
@@ -1139,6 +1293,7 @@
           '<div class="text-gray-300 font-medium text-xs mt-1.5 text-left bg-gray-950 p-2.5 rounded-2xl border border-gray-800 space-y-1">' + chosenListHtml + '</div>';
       }
       showScreen('screen-submitted');
+      updateSubmittedHangmanUI();
 
       const answerTime = Date.now();
       const correctIndices = extractPlayQuestionCorrectIndices(q);
@@ -1219,7 +1374,7 @@
 
       if (isCorrect) {
         card.className = 'bg-gradient-to-b from-gray-900 via-gray-900 to-emerald-950/40 border-2 border-emerald-400 rounded-3xl p-6 shadow-2xl shadow-emerald-500/20 ring-4 ring-emerald-500/20 space-y-3';
-        icon.textContent = '🎉';
+        icon.innerHTML = '<div class="w-20 h-20 rounded-full bg-emerald-500/20 border-2 border-emerald-400 text-emerald-400 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/30 ring-4 ring-emerald-500/20 animate-pulse"><svg class="w-12 h-12 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>';
         title.textContent = 'RICHTIG!';
         title.className = 'text-2xl font-black text-emerald-400 drop-shadow-[0_0_12px_rgba(52,211,153,0.4)]';
         ptsBadge.className = 'inline-block px-4 py-1.5 rounded-full text-base font-black bg-gradient-to-r from-emerald-500 to-teal-500 text-gray-950 shadow-lg shadow-emerald-500/30';
@@ -1227,7 +1382,7 @@
         if (dangerAlert) dangerAlert.classList.add('hidden');
       } else if (!hasAnsweredThisRound) {
         card.className = 'bg-gray-900 border-2 border-amber-500/60 rounded-3xl p-6 shadow-2xl space-y-3';
-        icon.textContent = '⏱️';
+        icon.innerHTML = '<div class="w-20 h-20 rounded-full bg-amber-500/20 border-2 border-amber-500 text-amber-400 flex items-center justify-center mx-auto shadow-lg shadow-amber-500/30 ring-4 ring-amber-500/20"><svg class="w-11 h-11 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>';
         title.textContent = 'ZEIT ABGELAUFEN';
         title.className = 'text-2xl font-black text-amber-400';
         ptsBadge.className = 'inline-block px-4 py-1.5 rounded-full text-base font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow';
@@ -1235,8 +1390,13 @@
         if (dangerAlert) dangerAlert.classList.add('hidden');
       } else {
         card.className = 'bg-gray-900 border-2 border-red-500/60 rounded-3xl p-6 shadow-2xl space-y-3';
-        icon.textContent = isDanger ? '⚠️' : '❌';
-        title.textContent = isDanger ? 'BETRIEBSGEFÄHRDEND!' : 'LEIDER FALSCH';
+        if (isDanger) {
+          icon.innerHTML = '<div class="w-20 h-20 rounded-full bg-red-500/20 border-2 border-red-500 text-red-400 flex items-center justify-center mx-auto shadow-lg shadow-red-500/30 ring-4 ring-red-500/20"><svg class="w-11 h-11 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>';
+          title.textContent = 'BETRIEBSGEFÄHRDEND!';
+        } else {
+          icon.innerHTML = '<div class="w-20 h-20 rounded-full bg-red-500/20 border-2 border-red-500 text-red-400 flex items-center justify-center mx-auto shadow-lg shadow-red-500/30 ring-4 ring-red-500/20"><svg class="w-11 h-11 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></div>';
+          title.textContent = 'LEIDER FALSCH';
+        }
         title.className = 'text-2xl font-black text-red-400';
         ptsBadge.className = 'inline-block px-4 py-1.5 rounded-full text-base font-black bg-red-500/20 text-red-300 border border-red-500/40 shadow';
         ptsBadge.textContent = '+0 Punkte';
@@ -1247,11 +1407,50 @@
         }
       }
 
+      // Hangman Knock-Out Runden-Feedback
+      const hangAlert = document.getElementById('roundResultHangmanAlert');
+      if (hangAlert) {
+        if (session.game_mode === 'hangman') {
+          hangAlert.classList.remove('hidden');
+          const strikes = me.hangman_strikes || 0;
+          const gotStrike = !!me.got_strike_this_round;
+          const reason = me.last_round_strike_reason;
+          const isEliminated = !!(me.is_eliminated || strikes >= 6);
+
+          const badgeEl = document.getElementById('roundResultHangmanBadge');
+          const descEl = document.getElementById('roundResultHangmanDesc');
+          const figEl = document.getElementById('roundResultHangmanFigure');
+
+          if (badgeEl) badgeEl.textContent = strikes + ' / 6 Striche';
+          if (figEl && window.renderHangmanSvg) {
+            figEl.innerHTML = window.renderHangmanSvg(strikes, 90, isEliminated);
+          }
+
+          if (isEliminated) {
+            hangAlert.className = 'p-3 rounded-2xl border-2 border-red-500 bg-red-950/40 text-xs font-bold space-y-1.5 transition-all text-center shadow-lg shadow-red-500/20';
+            if (descEl) descEl.innerHTML = '<span class="text-red-400 font-black">☠️ 6 Striche voll – DU BIST AUSGESCHIEDEN!</span><br><span class="text-gray-300 text-[10px]">Du nimmst ab jetzt als Zuschauer teil.</span>';
+          } else if (gotStrike) {
+            hangAlert.className = 'p-3 rounded-2xl border-2 border-amber-500/80 bg-amber-950/40 text-xs font-bold space-y-1.5 transition-all text-center';
+            let reasonText = '+1 Strich erhalten!';
+            if (reason === 'slowest') reasonText = '🐌 Du warst der Langsamste dieser Runde (+1 Strich)';
+            else if (reason === 'danger') reasonText = '⚠️ Betriebsgefahr gewählt (+1 Strich)';
+            else if (reason === 'timeout') reasonText = '⏱️ Keine rechtzeitige Antwort (+1 Strich)';
+            if (descEl) descEl.innerHTML = '<span class="text-amber-400 font-extrabold">' + reasonText + '</span><br><span class="text-gray-300 text-[10px]">Noch ' + (6 - strikes) + ' Leben übrig!</span>';
+          } else {
+            hangAlert.className = 'p-3 rounded-2xl border border-emerald-500/40 bg-emerald-950/30 text-xs font-bold space-y-1.5 transition-all text-center';
+            if (descEl) descEl.innerHTML = '<span class="text-emerald-400 font-extrabold">🛡️ Runde überstanden – kein Strich!</span><br><span class="text-gray-300 text-[10px]">Noch ' + (6 - strikes) + ' Leben übrig!</span>';
+          }
+        } else {
+          hangAlert.classList.add('hidden');
+        }
+      }
+
       // Richtige Lösung im Klartext anzeigen
       const q = session.current_question_data;
       if (q && q.options) {
         const qType = extractPlayQuestionType(q);
         const optLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+        const optSymbols = ['▲ A', '◆ B', '● C', '■ D', '★ E', '✦ F', '✿ G', '❖ H'];
         const corrLetterEl = document.getElementById('roundResultCorrectLetter');
         const corrTextEl = document.getElementById('roundResultCorrectText');
         const sumBox = document.getElementById('roundResultAnswerSummary');
@@ -1260,27 +1459,44 @@
           if (corrLetterEl) corrLetterEl.textContent = 'Korrekte Soll-Reihenfolge:';
           if (corrTextEl) {
             corrTextEl.innerHTML = q.options.map((opt, oIdx) => {
-              return '<div class="flex items-center gap-2 py-0.5"><span class="w-4 h-4 rounded text-[10px] bg-emerald-600 text-white font-black flex items-center justify-center shrink-0">' + (oIdx + 1) + '</span><span class="text-gray-200">' + escapeHtml(opt) + '</span></div>';
+              return '<div class="flex items-center gap-2 py-0.5"><span class="w-5 h-5 rounded-md text-[11px] bg-cyan-600 text-white font-black flex items-center justify-center shrink-0">' + (oIdx + 1) + '</span><span class="text-gray-200">' + escapeHtml(opt) + '</span></div>';
             }).join('');
           }
         } else if (qType === 'multiple') {
           const correctIndices = extractPlayQuestionCorrectIndices(q);
-          const letters = correctIndices.map(idx => optLetters[idx] || (idx + 1)).join(', ');
+          const letters = correctIndices.map(idx => optSymbols[idx] || (optLetters[idx] || (idx + 1))).join(', ');
           if (corrLetterEl) corrLetterEl.textContent = 'Richtige Antworten: ' + letters;
           if (corrTextEl) {
             corrTextEl.innerHTML = correctIndices.map(idx => {
-              return '<div class="flex items-center gap-2 py-0.5"><span class="w-4 h-4 rounded text-[10px] bg-emerald-600 text-white font-black flex items-center justify-center shrink-0">' + (optLetters[idx] || (idx + 1)) + '</span><span class="text-gray-200 font-medium">' + escapeHtml(q.options[idx] || '') + '</span></div>';
+              return '<div class="flex items-center gap-2 py-0.5"><span class="w-auto px-1.5 h-4 rounded text-[10px] bg-emerald-600 text-white font-black flex items-center justify-center shrink-0">' + (optSymbols[idx] || optLetters[idx] || (idx + 1)) + '</span><span class="text-gray-200 font-medium">' + escapeHtml(q.options[idx] || '') + '</span></div>';
             }).join('');
           }
         } else {
-          const correctIdx = (q.correct_index !== undefined) ? q.correct_index : (q.correctIndex || 0);
-          if (corrLetterEl) corrLetterEl.textContent = 'Antwort ' + (optLetters[correctIdx] || (correctIdx + 1));
+          const correctIndices = extractPlayQuestionCorrectIndices(q);
+          const correctIdx = (correctIndices.length > 0 && correctIndices[0] !== undefined)
+            ? correctIndices[0]
+            : ((q.correct_index !== undefined) ? Number(q.correct_index) : (Number(q.correctIndex) || 0));
+          const optSymbol = optSymbols[correctIdx] || ('Antwort ' + (optLetters[correctIdx] || (correctIdx + 1)));
+          if (corrLetterEl) corrLetterEl.textContent = optSymbol;
           if (corrTextEl) corrTextEl.textContent = q.options[correctIdx] || '';
         }
         if (sumBox) sumBox.classList.remove('hidden');
       }
 
-      const sorted = [...players].sort((a, b) => (b.score || 0) - (a.score || 0));
+      let sorted;
+      if (session.game_mode === 'hangman') {
+        sorted = [...players].sort((a, b) => {
+          const aElim = !!(a.is_eliminated || (a.hangman_strikes || 0) >= 6);
+          const bElim = !!(b.is_eliminated || (b.hangman_strikes || 0) >= 6);
+          if (aElim !== bElim) return aElim ? 1 : -1;
+          if ((a.hangman_strikes || 0) !== (b.hangman_strikes || 0)) {
+            return (a.hangman_strikes || 0) - (b.hangman_strikes || 0);
+          }
+          return (b.score || 0) - (a.score || 0);
+        });
+      } else {
+        sorted = [...players].sort((a, b) => (b.score || 0) - (a.score || 0));
+      }
       const myRank = sorted.findIndex(p => p.id === myPlayerId) + 1;
 
       document.getElementById('roundTotalScore').textContent = (me.score || 0) + ' Pkt';
@@ -1290,7 +1506,22 @@
 
     function renderFinalScreen(session) {
       const players = session.players || [];
-      const sorted = [...players].sort((a, b) => (b.score || 0) - (a.score || 0));
+      const isHangman = session.game_mode === 'hangman';
+      let sorted;
+      if (isHangman) {
+        sorted = [...players].sort((a, b) => {
+          const aElim = !!(a.is_eliminated || (a.hangman_strikes || 0) >= 6);
+          const bElim = !!(b.is_eliminated || (b.hangman_strikes || 0) >= 6);
+          if (aElim !== bElim) return aElim ? 1 : -1;
+          if ((a.hangman_strikes || 0) !== (b.hangman_strikes || 0)) {
+            return (a.hangman_strikes || 0) - (b.hangman_strikes || 0);
+          }
+          return (b.score || 0) - (a.score || 0);
+        });
+      } else {
+        sorted = [...players].sort((a, b) => (b.score || 0) - (a.score || 0));
+      }
+
       const myRank = sorted.findIndex(p => p.id === myPlayerId) + 1;
       const me = players.find(p => p.id === myPlayerId);
 
@@ -1299,22 +1530,37 @@
       const sub = document.getElementById('finalSubtext');
       const pts = document.getElementById('finalTotalPoints');
 
-      if (pts) pts.textContent = (me?.score || 0) + ' Punkte';
+      if (pts) {
+        if (isHangman) {
+          const strikes = me ? (me.hangman_strikes || 0) : 0;
+          pts.textContent = (me?.score || 0) + ' Pkt (' + strikes + '/6 Striche)';
+        } else {
+          pts.textContent = (me?.score || 0) + ' Punkte';
+        }
+      }
 
       const emeraldConfetti = ['#10b981', '#34d399', '#059669', '#6ee7b7', '#f59e0b', '#fbbf24'];
+      const isMeEliminated = isHangman && me && (me.is_eliminated || (me.hangman_strikes || 0) >= 6);
 
-      if (myRank === 1) {
-        trophy.textContent = '🥇';
-        heading.textContent = '1. PLATZ! BATTLE-CHAMPION!';
+      if (isMeEliminated) {
+        trophy.textContent = '☠️';
+        heading.textContent = 'AUSGESCHIEDEN (' + myRank + '. Platz)';
+        heading.className = 'text-2xl font-black text-red-400';
+        sub.textContent = 'Dein Galgenmännchen hat 6 Striche erreicht. Beim nächsten Quiz-Battle klappt es bestimmt!';
+      } else if (myRank === 1) {
+        trophy.textContent = isHangman ? '👑' : '🥇';
+        heading.textContent = isHangman ? '1. PLATZ! SOLE SURVIVOR!' : '1. PLATZ! BATTLE-CHAMPION!';
         heading.className = 'text-2xl font-black text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.5)]';
-        sub.textContent = 'Wahnsinnige Leistung! Du hast das Quiz-Battle gewonnen!';
-        confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 }, colors: emeraldConfetti });
+        sub.textContent = isHangman
+          ? 'Du hast das Hangman Knock-Out überlebt und triumphiert!'
+          : 'Wahnsinnige Leistung! Du hast das Quiz-Battle gewonnen!';
+        if (typeof confetti === 'function') confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 }, colors: emeraldConfetti });
       } else if (myRank === 2) {
         trophy.textContent = '🥈';
         heading.textContent = '2. PLATZ!';
         heading.className = 'text-2xl font-black text-gray-200';
-        sub.textContent = 'Silbermedaille! Hervorragendes Eisenbahn-Wissen!';
-        confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 }, colors: emeraldConfetti });
+        sub.textContent = isHangman ? 'Silbermedaille im Hangman-Überlebenskampf!' : 'Silbermedaille! Hervorragendes Eisenbahn-Wissen!';
+        if (typeof confetti === 'function') confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 }, colors: emeraldConfetti });
       } else if (myRank === 3) {
         trophy.textContent = '🥉';
         heading.textContent = '3. PLATZ!';
