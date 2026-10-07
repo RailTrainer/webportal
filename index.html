@@ -2772,43 +2772,64 @@ window.handleBattleModeChange = function() {
   }
 };
 
-window.renderHangmanSvg = function(strikes, size = 64, isEliminated = false) {
+window.renderHangmanSvg = function(strikes, size = 64, isEliminated = false, animated = true) {
   const s = Math.min(6, Math.max(0, Number(strikes) || 0));
   const isDead = isEliminated || s >= 6;
   const gallowsColor = "#64748b";
   const ropeColor = "#d97706";
   const bodyColor = isDead ? "#ef4444" : (s >= 4 ? "#f97316" : (s >= 2 ? "#eab308" : "#10b981"));
-  
+
+  const animStyle = animated ? (
+    '<style>' +
+      '@keyframes hmDraw { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }' +
+      '@keyframes hmFade { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }' +
+      '@keyframes hmSway { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(3.5deg); } 75% { transform: rotate(-3.5deg); } }' +
+      '.hm-d { stroke-dasharray: 100; stroke-dashoffset: 100; animation: hmDraw 0.25s cubic-bezier(0.25, 1, 0.5, 1) forwards; }' +
+    '</style>'
+  ) : '';
+
+  const dAttr = (dur, del) => animated ? ('pathLength="100" class="hm-d" style="animation-duration:' + dur + 's;animation-delay:' + del + 's;"') : '';
+
   let headContent = '';
   if (s >= 1) {
+    const faceStyle = animated ? 'style="opacity:0;animation:hmFade 0.25s ease-out 0.65s forwards;transform-origin:68px 34px;"' : '';
     if (isDead) {
-      headContent = '<circle cx="68" cy="34" r="8" fill="#ef444422" stroke="' + bodyColor + '" stroke-width="2.5"/>' +
-        '<line x1="64" y1="31" x2="67" y2="34" stroke="' + bodyColor + '" stroke-width="1.5"/>' +
-        '<line x1="67" y1="31" x2="64" y2="34" stroke="' + bodyColor + '" stroke-width="1.5"/>' +
-        '<line x1="69" y1="31" x2="72" y2="34" stroke="' + bodyColor + '" stroke-width="1.5"/>' +
-        '<line x1="72" y1="31" x2="69" y2="34" stroke="' + bodyColor + '" stroke-width="1.5"/>' +
-        '<path d="M65 39 Q68 36 71 39" fill="none" stroke="' + bodyColor + '" stroke-width="1.5"/>';
+      headContent = '<circle cx="68" cy="34" r="8" fill="#ef444422" stroke="' + bodyColor + '" stroke-width="2.5" ' + dAttr(0.35, 0.35) + '/>' +
+        '<g ' + faceStyle + '>' +
+          '<line x1="64" y1="31" x2="67" y2="34" stroke="' + bodyColor + '" stroke-width="1.5" stroke-linecap="round"/>' +
+          '<line x1="67" y1="31" x2="64" y2="34" stroke="' + bodyColor + '" stroke-width="1.5" stroke-linecap="round"/>' +
+          '<line x1="69" y1="31" x2="72" y2="34" stroke="' + bodyColor + '" stroke-width="1.5" stroke-linecap="round"/>' +
+          '<line x1="72" y1="31" x2="69" y2="34" stroke="' + bodyColor + '" stroke-width="1.5" stroke-linecap="round"/>' +
+          '<path d="M65 39 Q68 36 71 39" fill="none" stroke="' + bodyColor + '" stroke-width="1.5" stroke-linecap="round"/>' +
+        '</g>';
     } else {
-      headContent = '<circle cx="68" cy="34" r="8" fill="#10b98115" stroke="' + bodyColor + '" stroke-width="2.5"/>' +
-        '<circle cx="65" cy="33" r="1.2" fill="' + bodyColor + '"/>' +
-        '<circle cx="71" cy="33" r="1.2" fill="' + bodyColor + '"/>' +
-        '<path d="M65 37 Q68 40 71 37" fill="none" stroke="' + bodyColor + '" stroke-width="1.5"/>';
+      headContent = '<circle cx="68" cy="34" r="8" fill="#10b98115" stroke="' + bodyColor + '" stroke-width="2.5" ' + dAttr(0.35, 0.35) + '/>' +
+        '<g ' + faceStyle + '>' +
+          '<circle cx="65" cy="33" r="1.2" fill="' + bodyColor + '"/>' +
+          '<circle cx="71" cy="33" r="1.2" fill="' + bodyColor + '"/>' +
+          '<path d="M65 37 Q68 40 71 37" fill="none" stroke="' + bodyColor + '" stroke-width="1.5" stroke-linecap="round"/>' +
+        '</g>';
     }
   }
 
+  const swayStyle = (isDead && animated) ? 'style="transform-origin:68px 12px;animation:hmSway 3s ease-in-out 1.6s infinite;"' : '';
+
   return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 100 100" class="shrink-0 drop-shadow">' +
+    animStyle +
     '<!-- Galgen -->' +
-    '<line x1="12" y1="92" x2="56" y2="92" stroke="' + gallowsColor + '" stroke-width="3.5" stroke-linecap="round"/>' +
-    '<line x1="28" y1="92" x2="28" y2="12" stroke="' + gallowsColor + '" stroke-width="3.5" stroke-linecap="round"/>' +
-    '<line x1="28" y1="12" x2="68" y2="12" stroke="' + gallowsColor + '" stroke-width="3.5" stroke-linecap="round"/>' +
-    '<line x1="28" y1="26" x2="42" y2="12" stroke="' + gallowsColor + '" stroke-width="2.5" stroke-linecap="round"/>' +
-    '<line x1="68" y1="12" x2="68" y2="26" stroke="' + ropeColor + '" stroke-width="2" stroke-linecap="round"/>' +
-    headContent +
-    (s >= 2 ? '<line x1="68" y1="42" x2="68" y2="64" stroke="' + bodyColor + '" stroke-width="2.8" stroke-linecap="round"/>' : '') +
-    (s >= 3 ? '<line x1="68" y1="48" x2="55" y2="58" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round"/>' : '') +
-    (s >= 4 ? '<line x1="68" y1="48" x2="81" y2="58" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round"/>' : '') +
-    (s >= 5 ? '<line x1="68" y1="64" x2="55" y2="82" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round"/>' : '') +
-    (s >= 6 ? '<line x1="68" y1="64" x2="81" y2="82" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round"/>' : '') +
+    '<line x1="12" y1="92" x2="56" y2="92" stroke="' + gallowsColor + '" stroke-width="3.5" stroke-linecap="round" ' + dAttr(0.18, 0.02) + '/>' +
+    '<line x1="28" y1="92" x2="28" y2="12" stroke="' + gallowsColor + '" stroke-width="3.5" stroke-linecap="round" ' + dAttr(0.22, 0.10) + '/>' +
+    '<line x1="28" y1="12" x2="68" y2="12" stroke="' + gallowsColor + '" stroke-width="3.5" stroke-linecap="round" ' + dAttr(0.18, 0.20) + '/>' +
+    '<line x1="28" y1="26" x2="42" y2="12" stroke="' + gallowsColor + '" stroke-width="2.5" stroke-linecap="round" ' + dAttr(0.15, 0.25) + '/>' +
+    '<line x1="68" y1="12" x2="68" y2="26" stroke="' + ropeColor + '" stroke-width="2" stroke-linecap="round" ' + dAttr(0.15, 0.30) + '/>' +
+    '<g ' + swayStyle + '>' +
+      headContent +
+      (s >= 2 ? '<line x1="68" y1="42" x2="68" y2="64" stroke="' + bodyColor + '" stroke-width="2.8" stroke-linecap="round" ' + dAttr(0.25, 0.65) + '/>' : '') +
+      (s >= 3 ? '<line x1="68" y1="48" x2="55" y2="58" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round" ' + dAttr(0.22, 0.85) + '/>' : '') +
+      (s >= 4 ? '<line x1="68" y1="48" x2="81" y2="58" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round" ' + dAttr(0.22, 1.02) + '/>' : '') +
+      (s >= 5 ? '<line x1="68" y1="64" x2="55" y2="82" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round" ' + dAttr(0.22, 1.18) + '/>' : '') +
+      (s >= 6 ? '<line x1="68" y1="64" x2="81" y2="82" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round" ' + dAttr(0.25, 1.35) + '/>' : '') +
+    '</g>' +
   '</svg>';
 };
 

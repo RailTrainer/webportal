@@ -109,8 +109,8 @@
     </section>
 
     <!-- 2. LOBBY WAITING SCREEN -->
-    <section id="screen-waiting" class="hidden text-center space-y-6 max-w-sm mx-auto w-full">
-      <div class="bg-gradient-to-b from-gray-900 to-gray-950 border border-emerald-500/30 rounded-3xl p-8 shadow-2xl space-y-5">
+    <section id="screen-waiting" class="hidden flex-col items-center justify-center flex-1 max-w-sm mx-auto w-full min-h-0 py-2">
+      <div class="bg-gradient-to-b from-gray-900 to-gray-950 border border-emerald-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-4 sm:space-y-5 w-full max-h-[85vh] overflow-y-auto custom-scrollbar">
         <div class="w-24 h-24 rounded-3xl bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border-2 border-emerald-400/50 ring-4 ring-emerald-500/20 flex items-center justify-center mx-auto text-5xl shadow-2xl shadow-emerald-500/20 animate-pulse" id="waitingAvatarBox">
           🚂
         </div>
@@ -221,35 +221,56 @@
       </div>
     </section>
 
-    <!-- 4. SUBMITTED SCREEN -->
-    <section id="screen-submitted" class="hidden text-center space-y-5 max-w-sm mx-auto w-full">
-      <div class="bg-gradient-to-b from-gray-900 to-gray-950 border border-emerald-500/30 rounded-3xl p-8 shadow-2xl space-y-4">
-        <div class="w-20 h-20 rounded-3xl bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border-2 border-emerald-400/50 ring-4 ring-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto text-4xl shadow-2xl shadow-emerald-500/30 animate-pulse">
-          ⚡
+    <!-- 4. SUBMITTED SCREEN (OPTIMIERT FÜR SMARTPHONE HOCHFORMAT) -->
+    <section id="screen-submitted" class="hidden flex-col items-center justify-center flex-1 max-w-sm mx-auto w-full min-h-0 py-2">
+      <div class="bg-gradient-to-b from-gray-900 via-gray-900 to-gray-950 border border-emerald-500/30 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-3.5 w-full max-h-[82vh] overflow-y-auto custom-scrollbar transition-all">
+        
+        <!-- Header: Kompakt & Hochformat-optimiert -->
+        <div class="flex items-center justify-center gap-3 pb-0.5">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border-2 border-emerald-400/50 ring-2 ring-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl shadow-lg shadow-emerald-500/20 animate-pulse shrink-0">
+            ⚡
+          </div>
+          <div class="text-left">
+            <div class="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-extrabold text-emerald-400 bg-emerald-950/80 border border-emerald-500/40 px-2 py-0.5 rounded-full">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+              <span>Eingeloggt</span>
+            </div>
+            <h2 class="text-lg sm:text-xl font-black text-white leading-tight mt-0.5">Antwort abgegeben!</h2>
+          </div>
         </div>
-        <h2 class="text-xl font-black text-white">Antwort abgegeben!</h2>
-        <div class="p-3.5 bg-gradient-to-b from-gray-950 to-emerald-950/20 border border-emerald-500/30 rounded-2xl text-xs text-gray-300" id="submittedChoiceContainer">
-          <div class="text-[11px] text-emerald-400 uppercase font-bold mb-1">Deine Wahl:</div>
-          <div class="text-emerald-300 text-sm font-black" id="submittedChoiceText">Antwort A</div>
+
+        <!-- Deine Wahl Container (100% lesbar im Hochformat ohne Abschneiden) -->
+        <div class="p-3 sm:p-3.5 bg-gradient-to-b from-gray-950 to-emerald-950/20 border border-emerald-500/30 rounded-2xl text-xs text-gray-300 text-left shadow-inner" id="submittedChoiceContainer">
+          <div class="text-[10px] sm:text-[11px] text-emerald-400 uppercase font-bold tracking-wider mb-1.5 flex items-center gap-1.5">
+            <i data-lucide="check" class="w-3.5 h-3.5"></i>
+            <span>Deine gewählte Antwort:</span>
+          </div>
+          <div class="text-gray-100 text-xs sm:text-sm font-semibold max-h-36 sm:max-h-48 overflow-y-auto custom-scrollbar" id="submittedChoiceText">
+            Antwort A
+          </div>
         </div>
 
         <!-- HANGMAN STATUS NACH ANTWORT-ABGABE -->
-        <div id="submittedHangmanBox" class="hidden p-3.5 rounded-2xl bg-gray-950/90 border border-purple-500/30 text-center space-y-2">
-          <div class="flex items-center justify-between text-xs">
-            <span class="font-extrabold text-purple-300 flex items-center gap-1.5">🪢 Dein Galgenmännchen:</span>
-            <span class="font-mono font-black text-amber-400" id="submittedHangmanStrikesText">0 / 6 Striche</span>
+        <div id="submittedHangmanBox" class="hidden p-3 rounded-2xl bg-gray-950/90 border border-purple-500/30 text-center space-y-1.5 shadow-inner">
+          <div class="flex items-center justify-between text-xs px-1">
+            <span class="font-extrabold text-purple-300 flex items-center gap-1.5 text-[11px] sm:text-xs">🪢 Dein Galgenmännchen:</span>
+            <span class="font-mono font-black text-amber-400 text-xs sm:text-sm" id="submittedHangmanStrikesText">0 / 6 Striche</span>
           </div>
-          <div id="submittedHangmanFigure" class="flex justify-center py-1"></div>
-          <p class="text-[11px] text-gray-400">Hoffentlich warst du nicht der Langsamste dieser Runde!</p>
+          <div id="submittedHangmanFigure" class="flex justify-center py-0.5"></div>
+          <p class="text-[10px] sm:text-[11px] text-gray-400 leading-tight">Hoffentlich warst du nicht der Langsamste dieser Runde!</p>
         </div>
 
-        <p class="text-xs text-gray-400">Warte auf das Timer-Ende und die Beamer-Auflösung...</p>
+        <!-- Footer Waiting Hint -->
+        <div class="flex items-center justify-center gap-2 pt-1 text-[11px] sm:text-xs text-gray-400">
+          <div class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></div>
+          <span>Warte auf Timer & Beamer-Auflösung...</span>
+        </div>
       </div>
     </section>
 
     <!-- 5. ROUND RESULT SCREEN -->
-    <section id="screen-round-result" class="hidden text-center space-y-4 max-w-sm mx-auto w-full">
-      <div id="roundResultCard" class="bg-gradient-to-b from-gray-900 to-gray-950 border-2 rounded-3xl p-6 shadow-2xl space-y-3 transition-all">
+    <section id="screen-round-result" class="hidden flex-col items-center justify-center flex-1 max-w-sm mx-auto w-full min-h-0 py-2">
+      <div id="roundResultCard" class="bg-gradient-to-b from-gray-900 to-gray-950 border-2 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-3 transition-all w-full max-h-[85vh] overflow-y-auto custom-scrollbar">
         <div id="roundResultIcon" class="flex items-center justify-center mx-auto mb-1">
           <div class="w-20 h-20 rounded-full bg-emerald-500/20 border-2 border-emerald-400 text-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-500/30 ring-4 ring-emerald-500/20">
             <svg class="w-12 h-12 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
@@ -302,8 +323,8 @@
     </section>
 
     <!-- 6. FINAL PODIUM SCREEN -->
-    <section id="screen-game-over" class="hidden text-center space-y-5 max-w-sm mx-auto w-full">
-      <div class="bg-gradient-to-b from-gray-900 to-gray-950 border-2 border-emerald-500/40 rounded-3xl p-8 shadow-2xl space-y-4">
+    <section id="screen-game-over" class="hidden flex-col items-center justify-center flex-1 max-w-sm mx-auto w-full min-h-0 py-2">
+      <div class="bg-gradient-to-b from-gray-900 to-gray-950 border-2 border-emerald-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-4 w-full max-h-[85vh] overflow-y-auto custom-scrollbar">
         <div class="text-6xl filter drop-shadow" id="finalTrophyIcon">🏆</div>
         <h2 class="text-2xl font-black text-white" id="finalPlacementHeading">Platz 1!</h2>
         <p class="text-xs text-gray-300" id="finalSubtext">Großartige Leistung im Quiz-Battle!</p>
@@ -471,43 +492,64 @@
       renderAvatarPicker();
     };
 
-    window.renderHangmanSvg = function(strikes, size = 64, isEliminated = false) {
+    window.renderHangmanSvg = function(strikes, size = 64, isEliminated = false, animated = true) {
       const s = Math.min(6, Math.max(0, Number(strikes) || 0));
       const isDead = isEliminated || s >= 6;
       const gallowsColor = "#64748b";
       const ropeColor = "#d97706";
       const bodyColor = isDead ? "#ef4444" : (s >= 4 ? "#f97316" : (s >= 2 ? "#eab308" : "#10b981"));
-      
+
+      const animStyle = animated ? (
+        '<style>' +
+          '@keyframes hmDraw { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }' +
+          '@keyframes hmFade { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }' +
+          '@keyframes hmSway { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(3.5deg); } 75% { transform: rotate(-3.5deg); } }' +
+          '.hm-d { stroke-dasharray: 100; stroke-dashoffset: 100; animation: hmDraw 0.25s cubic-bezier(0.25, 1, 0.5, 1) forwards; }' +
+        '</style>'
+      ) : '';
+
+      const dAttr = (dur, del) => animated ? ('pathLength="100" class="hm-d" style="animation-duration:' + dur + 's;animation-delay:' + del + 's;"') : '';
+
       let headContent = '';
       if (s >= 1) {
+        const faceStyle = animated ? 'style="opacity:0;animation:hmFade 0.25s ease-out 0.65s forwards;transform-origin:68px 34px;"' : '';
         if (isDead) {
-          headContent = '<circle cx="68" cy="34" r="8" fill="#ef444422" stroke="' + bodyColor + '" stroke-width="2.5"/>' +
-            '<line x1="64" y1="31" x2="67" y2="34" stroke="' + bodyColor + '" stroke-width="1.5"/>' +
-            '<line x1="67" y1="31" x2="64" y2="34" stroke="' + bodyColor + '" stroke-width="1.5"/>' +
-            '<line x1="69" y1="31" x2="72" y2="34" stroke="' + bodyColor + '" stroke-width="1.5"/>' +
-            '<line x1="72" y1="31" x2="69" y2="34" stroke="' + bodyColor + '" stroke-width="1.5"/>' +
-            '<path d="M65 39 Q68 36 71 39" fill="none" stroke="' + bodyColor + '" stroke-width="1.5"/>';
+          headContent = '<circle cx="68" cy="34" r="8" fill="#ef444422" stroke="' + bodyColor + '" stroke-width="2.5" ' + dAttr(0.35, 0.35) + '/>' +
+            '<g ' + faceStyle + '>' +
+              '<line x1="64" y1="31" x2="67" y2="34" stroke="' + bodyColor + '" stroke-width="1.5" stroke-linecap="round"/>' +
+              '<line x1="67" y1="31" x2="64" y2="34" stroke="' + bodyColor + '" stroke-width="1.5" stroke-linecap="round"/>' +
+              '<line x1="69" y1="31" x2="72" y2="34" stroke="' + bodyColor + '" stroke-width="1.5" stroke-linecap="round"/>' +
+              '<line x1="72" y1="31" x2="69" y2="34" stroke="' + bodyColor + '" stroke-width="1.5" stroke-linecap="round"/>' +
+              '<path d="M65 39 Q68 36 71 39" fill="none" stroke="' + bodyColor + '" stroke-width="1.5" stroke-linecap="round"/>' +
+            '</g>';
         } else {
-          headContent = '<circle cx="68" cy="34" r="8" fill="#10b98115" stroke="' + bodyColor + '" stroke-width="2.5"/>' +
-            '<circle cx="65" cy="33" r="1.2" fill="' + bodyColor + '"/>' +
-            '<circle cx="71" cy="33" r="1.2" fill="' + bodyColor + '"/>' +
-            '<path d="M65 37 Q68 40 71 37" fill="none" stroke="' + bodyColor + '" stroke-width="1.5"/>';
+          headContent = '<circle cx="68" cy="34" r="8" fill="#10b98115" stroke="' + bodyColor + '" stroke-width="2.5" ' + dAttr(0.35, 0.35) + '/>' +
+            '<g ' + faceStyle + '>' +
+              '<circle cx="65" cy="33" r="1.2" fill="' + bodyColor + '"/>' +
+              '<circle cx="71" cy="33" r="1.2" fill="' + bodyColor + '"/>' +
+              '<path d="M65 37 Q68 40 71 37" fill="none" stroke="' + bodyColor + '" stroke-width="1.5" stroke-linecap="round"/>' +
+            '</g>';
         }
       }
 
+      const swayStyle = (isDead && animated) ? 'style="transform-origin:68px 12px;animation:hmSway 3s ease-in-out 1.6s infinite;"' : '';
+
       return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 100 100" class="shrink-0 drop-shadow">' +
+        animStyle +
         '<!-- Galgen -->' +
-        '<line x1="12" y1="92" x2="56" y2="92" stroke="' + gallowsColor + '" stroke-width="3.5" stroke-linecap="round"/>' +
-        '<line x1="28" y1="92" x2="28" y2="12" stroke="' + gallowsColor + '" stroke-width="3.5" stroke-linecap="round"/>' +
-        '<line x1="28" y1="12" x2="68" y2="12" stroke="' + gallowsColor + '" stroke-width="3.5" stroke-linecap="round"/>' +
-        '<line x1="28" y1="26" x2="42" y2="12" stroke="' + gallowsColor + '" stroke-width="2.5" stroke-linecap="round"/>' +
-        '<line x1="68" y1="12" x2="68" y2="26" stroke="' + ropeColor + '" stroke-width="2" stroke-linecap="round"/>' +
-        headContent +
-        (s >= 2 ? '<line x1="68" y1="42" x2="68" y2="64" stroke="' + bodyColor + '" stroke-width="2.8" stroke-linecap="round"/>' : '') +
-        (s >= 3 ? '<line x1="68" y1="48" x2="55" y2="58" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round"/>' : '') +
-        (s >= 4 ? '<line x1="68" y1="48" x2="81" y2="58" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round"/>' : '') +
-        (s >= 5 ? '<line x1="68" y1="64" x2="55" y2="82" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round"/>' : '') +
-        (s >= 6 ? '<line x1="68" y1="64" x2="81" y2="82" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round"/>' : '') +
+        '<line x1="12" y1="92" x2="56" y2="92" stroke="' + gallowsColor + '" stroke-width="3.5" stroke-linecap="round" ' + dAttr(0.18, 0.02) + '/>' +
+        '<line x1="28" y1="92" x2="28" y2="12" stroke="' + gallowsColor + '" stroke-width="3.5" stroke-linecap="round" ' + dAttr(0.22, 0.10) + '/>' +
+        '<line x1="28" y1="12" x2="68" y2="12" stroke="' + gallowsColor + '" stroke-width="3.5" stroke-linecap="round" ' + dAttr(0.18, 0.20) + '/>' +
+        '<line x1="28" y1="26" x2="42" y2="12" stroke="' + gallowsColor + '" stroke-width="2.5" stroke-linecap="round" ' + dAttr(0.15, 0.25) + '/>' +
+        '<line x1="68" y1="12" x2="68" y2="26" stroke="' + ropeColor + '" stroke-width="2" stroke-linecap="round" ' + dAttr(0.15, 0.30) + '/>' +
+        '<g ' + swayStyle + '>' +
+          headContent +
+          (s >= 2 ? '<line x1="68" y1="42" x2="68" y2="64" stroke="' + bodyColor + '" stroke-width="2.8" stroke-linecap="round" ' + dAttr(0.25, 0.65) + '/>' : '') +
+          (s >= 3 ? '<line x1="68" y1="48" x2="55" y2="58" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round" ' + dAttr(0.22, 0.85) + '/>' : '') +
+          (s >= 4 ? '<line x1="68" y1="48" x2="81" y2="58" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round" ' + dAttr(0.22, 1.02) + '/>' : '') +
+          (s >= 5 ? '<line x1="68" y1="64" x2="55" y2="82" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round" ' + dAttr(0.22, 1.18) + '/>' : '') +
+          (s >= 6 ? '<line x1="68" y1="64" x2="81" y2="82" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round" ' + dAttr(0.25, 1.35) + '/>' : '') +
+        '</g>' +
       '</svg>';
     };
 
@@ -542,7 +584,7 @@
       if (textEl) textEl.textContent = strikes + ' / 6 Striche';
       const figEl = document.getElementById('submittedHangmanFigure');
       if (figEl && window.renderHangmanSvg) {
-        figEl.innerHTML = window.renderHangmanSvg(strikes, 90, strikes >= 6);
+        figEl.innerHTML = window.renderHangmanSvg(strikes, 70, strikes >= 6);
       }
     }
 
@@ -1111,10 +1153,18 @@
       const subChoice = document.getElementById('submittedChoiceText');
       if (subChoice) {
         const listHtml = currentOrderPermutation.map((origIdx, slot) => {
-          return '<div class="flex items-center gap-2 py-0.5"><span class="w-4 h-4 rounded text-[10px] bg-cyan-600 text-white font-black flex items-center justify-center shrink-0">' + (slot + 1) + '</span><span class="text-gray-200 truncate">' + escapeHtml(options[origIdx] || '') + '</span></div>';
+          return '<div class="flex items-start gap-2 py-1.5 border-b border-gray-800/60 last:border-0">' +
+            '<span class="w-5 h-5 rounded-md text-[10px] bg-cyan-600 text-white font-black flex items-center justify-center shrink-0 mt-0.5 shadow">' + (slot + 1) + '</span>' +
+            '<span class="text-gray-200 font-semibold text-xs leading-snug break-words flex-1 text-left">' + escapeHtml(options[origIdx] || '') + '</span>' +
+          '</div>';
         }).join('');
-        subChoice.innerHTML = '<span class="text-cyan-400 font-black text-sm">Deine Reihenfolge:</span>' +
-          '<div class="text-gray-300 font-medium text-xs mt-1.5 text-left bg-gray-950 p-2.5 rounded-2xl border border-gray-800 space-y-1">' + listHtml + '</div>';
+        subChoice.innerHTML = '<div class="space-y-1.5">' +
+          '<div class="text-cyan-300 font-black text-xs flex items-center gap-1.5">' +
+            '<span class="w-2 h-2 rounded-full bg-cyan-400"></span>' +
+            '<span>Eingeloggte Reihenfolge:</span>' +
+          '</div>' +
+          '<div class="space-y-0.5">' + listHtml + '</div>' +
+        '</div>';
       }
       showScreen('screen-submitted');
       updateSubmittedHangmanUI();
@@ -1181,8 +1231,10 @@
       const chosenText = (q && q.options && q.options[idx]) ? q.options[idx] : '';
       const subChoice = document.getElementById('submittedChoiceText');
       if (subChoice) {
-        subChoice.innerHTML = '<span class="text-brand-400 font-black text-sm">' + (optSymbols[idx] || ('Antwort ' + (optLetters[idx] || (idx + 1)))) + '</span>' +
-          (chosenText ? ('<div class="text-gray-300 font-medium text-xs mt-1.5 break-words max-h-24 overflow-y-auto custom-scrollbar">' + escapeHtml(chosenText) + '</div>') : '');
+        subChoice.innerHTML = '<div class="flex items-start gap-2.5 pt-0.5">' +
+          '<span class="px-2.5 py-1 rounded-xl bg-emerald-500 text-gray-950 font-black text-xs shrink-0 shadow">' + (optSymbols[idx] || ('Antwort ' + (optLetters[idx] || (idx + 1)))) + '</span>' +
+          (chosenText ? ('<span class="text-gray-100 font-bold text-xs sm:text-sm leading-snug break-words flex-1 text-left">' + escapeHtml(chosenText) + '</span>') : '') +
+          '</div>';
       }
       showScreen('screen-submitted');
       updateSubmittedHangmanUI();
@@ -1287,10 +1339,18 @@
       if (subChoice) {
         const letters = chosenIndices.map(i => optLetters[i] || (i + 1)).join(', ');
         const chosenListHtml = chosenIndices.map(i => {
-          return '<div class="flex items-center gap-2 py-0.5"><span class="w-4 h-4 rounded text-[10px] bg-purple-600 text-white font-black flex items-center justify-center shrink-0">' + (optLetters[i] || (i + 1)) + '</span><span class="text-gray-200 truncate">' + escapeHtml(options[i] || '') + '</span></div>';
+          return '<div class="flex items-start gap-2 py-1.5 border-b border-gray-800/60 last:border-0">' +
+            '<span class="w-5 h-5 rounded-md text-[10px] bg-purple-600 text-white font-black flex items-center justify-center shrink-0 mt-0.5 shadow">' + (optLetters[i] || (i + 1)) + '</span>' +
+            '<span class="text-gray-200 font-semibold text-xs leading-snug break-words flex-1 text-left">' + escapeHtml(options[i] || '') + '</span>' +
+          '</div>';
         }).join('');
-        subChoice.innerHTML = '<span class="text-purple-400 font-black text-sm">Deine Auswahl: ' + letters + '</span>' +
-          '<div class="text-gray-300 font-medium text-xs mt-1.5 text-left bg-gray-950 p-2.5 rounded-2xl border border-gray-800 space-y-1">' + chosenListHtml + '</div>';
+        subChoice.innerHTML = '<div class="space-y-1.5">' +
+          '<div class="text-purple-300 font-black text-xs flex items-center gap-1.5">' +
+            '<span class="w-2 h-2 rounded-full bg-purple-400"></span>' +
+            '<span>Auswahl (' + chosenIndices.length + ' Antworten): ' + letters + '</span>' +
+          '</div>' +
+          '<div class="space-y-0.5">' + chosenListHtml + '</div>' +
+        '</div>';
       }
       showScreen('screen-submitted');
       updateSubmittedHangmanUI();
