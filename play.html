@@ -547,15 +547,15 @@
       return null;
     }
 
-    async function updateSessionPlayers(sessionId, players) {
+    async function updateSessionPlayers(sessionId, players, extraSessionData = {}) {
       // 1. Lokale API
       const url = getPlayApiUrl('/api/battle/session');
       try {
-        fetch(url, {
+        await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pin: currentPin, players: players })
-        }).catch(() => {});
+          body: JSON.stringify({ pin: currentPin, players: players, ...extraSessionData })
+        });
       } catch {}
 
       // 2. Cloud Supabase
@@ -563,6 +563,10 @@
         const session = await fetchSessionByPin(currentPin);
         if (session) {
           session.players = players;
+          if (extraSessionData.first_answer_time && !session.first_answer_time) {
+            session.first_answer_time = extraSessionData.first_answer_time;
+            session.timer_active = true;
+          }
           await fetch(SUPABASE_URL + '/rest/v1/chat_messages', {
             method: 'POST',
             headers: { ...restHeaders, 'Prefer': 'resolution=merge-duplicates' },
@@ -601,13 +605,22 @@
         const timerEl = document.getElementById('questionTimer');
         if (!timerEl || !currentSession || currentSession.status !== 'question') return;
         const limit = currentSession.time_limit || 20;
-        if (!currentSession.first_answer_time) {
-          timerEl.textContent = limit + 's';
+
+        // Wenn noch keine 1. Antwort gegeben wurde: Timer wartet im Ruhezustand
+        if (!currentSession.first_answer_time && !currentSession.timer_active) {
+          timerEl.textContent = limit + 's ⏳';
           timerEl.className = 'text-amber-400 font-extrabold';
           return;
         }
-        const elapsed = Math.floor((Date.now() - currentSession.first_answer_time) / 1000);
-        const rem = Math.max(0, limit - elapsed);
+
+        let rem = limit;
+        if (currentSession.first_answer_time) {
+          const elapsed = Math.floor((Date.now() - currentSession.first_answer_time) / 1000);
+          rem = Math.max(0, limit - elapsed);
+        } else if (typeof currentSession.timer_remaining === 'number') {
+          rem = Math.max(0, currentSession.timer_remaining);
+        }
+
         timerEl.textContent = rem + 's';
         if (rem <= 5) {
           timerEl.className = 'text-red-400 animate-pulse font-black';
@@ -986,6 +999,12 @@
         const players = freshSession.players || [];
         const meIdx = players.findIndex(p => p.id === myPlayerId);
 
+        const extraData = {};
+        if (!freshSession.first_answer_time) {
+          extraData.first_answer_time = answerTime;
+          extraData.timer_active = true;
+        }
+
         if (meIdx !== -1) {
           const prevScore = players[meIdx].score || 0;
           const prevStreak = isCorrect ? ((players[meIdx].streak || 0) + 1) : 0;
@@ -994,12 +1013,13 @@
             score: prevScore + earnedPoints,
             streak: prevStreak,
             last_answer: currentOrderPermutation,
+            last_answered_q_index: currentSession.current_q_index,
             last_answer_time: answerTime,
             is_correct: isCorrect,
             is_danger: false,
             last_earned_points: earnedPoints
           };
-          await updateSessionPlayers(freshSession.id, players);
+          await updateSessionPlayers(freshSession.id, players, extraData);
         }
       } catch (e) {
         console.error('Order submit error', e);
@@ -1040,6 +1060,12 @@
         const players = freshSession.players || [];
         const meIdx = players.findIndex(p => p.id === myPlayerId);
 
+        const extraData = {};
+        if (!freshSession.first_answer_time) {
+          extraData.first_answer_time = answerTime;
+          extraData.timer_active = true;
+        }
+
         if (meIdx !== -1) {
           const prevScore = players[meIdx].score || 0;
           const prevStreak = isCorrect ? ((players[meIdx].streak || 0) + 1) : 0;
@@ -1048,12 +1074,13 @@
             score: prevScore + earnedPoints,
             streak: prevStreak,
             last_answer: idx,
+            last_answered_q_index: currentSession.current_q_index,
             last_answer_time: answerTime,
             is_correct: isCorrect,
             is_danger: isDanger,
             last_earned_points: earnedPoints
           };
-          await updateSessionPlayers(freshSession.id, players);
+          await updateSessionPlayers(freshSession.id, players, extraData);
         }
       } catch (e) {
         console.error('Answer send error', e);
@@ -1136,6 +1163,12 @@
         const players = freshSession.players || [];
         const meIdx = players.findIndex(p => p.id === myPlayerId);
 
+        const extraData = {};
+        if (!freshSession.first_answer_time) {
+          extraData.first_answer_time = answerTime;
+          extraData.timer_active = true;
+        }
+
         if (meIdx !== -1) {
           const prevScore = players[meIdx].score || 0;
           const prevStreak = isCorrect ? ((players[meIdx].streak || 0) + 1) : 0;
@@ -1144,12 +1177,13 @@
             score: prevScore + earnedPoints,
             streak: prevStreak,
             last_answer: chosenIndices,
+            last_answered_q_index: currentSession.current_q_index,
             last_answer_time: answerTime,
             is_correct: isCorrect,
             is_danger: isDanger,
             last_earned_points: earnedPoints
           };
-          await updateSessionPlayers(freshSession.id, players);
+          await updateSessionPlayers(freshSession.id, players, extraData);
         }
       } catch (e) {
         console.error('Multiple submit error', e);
@@ -1178,9 +1212,10 @@
         });
       }
 
-      const isCorrect = me.is_correct;
-      const isDanger = me.is_danger;
-      const earned = me.last_earned_points || 0;
+      const hasAnsweredThisRound = (me.last_answered_q_index === (session.current_q_index || 0)) && me.last_answer !== null && me.last_answer !== undefined;
+      const isCorrect = hasAnsweredThisRound && me.is_correct;
+      const isDanger = hasAnsweredThisRound && me.is_danger;
+      const earned = hasAnsweredThisRound ? (me.last_earned_points || 0) : 0;
 
       if (isCorrect) {
         card.className = 'bg-gradient-to-b from-gray-900 via-gray-900 to-emerald-950/40 border-2 border-emerald-400 rounded-3xl p-6 shadow-2xl shadow-emerald-500/20 ring-4 ring-emerald-500/20 space-y-3';
@@ -1189,6 +1224,14 @@
         title.className = 'text-2xl font-black text-emerald-400 drop-shadow-[0_0_12px_rgba(52,211,153,0.4)]';
         ptsBadge.className = 'inline-block px-4 py-1.5 rounded-full text-base font-black bg-gradient-to-r from-emerald-500 to-teal-500 text-gray-950 shadow-lg shadow-emerald-500/30';
         ptsBadge.textContent = '+' + earned + ' Punkte';
+        if (dangerAlert) dangerAlert.classList.add('hidden');
+      } else if (!hasAnsweredThisRound) {
+        card.className = 'bg-gray-900 border-2 border-amber-500/60 rounded-3xl p-6 shadow-2xl space-y-3';
+        icon.textContent = '⏱️';
+        title.textContent = 'ZEIT ABGELAUFEN';
+        title.className = 'text-2xl font-black text-amber-400';
+        ptsBadge.className = 'inline-block px-4 py-1.5 rounded-full text-base font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow';
+        ptsBadge.textContent = '+0 Punkte (Nicht rechtzeitig eingeloggt)';
         if (dangerAlert) dangerAlert.classList.add('hidden');
       } else {
         card.className = 'bg-gray-900 border-2 border-red-500/60 rounded-3xl p-6 shadow-2xl space-y-3';

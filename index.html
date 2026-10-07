@@ -3099,12 +3099,12 @@ window.syncBattleSession = async function(sessionObj) {
   // 1. Lokaler Server (für LAN / WLAN)
   const url = window.getBattleApiUrl('/api/battle/session');
   try {
-    fetch(url, {
+    await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(sessionObj)
-    }).catch(() => {});
-  } catch {}
+    });
+  } catch (e) {}
 
   // 2. Cloud Supabase (für Webhosting / Internet)
   try {
@@ -3139,6 +3139,9 @@ function startHostPolling() {
         const remote = await res.json();
         if (remote && remote.players) {
           battleSession.players = remote.players || [];
+          if (remote.first_answer_time && !battleSession.first_answer_time) {
+            battleSession.first_answer_time = remote.first_answer_time;
+          }
           updateHostUIFromState();
           return;
         }
@@ -3156,6 +3159,9 @@ function startHostPolling() {
           const remote = JSON.parse(rows[0].text);
           if (remote && remote.players) {
             battleSession.players = remote.players || [];
+            if (remote.first_answer_time && !battleSession.first_answer_time) {
+              battleSession.first_answer_time = remote.first_answer_time;
+            }
             updateHostUIFromState();
           }
         }
@@ -3190,11 +3196,16 @@ function updateHostUIFromState() {
 
   // Question UI Update (Live geantwortet Zähler)
   if (battleSession?.status === 'question') {
-    const answeredCount = players.filter(p => p.last_answer !== null && p.last_answer !== undefined).length;
+    // Streng prüfen: Hat der Spieler wirklich auf die AKTUELLE Frage geantwortet?
+    const answeredCount = players.filter(p => 
+      p.last_answer !== null && 
+      p.last_answer !== undefined && 
+      p.last_answered_q_index === battleCurrentQIdx
+    ).length;
     const statsEl = document.getElementById('battleAnsweredStats');
     if (statsEl) statsEl.textContent = answeredCount + ' / ' + players.length + ' geantwortet';
 
-    // Timer erst starten, sobald der 1. Teilnehmer geantwortet hat!
+    // Timer erst starten, sobald mindestens 1 Teilnehmer auf DIESE Frage geantwortet hat!
     if (answeredCount >= 1 && !battleTimerStarted) {
       startBattleTimerCountdown();
     }
@@ -3218,6 +3229,7 @@ function startBattleTimerCountdown() {
       battleSession.first_answer_time = Date.now();
     }
     battleSession.timer_active = true;
+    battleSession.timer_remaining = battleRemainingTime;
     syncBattleSession(battleSession);
   }
 
@@ -3236,6 +3248,9 @@ function startBattleTimerCountdown() {
   if (battleTimerInterval) clearInterval(battleTimerInterval);
   battleTimerInterval = setInterval(() => {
     battleRemainingTime--;
+    if (battleSession) {
+      battleSession.timer_remaining = battleRemainingTime;
+    }
     if (timerBox) {
       timerBox.textContent = Math.max(0, battleRemainingTime);
       if (battleRemainingTime <= 5 && battleRemainingTime > 0) {
@@ -3307,6 +3322,12 @@ async function presentBattleQuestion(qIdx) {
   battleTimerStarted = false;
   isBattleImageFocused = false;
   battleCurrentQIdx = qIdx;
+  if (battleTimerInterval) {
+    clearInterval(battleTimerInterval);
+    battleTimerInterval = null;
+  }
+  battleRemainingTime = battleTimeLimit;
+
   const q = battleQuestions[qIdx];
   if (!q) {
     renderBattlePodium();
@@ -3317,6 +3338,7 @@ async function presentBattleQuestion(qIdx) {
   const players = (battleSession.players || []).map(p => ({
     ...p,
     last_answer: null,
+    last_answered_q_index: null,
     last_answer_time: null,
     is_correct: false,
     is_danger: false,
@@ -3350,10 +3372,11 @@ async function presentBattleQuestion(qIdx) {
   battleSession.question_start_time = startTime;
   battleSession.first_answer_time = null;
   battleSession.timer_active = false;
+  battleSession.timer_remaining = battleTimeLimit;
   battleSession.players = players;
 
   // Session synchronisieren
-  syncBattleSession(battleSession);
+  await syncBattleSession(battleSession);
 
   // Screens wechseln (Sicherstellen, dass Opacity und Skalierung voll sichtbar sind)
   const qScreen = document.getElementById('battleQuestionScreen');
@@ -3592,8 +3615,12 @@ window.revealBattleRoundResults = async function() {
   const optLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
   const optSymbols = ['▲ A', '◆ B', '● C', '■ D', '★ E', '✦ F', '✿ G', '❖ H'];
 
-  const players = battleSession.players || [];
-  const answeredCount = players.filter(p => p.last_answer !== null && p.last_answer !== undefined).length;
+  const players = battleSession?.players || [];
+  const answeredCount = players.filter(p => 
+    p.last_answer !== null && 
+    p.last_answer !== undefined && 
+    p.last_answered_q_index === battleCurrentQIdx
+  ).length;
 
   // 1. Top Badges & Antwort-Zähler
   const numBadge = document.getElementById('battleRoundNumBadge') || document.getElementById('battleRoundNumText');
@@ -3658,7 +3685,8 @@ window.revealBattleRoundResults = async function() {
   const distContainer = document.getElementById('battleDistributionBars');
   if (distContainer) {
     if (isOrder) {
-      const correctCount = players.filter(p => p.is_correct).length;
+      const answeredPlayers = players.filter(p => p.last_answered_q_index === battleCurrentQIdx);
+      const correctCount = answeredPlayers.filter(p => p.is_correct).length;
       const wrongCount = players.length - correctCount;
       const correctPct = players.length > 0 ? Math.round((correctCount / players.length) * 100) : 0;
       const wrongPct = players.length > 0 ? Math.round((wrongCount / players.length) * 100) : 0;
@@ -3697,6 +3725,7 @@ window.revealBattleRoundResults = async function() {
       const numOptions = Math.min(8, (q.options || []).length || 4);
       const dist = Array(numOptions).fill(0);
       players.forEach(p => {
+        if (p.last_answered_q_index !== battleCurrentQIdx) return;
         if (Array.isArray(p.last_answer)) {
           p.last_answer.forEach(idx => {
             if (typeof idx === 'number' && dist[idx] !== undefined) {
