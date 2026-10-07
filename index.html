@@ -31,7 +31,7 @@
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.4); border-radius: 3px; }
 
-    @keyframes hmDraw { from { stroke-dashoffset: 50; } to { stroke-dashoffset: 0; } }
+    @keyframes hmDraw { from { stroke-dashoffset: 80; } to { stroke-dashoffset: 0; } }
     @keyframes hmPop { 0% { transform: scale(0.4); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
     @keyframes hmSway { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(3.5deg); } 75% { transform: rotate(-3.5deg); } }
 
@@ -218,6 +218,60 @@
     /* Scrollbar im Light-Mode */
     html:not(.dark) .custom-scrollbar::-webkit-scrollbar-thumb {
       background: rgba(148, 163, 184, 0.6);
+    }
+
+    /* ======================================================== */
+    /* VOLLBILD- & BEAMER-OPTIMIERUNGEN (KEIN SCROLLEN NÖTIG)   */
+    /* ======================================================== */
+    :fullscreen header,
+    :-webkit-full-screen header,
+    body.is-fullscreen header {
+      display: none !important;
+    }
+
+    /* Bei Vollbild oder laufendem Battle die Kopfleiste ausblenden */
+    body.battle-running #classroomTopNav,
+    :fullscreen #classroomTopNav,
+    :-webkit-full-screen #classroomTopNav,
+    body.is-fullscreen.battle-running #classroomTopNav {
+      display: none !important;
+    }
+
+    :fullscreen #classroomWrapper,
+    :-webkit-full-screen #classroomWrapper,
+    body.is-fullscreen #classroomWrapper {
+      height: 100vh !important;
+      max-height: 100vh !important;
+      overflow: hidden !important;
+      padding: 0 !important;
+    }
+
+    body.battle-running #classroomWrapper {
+      overflow-y: hidden !important;
+    }
+
+    :fullscreen #classroomContentArea,
+    :-webkit-full-screen #classroomContentArea,
+    body.is-fullscreen #classroomContentArea,
+    body.battle-running #classroomContentArea {
+      padding: 0.5rem 0.75rem !important;
+      max-width: 100% !important;
+      width: 100% !important;
+      height: 100% !important;
+      max-height: 100vh !important;
+      justify-content: flex-start !important;
+    }
+
+    :fullscreen #classroomBattleView,
+    :-webkit-full-screen #classroomBattleView,
+    body.is-fullscreen #classroomBattleView,
+    body.battle-running #classroomBattleView {
+      padding: 0.25rem 0.5rem !important;
+      max-width: 1200px !important;
+      width: 100% !important;
+      height: 100% !important;
+      max-height: 100% !important;
+      justify-content: space-between !important;
     }
   </style>
 </head>
@@ -894,7 +948,7 @@
   <!-- ======================================================= -->
   <div id="classroomWrapper" class="hidden flex-1 flex-col bg-gray-950 min-h-0 overflow-y-auto custom-scrollbar">
     <!-- UNTERRICHTS-KOPFLEISTE -->
-    <div class="bg-gray-900/95 backdrop-blur-md border-b border-gray-800 px-6 py-3.5 sticky top-0 z-30 flex flex-wrap items-center justify-between gap-4 shadow-lg">
+    <div id="classroomTopNav" class="bg-gray-900/95 backdrop-blur-md border-b border-gray-800 px-6 py-3.5 sticky top-0 z-30 flex flex-wrap items-center justify-between gap-4 shadow-lg">
       <div class="flex items-center gap-3">
         <!-- MODUS-REITER FÜR UNTERRICHT -->
         <div class="flex items-center bg-gray-950 p-1 rounded-xl border border-gray-800">
@@ -965,15 +1019,15 @@
         </button>
 
         <!-- VOLLBILD-TOGGLE FÜR BEAMER -->
-        <button type="button" onclick="toggleClassroomFullscreen()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-bold border border-gray-700 transition" title="Vollbildmodus (F11)">
+        <button type="button" onclick="toggleClassroomFullscreen()" id="classroomFullscreenBtn" class="btn-fs-toggle flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-bold border border-gray-700 transition" title="Vollbildmodus (F11)">
           <i data-lucide="maximize" class="w-4 h-4 text-amber-400"></i>
-          <span class="hidden md:inline">Beamer-Vollbild</span>
+          <span class="fs-toggle-text hidden md:inline">Beamer-Vollbild</span>
         </button>
       </div>
     </div>
 
     <!-- UNTERRICHTS-INHALTSBEREICH (MAX-BREITE FÜR BEAMER / SMARTBOARD) -->
-    <div class="flex-1 p-6 md:p-10 flex flex-col items-center justify-center max-w-6xl w-full mx-auto">
+    <div id="classroomContentArea" class="flex-1 p-4 md:p-6 flex flex-col items-center justify-center max-w-6xl w-full mx-auto">
       
       <!-- SUB-TAB 1: KLASSEN-QUIZ / PRÜFUNGSSIMULATION -->
       <div id="classroomQuizView" class="w-full flex flex-col gap-6">
@@ -1179,55 +1233,55 @@
         </div>
 
         <!-- 3.1 SETUP / CONFIG STATE -->
-        <div id="battleSetupScreen" class="relative z-10 bg-gradient-to-b from-gray-900/95 to-gray-950/95 border-2 border-emerald-500/30 rounded-3xl p-8 max-w-xl w-full shadow-2xl shadow-emerald-950/40 space-y-6 backdrop-blur-xl">
-          <div class="text-center space-y-2.5">
-            <div class="w-16 h-16 rounded-3xl bg-gradient-to-br from-emerald-500/25 via-emerald-600/20 to-teal-500/25 text-emerald-400 border border-emerald-500/40 flex items-center justify-center mx-auto text-3xl shadow-xl shadow-emerald-500/25 ring-4 ring-emerald-500/10">
+        <div id="battleSetupScreen" class="relative z-10 bg-gradient-to-b from-gray-900/95 to-gray-950/95 border-2 border-emerald-500/30 rounded-3xl p-5 md:p-6 max-w-lg w-full shadow-2xl shadow-emerald-950/40 space-y-4 backdrop-blur-xl">
+          <div class="text-center space-y-2">
+            <div class="w-13 h-13 rounded-2xl bg-gradient-to-br from-emerald-500/25 via-emerald-600/20 to-teal-500/25 text-emerald-400 border border-emerald-500/40 flex items-center justify-center mx-auto text-2xl shadow-xl shadow-emerald-500/25 ring-2 ring-emerald-500/10">
               ⚔️
             </div>
-            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shadow-sm">
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shadow-sm">
               <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
               <span>LIVE MULTIPLAYER</span>
             </div>
-            <h2 class="text-3xl font-black text-white tracking-tight">Quiz-Battle starten</h2>
+            <h2 class="text-2xl font-black text-white tracking-tight">Quiz-Battle starten</h2>
             <p class="text-xs text-gray-300 max-w-md mx-auto">Teilnehmer treten mit Smartphone & QR-Code bei und duellieren sich in Echtzeit um Punkte und Bestzeit!</p>
           </div>
 
-          <div class="space-y-4 pt-2">
+          <div class="space-y-3 pt-1">
             <div>
-              <label class="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+              <label class="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1 flex items-center gap-1.5">
                 <i data-lucide="book-open" class="w-3.5 h-3.5 text-emerald-400"></i>
                 <span>Fachbereich / Thema</span>
               </label>
-              <select id="battleCategorySelect" class="w-full px-4 py-3 bg-gray-950/90 border border-gray-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-2xl text-sm font-semibold text-gray-100 focus:outline-none transition shadow-inner">
+              <select id="battleCategorySelect" class="w-full px-3.5 py-2.5 bg-gray-950/90 border border-gray-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-xl text-xs md:text-sm font-semibold text-gray-100 focus:outline-none transition shadow-inner">
                 <option value="all">Alle Fachbereiche (Gemischt)</option>
               </select>
             </div>
 
             <!-- SPIELMODUS AUSWAHL (KLASSISCH VS. HANGMAN KNOCK-OUT) -->
             <div>
-              <label class="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+              <label class="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1 flex items-center gap-1.5">
                 <i data-lucide="swords" class="w-3.5 h-3.5 text-emerald-400"></i>
                 <span>Spielmodus</span>
               </label>
-              <select id="battleModeSelect" onchange="window.handleBattleModeChange()" class="w-full px-4 py-3 bg-gray-950/90 border border-gray-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-2xl text-sm font-semibold text-gray-100 focus:outline-none transition shadow-inner">
+              <select id="battleModeSelect" onchange="window.handleBattleModeChange()" class="w-full px-3.5 py-2.5 bg-gray-950/90 border border-gray-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-xl text-xs md:text-sm font-semibold text-gray-100 focus:outline-none transition shadow-inner">
                 <option value="classic" selected>🏆 Klassisch (Punkte, Highscore & Tempo)</option>
                 <option value="hangman">🪢 Hangman Knock-Out (Galgenmännchen Überlebenskampf)</option>
               </select>
-              <div id="battleModeDescriptionBox" class="mt-2 p-3 rounded-2xl bg-gray-950/80 border border-gray-800 text-xs text-gray-300 flex items-start gap-2.5 shadow-inner">
+              <div id="battleModeDescriptionBox" class="mt-1.5 p-2.5 rounded-xl bg-gray-950/80 border border-gray-800 text-xs text-gray-300 flex items-start gap-2 shadow-inner">
                 <span class="text-base leading-none" id="battleModeIcon">🏆</span>
                 <div class="leading-relaxed text-[11px]" id="battleModeDescText">
-                  <strong>Klassisches Quiz-Battle:</strong> Alle spielen bis zum Schluss mit. Punkte für richtige Antworten, Bonuspunkte für Tempo und Antwort-Streaks.
+                  <strong>Klassisches Quiz-Battle:</strong> Alle spielen bis zum Schluss mit. Punkte für richtige Antworten, Bonuspunkte für Tempo und Streaks.
                 </div>
               </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-3.5">
+            <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                <label class="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1 flex items-center gap-1.5">
                   <i data-lucide="help-circle" class="w-3.5 h-3.5 text-emerald-400"></i>
                   <span>Anzahl Fragen</span>
                 </label>
-                <select id="battleCountSelect" class="w-full px-4 py-3 bg-gray-950/90 border border-gray-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-2xl text-sm font-semibold text-gray-100 focus:outline-none transition shadow-inner">
+                <select id="battleCountSelect" class="w-full px-3 py-2.5 bg-gray-950/90 border border-gray-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-xl text-xs md:text-sm font-semibold text-gray-100 focus:outline-none transition shadow-inner">
                   <option value="5">5 Fragen (Sprint)</option>
                   <option value="10" selected>10 Fragen (Standard)</option>
                   <option value="15">15 Fragen</option>
@@ -1236,11 +1290,11 @@
               </div>
 
               <div>
-                <label class="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                <label class="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1 flex items-center gap-1.5">
                   <i data-lucide="clock" class="w-3.5 h-3.5 text-emerald-400"></i>
                   <span>Zeit pro Frage</span>
                 </label>
-                <select id="battleTimerSelect" class="w-full px-4 py-3 bg-gray-950/90 border border-gray-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-2xl text-sm font-semibold text-gray-100 focus:outline-none transition shadow-inner">
+                <select id="battleTimerSelect" class="w-full px-3 py-2.5 bg-gray-950/90 border border-gray-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-xl text-xs md:text-sm font-semibold text-gray-100 focus:outline-none transition shadow-inner">
                   <option value="10">10 Sekunden</option>
                   <option value="15">15 Sekunden</option>
                   <option value="20" selected>20 Sekunden</option>
@@ -1249,7 +1303,7 @@
               </div>
             </div>
 
-            <button type="button" onclick="createLiveBattleLobby()" id="btnCreateLobby" class="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-base shadow-xl shadow-emerald-600/35 transition flex items-center justify-center gap-2 transform hover:-translate-y-0.5 active:translate-y-0">
+            <button type="button" onclick="createLiveBattleLobby()" id="btnCreateLobby" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm md:text-base shadow-xl shadow-emerald-600/35 transition flex items-center justify-center gap-2 transform hover:-translate-y-0.5 active:translate-y-0">
               <i data-lucide="qr-code" class="w-5 h-5"></i>
               <span>Lobby eröffnen & QR-Code anzeigen</span>
             </button>
@@ -1257,76 +1311,94 @@
         </div>
 
         <!-- 3.2 LOBBY STATE (QR-CODE + JOINED PLAYERS) -->
-        <div id="battleLobbyScreen" class="relative z-10 hidden flex-col items-center max-w-4xl w-full space-y-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full items-stretch">
+        <div id="battleLobbyScreen" class="relative z-10 hidden flex-col items-center max-w-4xl w-full space-y-3 md:space-y-4">
+          <!-- Top Lobby Action Bar -->
+          <div class="w-full flex items-center justify-between bg-gradient-to-r from-gray-900/95 to-gray-950/95 border-2 border-emerald-500/30 rounded-2xl py-2 px-3 md:px-4 shadow-xl backdrop-blur-xl">
+            <div class="flex items-center gap-2.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+              <span class="text-xs md:text-sm font-black text-white">QUIZ-BATTLE LOBBY</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" id="battleLobbyModeBadge">Live</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="window.toggleClassroomFullscreen()" class="btn-fs-toggle flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gray-800/80 hover:bg-gray-700 text-xs font-bold text-amber-300 border border-amber-500/30 transition shadow" title="Beamer-Vollbild an/aus (F11)">
+                <i data-lucide="maximize" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span class="fs-toggle-text hidden sm:inline">Vollbild</span>
+              </button>
+              <button type="button" onclick="resetLiveBattleToSetup()" class="px-2.5 py-1 rounded-xl bg-gray-800 hover:bg-red-500/20 text-gray-400 hover:text-red-400 text-xs font-bold border border-gray-700 transition" title="Lobby abbrechen und zurück">
+                Abbrechen
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full items-stretch">
             <!-- QR CODE BOX -->
-            <div class="bg-gradient-to-b from-gray-900/95 to-gray-950/95 border-2 border-emerald-500/30 rounded-3xl p-6 text-center shadow-2xl shadow-emerald-950/50 space-y-4 backdrop-blur-xl flex flex-col justify-between">
+            <div class="bg-gradient-to-b from-gray-900/95 to-gray-950/95 border-2 border-emerald-500/30 rounded-3xl p-4 md:p-5 text-center shadow-2xl shadow-emerald-950/50 space-y-3 backdrop-blur-xl flex flex-col justify-between">
               <div>
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-extrabold text-xs mb-3 shadow-sm">
+                <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-extrabold text-[11px] mb-2 shadow-sm">
                   <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
                   <span>Mit Smartphone beitreten</span>
                 </div>
-                <div class="bg-white p-3.5 rounded-3xl w-52 h-52 mx-auto shadow-2xl shadow-emerald-500/20 flex items-center justify-center overflow-hidden ring-4 ring-emerald-500/20" id="battleQrContainer">
+                <div class="bg-white p-2.5 rounded-2xl w-40 h-40 md:w-44 md:h-44 mx-auto shadow-xl shadow-emerald-500/20 flex items-center justify-center overflow-hidden ring-4 ring-emerald-500/20" id="battleQrContainer">
                   <img id="battleQrImage" src="" alt="QR-Code zum Beitreten" class="w-full h-full object-contain">
                   <canvas id="battleQrCanvas" class="w-full h-full hidden"></canvas>
                 </div>
               </div>
 
               <div>
-                <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">Game-PIN:</div>
-                <div class="text-5xl font-black text-emerald-400 tracking-widest font-mono mt-1 drop-shadow-[0_0_20px_rgba(52,211,153,0.5)]" id="battlePinDisplay">----</div>
+                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Game-PIN:</div>
+                <div class="text-4xl md:text-5xl font-black text-emerald-400 tracking-widest font-mono mt-0.5 drop-shadow-[0_0_20px_rgba(52,211,153,0.5)]" id="battlePinDisplay">----</div>
               </div>
               
               <!-- Direktlink & Konfiguration -->
-              <div class="space-y-2.5 pt-2 border-t border-gray-800/80">
-                <div class="flex items-center gap-1.5 bg-gray-950 py-2 px-3 rounded-xl border border-gray-800 text-xs text-gray-300 shadow-inner">
-                  <span class="truncate flex-1 font-mono text-left text-emerald-300 font-semibold" id="battleUrlDisplay">play.html</span>
-                  <button type="button" onclick="copyBattleJoinUrl()" class="p-1.5 rounded-lg bg-gray-800 hover:bg-emerald-600/30 text-gray-300 hover:text-white transition" title="Link kopieren">
+              <div class="space-y-2 pt-2 border-t border-gray-800/80">
+                <div class="flex items-center gap-1.5 bg-gray-950 py-1.5 px-2.5 rounded-xl border border-gray-800 text-xs text-gray-300 shadow-inner">
+                  <span class="truncate flex-1 font-mono text-left text-emerald-300 font-semibold text-[11px]" id="battleUrlDisplay">play.html</span>
+                  <button type="button" onclick="copyBattleJoinUrl()" class="p-1 rounded-lg bg-gray-800 hover:bg-emerald-600/30 text-gray-300 hover:text-white transition" title="Link kopieren">
                     <i data-lucide="copy" class="w-3.5 h-3.5"></i>
                   </button>
-                  <button type="button" onclick="editBattleBaseUrl()" class="p-1.5 rounded-lg bg-gray-800 hover:bg-emerald-600/30 text-gray-300 hover:text-white transition" title="Web-Adresse / Domain anpassen">
+                  <button type="button" onclick="editBattleBaseUrl()" class="p-1 rounded-lg bg-gray-800 hover:bg-emerald-600/30 text-gray-300 hover:text-white transition" title="Web-Adresse / Domain anpassen">
                     <i data-lucide="settings" class="w-3.5 h-3.5 text-emerald-400"></i>
                   </button>
                 </div>
 
-                <div id="battleServerStatusBadge" class="flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
+                <div id="battleServerStatusBadge" class="flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-semibold">
                   <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                   <span id="battleServerStatusText">Server aktiv (192.168.188.78:3000)</span>
                 </div>
 
-                <div class="p-2.5 rounded-2xl bg-gray-950/90 border border-gray-800 text-left text-[11px] text-gray-300 space-y-1">
-                  <div class="flex items-center gap-1.5 font-bold text-white">
-                    <i data-lucide="wifi" class="w-3.5 h-3.5 text-emerald-400"></i>
+                <div class="p-2 rounded-xl bg-gray-950/90 border border-gray-800 text-left text-[10px] text-gray-300 space-y-0.5 leading-snug">
+                  <div class="flex items-center gap-1 font-bold text-white text-[11px]">
+                    <i data-lucide="wifi" class="w-3 h-3 text-emerald-400"></i>
                     <span>WLAN-Voraussetzung:</span>
                   </div>
-                  <div class="text-gray-400 leading-relaxed">
-                    Smartphone muss im <strong>selben WLAN</strong> (z.B. FRITZ!Box) sein wie dieser PC. Bei mobilem Datennetz (LTE/5G) ist die lokale IP nicht erreichbar.
+                  <div class="text-gray-400">
+                    Smartphone muss im <strong>selben WLAN</strong> (z.B. FRITZ!Box) sein wie dieser PC.
                   </div>
                 </div>
               </div>
             </div>
 
             <!-- PLAYERS LIST -->
-            <div class="bg-gradient-to-b from-gray-900/95 to-gray-950/95 border-2 border-emerald-500/30 rounded-3xl p-6 shadow-2xl shadow-emerald-950/50 flex flex-col justify-between h-full min-h-[420px] backdrop-blur-xl">
+            <div class="bg-gradient-to-b from-gray-900/95 to-gray-950/95 border-2 border-emerald-500/30 rounded-3xl p-4 md:p-5 shadow-2xl shadow-emerald-950/50 flex flex-col justify-between h-full min-h-[360px] backdrop-blur-xl">
               <div>
-                <div class="flex items-center justify-between pb-3 border-b border-gray-800/80 mb-4">
+                <div class="flex items-center justify-between pb-2 border-b border-gray-800/80 mb-3">
                   <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
-                      <i data-lucide="users" class="w-4 h-4"></i>
+                    <div class="w-7 h-7 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
+                      <i data-lucide="users" class="w-3.5 h-3.5"></i>
                     </div>
-                    <h3 class="text-lg font-black text-white">Lobby-Teilnehmer</h3>
+                    <h3 class="text-base font-black text-white">Lobby-Teilnehmer</h3>
                   </div>
-                  <span class="px-3 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm" id="battleLobbyCount">0 Spieler</span>
+                  <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm" id="battleLobbyCount">0 Spieler</span>
                 </div>
 
-                <div id="battleLobbyPlayerList" class="flex flex-wrap gap-2.5 max-h-[250px] overflow-y-auto custom-scrollbar p-1">
-                  <div class="text-xs text-gray-500 italic py-10 text-center w-full">Warte auf Teilnehmer... Scanne den QR-Code!</div>
+                <div id="battleLobbyPlayerList" class="flex flex-wrap gap-2 max-h-[190px] md:max-h-[230px] overflow-y-auto custom-scrollbar p-1">
+                  <div class="text-xs text-gray-500 italic py-8 text-center w-full">Warte auf Teilnehmer... Scanne den QR-Code!</div>
                 </div>
               </div>
 
-              <div class="pt-4 border-t border-gray-800/80">
-                <button type="button" onclick="startLiveBattleGame()" id="btnStartBattleGame" class="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-black text-base shadow-2xl shadow-emerald-500/40 transition flex items-center justify-center gap-2.5 transform hover:-translate-y-0.5 active:translate-y-0">
-                  <i data-lucide="play" class="w-5 h-5"></i>
+              <div class="pt-3 border-t border-gray-800/80">
+                <button type="button" onclick="startLiveBattleGame()" id="btnStartBattleGame" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-black text-sm md:text-base shadow-2xl shadow-emerald-500/40 transition flex items-center justify-center gap-2 transform hover:-translate-y-0.5 active:translate-y-0">
+                  <i data-lucide="play" class="w-4 h-4"></i>
                   <span>Quiz-Battle jetzt starten</span>
                 </button>
               </div>
@@ -1335,225 +1407,233 @@
         </div>
 
         <!-- 3.3 LIVE QUESTION SCREEN ON BEAMER -->
-        <div id="battleQuestionScreen" class="relative z-10 hidden flex-col max-w-5xl w-full space-y-4">
+        <div id="battleQuestionScreen" class="relative z-10 hidden flex-col max-w-5xl w-full space-y-2.5 md:space-y-3">
           <!-- Top Info Bar -->
-          <div class="bg-gradient-to-r from-gray-900/95 via-gray-900/95 to-emerald-950/40 border-2 border-emerald-500/30 rounded-2xl p-4 flex items-center justify-between shadow-xl shadow-emerald-950/40 backdrop-blur-xl">
-            <div class="flex items-center gap-3">
-              <span class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black text-sm shadow-md shadow-emerald-600/30" id="battleQNumBadge">Frage 1 / 10</span>
-              <span class="text-xs font-extrabold text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-3 py-1 rounded-xl" id="battleQCatBadge">#Signale</span>
-              <button type="button" onclick="window.toggleBattleMusic()" id="btnBattleMusicToggle" class="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gray-800/80 hover:bg-gray-700 text-xs font-bold text-emerald-300 border border-emerald-500/30 transition shadow" title="Kahoot Hintergrundmusik an/aus">
+          <div class="bg-gradient-to-r from-gray-900/95 via-gray-900/95 to-emerald-950/40 border-2 border-emerald-500/30 rounded-2xl py-2 px-3 md:px-4 flex items-center justify-between shadow-xl shadow-emerald-950/40 backdrop-blur-xl shrink-0">
+            <div class="flex items-center gap-2 md:gap-3 flex-wrap">
+              <span class="px-3 py-1 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black text-xs md:text-sm shadow-md shadow-emerald-600/30" id="battleQNumBadge">Frage 1 / 10</span>
+              <span class="text-xs font-extrabold text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-1 rounded-xl" id="battleQCatBadge">#Signale</span>
+              <button type="button" onclick="window.toggleBattleMusic()" id="btnBattleMusicToggle" class="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gray-800/80 hover:bg-gray-700 text-xs font-bold text-emerald-300 border border-emerald-500/30 transition shadow" title="Kahoot Hintergrundmusik an/aus">
                 <i data-lucide="volume-2" class="w-3.5 h-3.5" id="battleMusicIcon"></i>
                 <span id="battleMusicToggleText">Musik: An</span>
               </button>
+              <button type="button" onclick="window.toggleClassroomFullscreen()" class="btn-fs-toggle flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gray-800/80 hover:bg-gray-700 text-xs font-bold text-amber-300 border border-amber-500/30 transition shadow" title="Beamer-Vollbild an/aus (F11)">
+                <i data-lucide="maximize" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span class="fs-toggle-text hidden sm:inline">Vollbild</span>
+              </button>
             </div>
             <!-- Countdown -->
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2.5 shrink-0">
               <div class="flex flex-col items-end">
-                <div class="flex items-center gap-2 text-sm font-black text-white bg-gray-950/80 px-3.5 py-1.5 rounded-xl border border-gray-800 shadow-inner">
-                  <i data-lucide="users" class="w-4 h-4 text-emerald-400"></i>
+                <div class="flex items-center gap-1.5 text-xs font-black text-white bg-gray-950/80 px-2.5 py-1 rounded-xl border border-gray-800 shadow-inner">
+                  <i data-lucide="users" class="w-3.5 h-3.5 text-emerald-400"></i>
                   <span id="battleAnsweredStats" class="text-emerald-400 font-mono font-black">0 / 0 geantwortet</span>
                 </div>
-                <span id="battleTimerSubtext" class="text-[10px] font-bold text-emerald-400/80 uppercase tracking-wider mt-0.5">Wartet auf 1. Antwort</span>
+                <span id="battleTimerSubtext" class="text-[9px] font-bold text-emerald-400/80 uppercase tracking-wider mt-0.5 hidden sm:inline">Wartet auf Antwort</span>
               </div>
-              <div class="w-13 h-13 rounded-full border-4 border-emerald-400 bg-gray-950 flex items-center justify-center text-xl font-black text-emerald-400 shadow-xl shadow-emerald-400/30 animate-pulse" id="battleTimerBox">
+              <div class="w-10 h-10 md:w-11 md:h-11 rounded-full border-4 border-emerald-400 bg-gray-950 flex items-center justify-center text-lg md:text-xl font-black text-emerald-400 shadow-xl shadow-emerald-400/30 animate-pulse shrink-0" id="battleTimerBox">
                 20
               </div>
             </div>
           </div>
 
           <!-- Question Content Card -->
-          <div class="bg-gradient-to-b from-gray-900/95 to-gray-950/95 border-2 border-emerald-500/25 rounded-3xl p-6 md:p-8 shadow-2xl shadow-emerald-950/40 space-y-4 backdrop-blur-xl transition-all duration-300">
-            <div id="battleQuestionImageContainer" class="hidden justify-center mb-2">
-              <div id="battleQuestionImageBox" onclick="window.toggleBattleImageFocus()" class="relative group cursor-pointer max-h-64 max-w-md rounded-2xl bg-gray-950 border-2 border-emerald-500/30 hover:border-emerald-400 p-2 overflow-hidden shadow-2xl shadow-emerald-950/50 transition-all duration-300 hover:scale-[1.01]" title="Klicken, um Bild zu vergrößern und Antwortkacheln auszublenden">
-                <img id="battleQuestionImage" src="" alt="Signalabbildung" class="max-h-60 object-contain mx-auto rounded-xl transition-all duration-300">
-                <div id="battleImageZoomHint" class="absolute bottom-2 right-2 px-2.5 py-1 rounded-xl bg-gray-950/85 backdrop-blur border border-emerald-500/40 text-[11px] font-bold text-emerald-300 flex items-center gap-1.5 opacity-90 group-hover:opacity-100 transition shadow-lg">
-                  <i data-lucide="maximize-2" class="w-3.5 h-3.5 text-emerald-400"></i>
-                  <span id="battleImageZoomHintText">Großansicht (Klick)</span>
+          <div class="bg-gradient-to-b from-gray-900/95 to-gray-950/95 border-2 border-emerald-500/25 rounded-2xl md:rounded-3xl p-3.5 md:p-4 shadow-2xl shadow-emerald-950/40 space-y-2 backdrop-blur-xl transition-all duration-300 shrink-0">
+            <div id="battleQuestionImageContainer" class="hidden justify-center mb-1">
+              <div id="battleQuestionImageBox" onclick="window.toggleBattleImageFocus()" class="relative group cursor-pointer max-h-32 md:max-h-40 max-w-sm rounded-xl bg-gray-950 border-2 border-emerald-500/30 hover:border-emerald-400 p-1.5 overflow-hidden shadow-2xl shadow-emerald-950/50 transition-all duration-300 hover:scale-[1.01]" title="Klicken für Großansicht">
+                <img id="battleQuestionImage" src="" alt="Signalabbildung" class="max-h-28 md:max-h-36 object-contain mx-auto rounded-lg transition-all duration-300">
+                <div id="battleImageZoomHint" class="absolute bottom-1.5 right-1.5 px-2 py-0.5 rounded-lg bg-gray-950/85 backdrop-blur border border-emerald-500/40 text-[10px] font-bold text-emerald-300 flex items-center gap-1 opacity-90 group-hover:opacity-100 transition shadow">
+                  <i data-lucide="maximize-2" class="w-3 h-3 text-emerald-400"></i>
+                  <span id="battleImageZoomHintText">Großansicht</span>
                 </div>
               </div>
             </div>
-            <h2 class="text-2xl md:text-3xl font-black text-white text-center leading-snug tracking-tight" id="battleQuestionText">Fragentext lädt...</h2>
+            <h2 class="text-lg md:text-xl lg:text-2xl font-black text-white text-center leading-snug tracking-tight" id="battleQuestionText">Fragentext lädt...</h2>
           </div>
 
           <!-- Mehrfachauswahl Banner (wird nur bei Multiple-Choice-Fragen eingeblendet) -->
-          <div id="battleMultipleBanner" class="hidden p-4 rounded-2xl bg-gradient-to-r from-purple-950/80 via-indigo-950/80 to-purple-950/80 border-2 border-purple-500/60 text-purple-200 font-black text-sm md:text-base shadow-xl flex items-center justify-center gap-3 animate-pulse">
-            <span class="text-xl">✨</span>
+          <div id="battleMultipleBanner" class="hidden py-1.5 px-3 rounded-xl bg-gradient-to-r from-purple-950/80 via-indigo-950/80 to-purple-950/80 border border-purple-500/60 text-purple-200 font-black text-xs md:text-sm shadow-xl flex items-center justify-center gap-2 animate-pulse shrink-0">
+            <span class="text-base">✨</span>
             <span id="battleMultipleBannerText">MEHRFACHAUSWAHL: Mehrere Antworten sind richtig! Wähle alle zutreffenden Optionen auf deinem Smartphone.</span>
           </div>
 
           <!-- Reihenfolge Banner (wird nur bei Order-Fragen eingeblendet) -->
-          <div id="battleOrderBanner" class="hidden p-4 rounded-2xl bg-cyan-950/70 border-2 border-cyan-500/50 text-cyan-200 font-black text-sm md:text-base shadow-xl flex items-center justify-center gap-2.5">
-            <i data-lucide="arrow-up-down" class="w-5 h-5 text-cyan-400"></i>
+          <div id="battleOrderBanner" class="hidden py-1.5 px-3 rounded-xl bg-cyan-950/70 border border-cyan-500/50 text-cyan-200 font-black text-xs md:text-sm shadow-xl flex items-center justify-center gap-2 shrink-0">
+            <i data-lucide="arrow-up-down" class="w-4 h-4 text-cyan-400"></i>
             <span>🔄 REIHENFOLGE-AUFGABE: Bringe die Schritte auf deinem Smartphone in die richtige Reihenfolge!</span>
           </div>
 
           <!-- Kahoot-Style Colored Option Boxes (Bis zu 8 Optionen / Schritte) -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="battleOptionsGrid">
-            <div id="battle_opt_box_0" class="p-5 rounded-3xl bg-gradient-to-r from-red-600 to-rose-700 text-white font-black flex items-center gap-4 shadow-xl shadow-red-950/30 border border-red-400/40 transition-all hover:scale-[1.01]">
-              <div id="battle_opt_badge_0" class="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center text-xl shrink-0 shadow-inner">▲ A</div>
-              <div class="text-base font-extrabold flex-1" id="battle_opt_text_0">Option A</div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-2.5 flex-1 min-h-0" id="battleOptionsGrid">
+            <div id="battle_opt_box_0" class="py-2.5 px-3.5 md:py-3 md:px-4 rounded-xl md:rounded-2xl bg-gradient-to-r from-red-600 to-rose-700 text-white font-black flex items-center gap-3 shadow-lg shadow-red-950/30 border border-red-400/40 transition-all hover:scale-[1.01]">
+              <div id="battle_opt_badge_0" class="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center text-sm md:text-base shrink-0 shadow-inner font-black">▲ A</div>
+              <div class="text-xs md:text-sm lg:text-base font-extrabold flex-1 leading-snug" id="battle_opt_text_0">Option A</div>
             </div>
 
-            <div id="battle_opt_box_1" class="p-5 rounded-3xl bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-black flex items-center gap-4 shadow-xl shadow-blue-950/30 border border-blue-400/40 transition-all hover:scale-[1.01]">
-              <div id="battle_opt_badge_1" class="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center text-xl shrink-0 shadow-inner">◆ B</div>
-              <div class="text-base font-extrabold flex-1" id="battle_opt_text_1">Option B</div>
+            <div id="battle_opt_box_1" class="py-2.5 px-3.5 md:py-3 md:px-4 rounded-xl md:rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-black flex items-center gap-3 shadow-lg shadow-blue-950/30 border border-blue-400/40 transition-all hover:scale-[1.01]">
+              <div id="battle_opt_badge_1" class="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center text-sm md:text-base shrink-0 shadow-inner font-black">◆ B</div>
+              <div class="text-xs md:text-sm lg:text-base font-extrabold flex-1 leading-snug" id="battle_opt_text_1">Option B</div>
             </div>
 
-            <div id="battle_opt_box_2" class="p-5 rounded-3xl bg-gradient-to-r from-amber-500 to-yellow-600 text-gray-950 font-black flex items-center gap-4 shadow-xl shadow-amber-950/30 border border-amber-300/50 transition-all hover:scale-[1.01]">
-              <div id="battle_opt_badge_2" class="w-11 h-11 rounded-2xl bg-black/20 text-black flex items-center justify-center text-xl shrink-0 shadow-inner">● C</div>
-              <div class="text-base font-extrabold flex-1" id="battle_opt_text_2">Option C</div>
+            <div id="battle_opt_box_2" class="py-2.5 px-3.5 md:py-3 md:px-4 rounded-xl md:rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-600 text-gray-950 font-black flex items-center gap-3 shadow-lg shadow-amber-950/30 border border-amber-300/50 transition-all hover:scale-[1.01]">
+              <div id="battle_opt_badge_2" class="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-black/20 text-black flex items-center justify-center text-sm md:text-base shrink-0 shadow-inner font-black">● C</div>
+              <div class="text-xs md:text-sm lg:text-base font-extrabold flex-1 leading-snug" id="battle_opt_text_2">Option C</div>
             </div>
 
-            <div id="battle_opt_box_3" class="p-5 rounded-3xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black flex items-center gap-4 shadow-xl shadow-emerald-950/40 border-2 border-emerald-400/60 ring-2 ring-emerald-500/20 transition-all hover:scale-[1.01]">
-              <div id="battle_opt_badge_3" class="w-11 h-11 rounded-2xl bg-white/25 backdrop-blur flex items-center justify-center text-xl shrink-0 shadow-inner">■ D</div>
-              <div class="text-base font-extrabold flex-1" id="battle_opt_text_3">Option D</div>
+            <div id="battle_opt_box_3" class="py-2.5 px-3.5 md:py-3 md:px-4 rounded-xl md:rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black flex items-center gap-3 shadow-lg shadow-emerald-950/40 border-2 border-emerald-400/60 ring-2 ring-emerald-500/20 transition-all hover:scale-[1.01]">
+              <div id="battle_opt_badge_3" class="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-white/25 backdrop-blur flex items-center justify-center text-sm md:text-base shrink-0 shadow-inner font-black">■ D</div>
+              <div class="text-xs md:text-sm lg:text-base font-extrabold flex-1 leading-snug" id="battle_opt_text_3">Option D</div>
             </div>
 
-            <div id="battle_opt_box_4" class="hidden p-5 rounded-3xl bg-gradient-to-r from-purple-600 to-violet-700 text-white font-black flex items-center gap-4 shadow-xl border border-purple-400/40 transition-all">
-              <div id="battle_opt_badge_4" class="w-11 h-11 rounded-2xl bg-white/20 flex items-center justify-center text-xl shrink-0">★ E</div>
-              <div class="text-base font-extrabold flex-1" id="battle_opt_text_4">Option E</div>
+            <div id="battle_opt_box_4" class="hidden py-2.5 px-3.5 md:py-3 md:px-4 rounded-xl md:rounded-2xl bg-gradient-to-r from-purple-600 to-violet-700 text-white font-black flex items-center gap-3 shadow-lg border border-purple-400/40 transition-all">
+              <div id="battle_opt_badge_4" class="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-white/20 flex items-center justify-center text-sm md:text-base shrink-0 font-black">★ E</div>
+              <div class="text-xs md:text-sm lg:text-base font-extrabold flex-1 leading-snug" id="battle_opt_text_4">Option E</div>
             </div>
 
-            <div id="battle_opt_box_5" class="hidden p-5 rounded-3xl bg-gradient-to-r from-teal-600 to-emerald-700 text-white font-black flex items-center gap-4 shadow-xl border border-teal-400/40 transition-all">
-              <div id="battle_opt_badge_5" class="w-11 h-11 rounded-2xl bg-white/20 flex items-center justify-center text-xl shrink-0">✦ F</div>
-              <div class="text-base font-extrabold flex-1" id="battle_opt_text_5">Option F</div>
+            <div id="battle_opt_box_5" class="hidden py-2.5 px-3.5 md:py-3 md:px-4 rounded-xl md:rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-700 text-white font-black flex items-center gap-3 shadow-lg border border-teal-400/40 transition-all">
+              <div id="battle_opt_badge_5" class="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-white/20 flex items-center justify-center text-sm md:text-base shrink-0 font-black">✦ F</div>
+              <div class="text-xs md:text-sm lg:text-base font-extrabold flex-1 leading-snug" id="battle_opt_text_5">Option F</div>
             </div>
 
-            <div id="battle_opt_box_6" class="hidden p-5 rounded-3xl bg-gradient-to-r from-pink-600 to-rose-700 text-white font-black flex items-center gap-4 shadow-xl border border-pink-400/40 transition-all">
-              <div id="battle_opt_badge_6" class="w-11 h-11 rounded-2xl bg-white/20 flex items-center justify-center text-xl shrink-0">✿ G</div>
-              <div class="text-base font-extrabold flex-1" id="battle_opt_text_6">Option G</div>
+            <div id="battle_opt_box_6" class="hidden py-2.5 px-3.5 md:py-3 md:px-4 rounded-xl md:rounded-2xl bg-gradient-to-r from-pink-600 to-rose-700 text-white font-black flex items-center gap-3 shadow-lg border border-pink-400/40 transition-all">
+              <div id="battle_opt_badge_6" class="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-white/20 flex items-center justify-center text-sm md:text-base shrink-0 font-black">✿ G</div>
+              <div class="text-xs md:text-sm lg:text-base font-extrabold flex-1 leading-snug" id="battle_opt_text_6">Option G</div>
             </div>
 
-            <div id="battle_opt_box_7" class="hidden p-5 rounded-3xl bg-gradient-to-r from-indigo-600 to-blue-800 text-white font-black flex items-center gap-4 shadow-xl border border-indigo-400/40 transition-all">
-              <div id="battle_opt_badge_7" class="w-11 h-11 rounded-2xl bg-white/20 flex items-center justify-center text-xl shrink-0">❖ H</div>
-              <div class="text-base font-extrabold flex-1" id="battle_opt_text_7">Option H</div>
+            <div id="battle_opt_box_7" class="hidden py-2.5 px-3.5 md:py-3 md:px-4 rounded-xl md:rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-800 text-white font-black flex items-center gap-3 shadow-lg border border-indigo-400/40 transition-all">
+              <div id="battle_opt_badge_7" class="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-white/20 flex items-center justify-center text-sm md:text-base shrink-0 font-black">❖ H</div>
+              <div class="text-xs md:text-sm lg:text-base font-extrabold flex-1 leading-snug" id="battle_opt_text_7">Option H</div>
             </div>
           </div>
 
           <!-- Host Control Toolbar -->
-          <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
-            <div class="text-xs text-gray-400 flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>Automatische Auflösung sobald alle geantwortet haben (Speed-Punkte bis 1.000 Pkt.)</span>
+          <div class="flex items-center justify-between gap-2 pt-1 shrink-0">
+            <div class="text-[11px] text-gray-400 flex items-center gap-1.5 truncate">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+              <span class="truncate hidden sm:inline">Automatische Auflösung sobald alle geantwortet haben</span>
             </div>
-            <div class="flex items-center gap-2">
-              <button type="button" onclick="window.toggleBattleQuestionView()" id="btnBackToResultScreen" class="hidden px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black shadow-lg shadow-emerald-600/30 transition flex items-center gap-1.5">
-                <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
+            <div class="flex items-center gap-2 shrink-0">
+              <button type="button" onclick="window.toggleBattleQuestionView()" id="btnBackToResultScreen" class="hidden px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black shadow-lg shadow-emerald-600/30 transition flex items-center gap-1.5">
+                <i data-lucide="bar-chart-2" class="w-3.5 h-3.5"></i>
                 <span>Zurück zur Auswertung</span>
               </button>
-              <button type="button" onclick="revealBattleRoundResults()" id="btnRevealBattleNow" class="px-4 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold border border-gray-700 transition flex items-center gap-1.5">
-                <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+              <button type="button" onclick="revealBattleRoundResults()" id="btnRevealBattleNow" class="px-3 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold border border-gray-700 transition flex items-center gap-1.5">
+                <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-400"></i>
                 <span>Sofort auflösen</span>
               </button>
-              <button type="button" onclick="renderBattlePodium()" class="px-4 py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-extrabold border border-amber-500/40 transition flex items-center gap-1.5" title="Quiz-Battle vorzeitig beenden und Endstand ehren">
-                <i data-lucide="award" class="w-4 h-4"></i>
-                <span>Battle beenden & zur Siegerehrung 🏆</span>
+              <button type="button" onclick="renderBattlePodium()" class="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-extrabold border border-amber-500/40 transition flex items-center gap-1.5" title="Quiz-Battle vorzeitig beenden und Endstand ehren">
+                <i data-lucide="award" class="w-3.5 h-3.5"></i>
+                <span>Battle beenden 🏆</span>
               </button>
             </div>
           </div>
         </div>
 
         <!-- 3.4 ROUND RESULT & LEADERBOARD SCREEN (AUFLÖSUNG AUF BEAMER) -->
-        <div id="battleRoundResultScreen" class="relative z-10 hidden flex-col max-w-5xl w-full space-y-4">
+        <div id="battleRoundResultScreen" class="relative z-10 hidden flex-col max-w-5xl w-full space-y-2 md:space-y-2.5">
           <!-- Top Meta Info Bar -->
-          <div class="bg-gradient-to-r from-gray-900/95 via-gray-900/95 to-emerald-950/40 border-2 border-emerald-500/30 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 shadow-xl shadow-emerald-950/40 backdrop-blur-xl">
-            <div class="flex items-center gap-3">
-              <span class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black text-sm shadow-md shadow-emerald-600/30" id="battleRoundNumBadge">Frage 1 / 10</span>
-              <span class="text-xs font-extrabold text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-3 py-1 rounded-xl" id="battleRoundCatBadge">#Signale</span>
-              <span class="px-3 py-1 rounded-xl bg-emerald-500/20 text-emerald-300 font-black text-xs border border-emerald-500/40 flex items-center gap-1.5 shadow-sm">
+          <div class="bg-gradient-to-r from-gray-900/95 via-gray-900/95 to-emerald-950/40 border-2 border-emerald-500/30 rounded-2xl py-2 px-3 md:px-4 flex items-center justify-between gap-2 shadow-xl shadow-emerald-950/40 backdrop-blur-xl shrink-0">
+            <div class="flex items-center gap-2 md:gap-3 flex-wrap">
+              <span class="px-3 py-1 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black text-xs md:text-sm shadow-md shadow-emerald-600/30" id="battleRoundNumBadge">Frage 1 / 10</span>
+              <span class="text-xs font-extrabold text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-1 rounded-xl" id="battleRoundCatBadge">#Signale</span>
+              <span class="px-2.5 py-1 rounded-xl bg-emerald-500/20 text-emerald-300 font-black text-xs border border-emerald-500/40 flex items-center gap-1.5 shadow-sm">
                 <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-400"></i>
                 <span>Auflösung & Ergebnisse</span>
               </span>
             </div>
-            <div class="flex items-center gap-3">
-              <div class="flex items-center gap-2 text-xs font-black text-white bg-gray-950/80 px-3.5 py-1.5 rounded-xl border border-gray-800 shadow-inner">
-                <i data-lucide="users" class="w-4 h-4 text-emerald-400"></i>
+            <div class="flex items-center gap-2 shrink-0">
+              <div class="flex items-center gap-1.5 text-xs font-black text-white bg-gray-950/80 px-2.5 py-1 rounded-xl border border-gray-800 shadow-inner">
+                <i data-lucide="users" class="w-3.5 h-3.5 text-emerald-400"></i>
                 <span id="battleResultAnswerCount" class="text-emerald-400 font-mono font-black">0 / 0 geantwortet</span>
               </div>
-              <button type="button" onclick="window.toggleBattleQuestionView()" id="btnToggleBattleQuestionView" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-xs font-bold text-gray-200 border border-gray-700 transition shadow" title="Große Antwort-Kacheln der Frage einblenden">
+              <button type="button" onclick="window.toggleBattleQuestionView()" id="btnToggleBattleQuestionView" class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-gray-800 hover:bg-gray-700 text-xs font-bold text-gray-200 border border-gray-700 transition shadow" title="Große Antwort-Kacheln der Frage einblenden">
                 <i data-lucide="eye" class="w-3.5 h-3.5 text-emerald-400"></i>
                 <span id="toggleBattleQuestionViewText">Frage-Großansicht</span>
+              </button>
+              <button type="button" onclick="window.toggleClassroomFullscreen()" class="btn-fs-toggle flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gray-800/80 hover:bg-gray-700 text-xs font-bold text-amber-300 border border-amber-500/30 transition shadow" title="Beamer-Vollbild an/aus (F11)">
+                <i data-lucide="maximize" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span class="fs-toggle-text hidden sm:inline">Vollbild</span>
               </button>
             </div>
           </div>
 
           <!-- Question Content Card (Frage & Abbildung auf Beamer) -->
-          <div class="bg-gradient-to-b from-gray-900/95 to-gray-950/95 border-2 border-emerald-500/25 rounded-3xl p-6 shadow-2xl shadow-emerald-950/40 space-y-3 backdrop-blur-xl">
-            <div id="battleResultQuestionImageContainer" class="hidden justify-center mb-2">
-              <div class="max-h-56 max-w-md rounded-2xl bg-gray-950 border-2 border-emerald-500/30 p-2 overflow-hidden shadow-2xl shadow-emerald-950/50">
-                <img id="battleResultQuestionImage" src="" alt="Signalabbildung" class="max-h-52 object-contain mx-auto rounded-xl">
+          <div class="bg-gradient-to-b from-gray-900/95 to-gray-950/95 border-2 border-emerald-500/25 rounded-2xl md:rounded-3xl p-3 md:p-3.5 shadow-xl shadow-emerald-950/40 space-y-1.5 backdrop-blur-xl shrink-0">
+            <div id="battleResultQuestionImageContainer" class="hidden justify-center mb-1">
+              <div class="max-h-24 md:max-h-28 max-w-xs rounded-xl bg-gray-950 border border-emerald-500/30 p-1.5 overflow-hidden shadow-xl shadow-emerald-950/50">
+                <img id="battleResultQuestionImage" src="" alt="Signalabbildung" class="max-h-20 md:max-h-24 object-contain mx-auto rounded-lg">
               </div>
             </div>
-            <h2 class="text-xl md:text-2xl font-black text-white text-center leading-snug tracking-tight" id="battleResultQuestionText">Fragentext lädt...</h2>
+            <h2 class="text-base md:text-lg lg:text-xl font-black text-white text-center leading-snug tracking-tight" id="battleResultQuestionText">Fragentext lädt...</h2>
           </div>
 
           <!-- Reihenfolge Banner (wird nur bei Order-Fragen eingeblendet) -->
-          <div id="battleResultOrderBanner" class="hidden p-3.5 rounded-2xl bg-cyan-950/70 border-2 border-cyan-500/50 text-cyan-200 font-black text-sm shadow-xl flex items-center justify-center gap-2.5">
-            <i data-lucide="arrow-up-down" class="w-5 h-5 text-cyan-400"></i>
+          <div id="battleResultOrderBanner" class="hidden py-1.5 px-3 rounded-xl bg-cyan-950/70 border border-cyan-500/50 text-cyan-200 font-black text-xs md:text-sm shadow-xl flex items-center justify-center gap-2 shrink-0">
+            <i data-lucide="arrow-up-down" class="w-4 h-4 text-cyan-400"></i>
             <span>🔄 REIHENFOLGE-AUFGABE • Korrekte Soll-Reihenfolge der Schritte:</span>
           </div>
 
           <!-- 2-Spalten Layout: Links Antworten & Verteilung + Erklärung | Rechts Rangliste & Steuerung -->
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 md:gap-4 items-start flex-1 min-h-0">
             <!-- Linke Spalte: Antworten & Erklärung (7 von 12 Spalten) -->
-            <div class="lg:col-span-7 space-y-4">
+            <div class="lg:col-span-7 flex flex-col gap-2 min-h-0">
               <!-- Antworten & Verteilung Box -->
-              <div class="bg-gradient-to-b from-gray-900/95 to-gray-950/95 border-2 border-emerald-500/30 rounded-3xl p-5 shadow-xl shadow-emerald-950/30 space-y-3 backdrop-blur-xl">
-                <div class="flex items-center justify-between pb-2 border-b border-gray-800/80">
+              <div class="bg-gradient-to-b from-gray-900/95 to-gray-950/95 border-2 border-emerald-500/30 rounded-2xl p-3 md:p-3.5 shadow-xl shadow-emerald-950/30 space-y-1.5 backdrop-blur-xl">
+                <div class="flex items-center justify-between pb-1.5 border-b border-gray-800/80">
                   <h4 class="text-xs font-black text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <i data-lucide="list-checks" class="w-4 h-4 text-emerald-400"></i>
+                    <i data-lucide="list-checks" class="w-3.5 h-3.5 text-emerald-400"></i>
                     <span>Antworten & Schüler-Verteilung</span>
                   </h4>
-                  <span class="text-[11px] font-black text-emerald-400 flex items-center gap-1">
-                    <i data-lucide="check" class="w-3.5 h-3.5"></i>
-                    <span>Richtige Lösung grün markiert</span>
+                  <span class="text-[10px] md:text-[11px] font-black text-emerald-400 flex items-center gap-1">
+                    <i data-lucide="check" class="w-3 h-3"></i>
+                    <span>Richtige Lösung grün</span>
                   </span>
                 </div>
 
                 <!-- Dynamische Antwortkarten mit Volltext, Status & Verteilungsbalken -->
-                <div class="space-y-2.5 pt-1" id="battleDistributionBars">
+                <div class="space-y-1.5 max-h-[34vh] overflow-y-auto custom-scrollbar pr-1" id="battleDistributionBars">
                   <!-- Dynamische Inhalte -->
                 </div>
               </div>
 
               <!-- Fachliche Erklärung & Regelwerk -->
-              <div class="bg-gradient-to-b from-gray-900/95 to-gray-950/95 border border-emerald-500/25 rounded-3xl p-5 shadow-xl space-y-2 backdrop-blur-xl" id="battleExplanationCard">
-                <div class="flex items-center gap-2 text-emerald-400 font-black text-xs uppercase tracking-wider">
-                  <div class="w-5 h-5 rounded-lg bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
-                    <i data-lucide="lightbulb" class="w-3.5 h-3.5 text-emerald-400"></i>
+              <div class="bg-gradient-to-b from-gray-900/95 to-gray-950/95 border border-emerald-500/25 rounded-2xl p-2.5 md:p-3 shadow-xl space-y-1 backdrop-blur-xl" id="battleExplanationCard">
+                <div class="flex items-center gap-1.5 text-emerald-400 font-black text-xs uppercase tracking-wider">
+                  <div class="w-4 h-4 rounded bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
+                    <i data-lucide="lightbulb" class="w-3 h-3 text-emerald-400"></i>
                   </div>
                   <span>Fachliche Begründung & Regelwerk</span>
                 </div>
-                <div class="text-xs md:text-sm text-gray-200 bg-gray-950/90 p-3.5 rounded-2xl border border-gray-800/80 leading-relaxed shadow-inner" id="battleExplanationText">
+                <div class="text-xs text-gray-200 bg-gray-950/90 p-2.5 rounded-xl border border-gray-800/80 leading-relaxed shadow-inner max-h-20 md:max-h-24 overflow-y-auto custom-scrollbar" id="battleExplanationText">
                   Keine weitere Erklärung hinterlegt.
                 </div>
               </div>
             </div>
 
             <!-- Rechte Spalte: Top 5 Rangliste & Steuerung (5 von 12 Spalten) -->
-            <div class="lg:col-span-5 space-y-4">
-              <!-- Rangliste Top 5 -->
-              <div class="bg-gradient-to-b from-gray-900/95 to-gray-950/95 border-2 border-emerald-500/30 rounded-3xl p-5 shadow-xl shadow-emerald-950/30 space-y-3 backdrop-blur-xl">
-                <div class="flex items-center justify-between pb-2 border-b border-gray-800/80">
+            <div class="lg:col-span-5 flex flex-col gap-2 min-h-0">
+              <!-- Rangliste Top 5 / Hangman Knockout Arena -->
+              <div class="bg-gradient-to-b from-gray-900/95 to-gray-950/95 border-2 border-emerald-500/30 rounded-2xl p-3 md:p-3.5 shadow-xl shadow-emerald-950/30 space-y-1.5 backdrop-blur-xl flex-1">
+                <div class="flex items-center justify-between pb-1.5 border-b border-gray-800/80">
                   <h4 class="text-xs font-black text-gray-300 uppercase tracking-wider flex items-center gap-1.5" id="battleLeaderboardHeading">
-                    <i data-lucide="trophy" class="w-4 h-4 text-amber-400" id="battleLeaderboardIcon"></i>
+                    <i data-lucide="trophy" class="w-3.5 h-3.5 text-amber-400" id="battleLeaderboardIcon"></i>
                     <span id="battleLeaderboardTitleText">Top 5 Rangliste</span>
                   </h4>
                   <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" id="battleLeaderboardBadgeText">Zwischenstand</span>
                 </div>
-                <div class="space-y-2 pt-1" id="battleLeaderboardTop5">
+                <div class="space-y-1.5 max-h-[30vh] overflow-y-auto custom-scrollbar pr-1" id="battleLeaderboardTop5">
                   <!-- Dynamische Spielerzeilen -->
                 </div>
               </div>
 
               <!-- Steuerung -->
-              <div class="bg-gradient-to-b from-gray-900/95 to-gray-950/95 border border-emerald-500/30 rounded-3xl p-5 shadow-xl space-y-2.5 backdrop-blur-xl">
-                <button type="button" onclick="nextBattleQuestionOrPodium()" id="btnNextBattleQ" class="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-black text-base shadow-xl shadow-emerald-600/40 transition flex items-center justify-center gap-2 transform hover:-translate-y-0.5 active:translate-y-0">
+              <div class="bg-gradient-to-b from-gray-900/95 to-gray-950/95 border border-emerald-500/30 rounded-2xl p-2.5 md:p-3 shadow-xl space-y-1.5 backdrop-blur-xl shrink-0">
+                <button type="button" onclick="nextBattleQuestionOrPodium()" id="btnNextBattleQ" class="w-full py-3 md:py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-black text-sm md:text-base shadow-xl shadow-emerald-600/40 transition flex items-center justify-center gap-2 transform hover:-translate-y-0.5 active:translate-y-0">
                   <span>Nächste Frage</span>
                   <i data-lucide="chevron-right" class="w-4 h-4"></i>
                 </button>
-                <button type="button" onclick="renderBattlePodium()" class="w-full py-2.5 rounded-2xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 font-extrabold text-xs border border-amber-500/40 transition flex items-center justify-center gap-1.5" title="Quiz-Battle vorzeitig beenden">
-                  <i data-lucide="award" class="w-4 h-4"></i>
+                <button type="button" onclick="renderBattlePodium()" class="w-full py-1.5 md:py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 font-extrabold text-xs border border-amber-500/40 transition flex items-center justify-center gap-1.5" title="Quiz-Battle vorzeitig beenden">
+                  <i data-lucide="award" class="w-3.5 h-3.5"></i>
                   <span>Battle beenden & zur Siegerehrung 🏆</span>
                 </button>
               </div>
@@ -1562,68 +1642,81 @@
         </div>
 
         <!-- 3.5 FINAL PODIUM SCREEN -->
-        <div id="battlePodiumScreen" class="relative z-10 hidden flex-col items-center max-w-4xl w-full space-y-6">
-          <div class="text-center space-y-2">
-            <div class="text-6xl animate-bounce drop-shadow-[0_0_20px_rgba(245,158,11,0.5)]">🏆</div>
-            <h2 class="text-4xl font-black text-white tracking-tight bg-gradient-to-r from-amber-300 via-emerald-400 to-teal-300 bg-clip-text text-transparent">SIEGEREHRUNG & PODIUM</h2>
-            <p class="text-sm font-extrabold text-emerald-400">Herzlichen Glückwunsch an alle Teilnehmer!</p>
+        <div id="battlePodiumScreen" class="relative z-10 hidden flex-col items-center max-w-4xl w-full space-y-3 md:space-y-4">
+          <!-- Top Action Bar -->
+          <div class="w-full flex items-center justify-between bg-gradient-to-r from-gray-900/95 to-gray-950/95 border-2 border-emerald-500/30 rounded-2xl py-2 px-3 md:px-4 shadow-xl backdrop-blur-xl shrink-0">
+            <div class="flex items-center gap-2">
+              <span class="text-xl">🏆</span>
+              <span class="text-xs md:text-sm font-black text-white">SIEGEREHRUNG & PODIUM</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="window.toggleClassroomFullscreen()" class="btn-fs-toggle flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gray-800/80 hover:bg-gray-700 text-xs font-bold text-amber-300 border border-amber-500/30 transition shadow" title="Beamer-Vollbild an/aus (F11)">
+                <i data-lucide="maximize" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span class="fs-toggle-text hidden sm:inline">Vollbild</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="text-center space-y-1 shrink-0">
+            <h2 class="text-2xl md:text-3xl font-black text-white tracking-tight bg-gradient-to-r from-amber-300 via-emerald-400 to-teal-300 bg-clip-text text-transparent">ENDSTAND & PODIUM</h2>
+            <p class="text-xs font-extrabold text-emerald-400">Herzlichen Glückwunsch an alle Teilnehmer!</p>
           </div>
 
           <!-- 3D Podium (Platz 2, Platz 1, Platz 3) -->
-          <div class="grid grid-cols-3 gap-3 md:gap-6 w-full items-end pt-4 pb-2" id="battlePodiumColumns">
+          <div class="grid grid-cols-3 gap-2.5 md:gap-4 w-full items-end pt-1 pb-1 shrink-0" id="battlePodiumColumns">
             <!-- 2. Platz -->
-            <div class="bg-gradient-to-t from-gray-900 to-gray-800/90 border-2 border-gray-600/80 rounded-3xl p-4 text-center shadow-2xl h-64 flex flex-col justify-between backdrop-blur-xl">
+            <div class="bg-gradient-to-t from-gray-900 to-gray-800/90 border-2 border-gray-600/80 rounded-2xl p-3 text-center shadow-xl h-40 md:h-48 flex flex-col justify-between backdrop-blur-xl">
               <div>
-                <div class="text-3xl mb-1 drop-shadow">🥈</div>
-                <div class="text-2xl" id="podiumAvatar2">🚂</div>
-                <div class="font-extrabold text-sm text-white mt-1 truncate" id="podiumName2">Zweiter</div>
-                <div class="text-xs font-black text-gray-300 mt-0.5" id="podiumScore2">0 Pkt</div>
+                <div class="text-2xl mb-0.5 drop-shadow">🥈</div>
+                <div class="text-xl" id="podiumAvatar2">🚂</div>
+                <div class="font-extrabold text-xs md:text-sm text-white mt-0.5 truncate" id="podiumName2">Zweiter</div>
+                <div class="text-[11px] font-black text-gray-300 mt-0.5" id="podiumScore2">0 Pkt</div>
               </div>
-              <div class="py-2 px-3 rounded-xl bg-gray-950/80 text-xs font-black text-gray-300 border border-gray-700">2. PLATZ</div>
+              <div class="py-1 px-2 rounded-lg bg-gray-950/80 text-[10px] font-black text-gray-300 border border-gray-700">2. PLATZ</div>
             </div>
 
             <!-- 1. Platz (Champion - Radiant Emerald & Gold Highlight!) -->
-            <div class="bg-gradient-to-t from-emerald-950 via-gray-900 to-gray-800 border-2 border-emerald-400 rounded-3xl p-5 text-center shadow-2xl shadow-emerald-500/40 h-80 flex flex-col justify-between ring-4 ring-emerald-400/30 scale-105 backdrop-blur-xl relative overflow-hidden">
+            <div class="bg-gradient-to-t from-emerald-950 via-gray-900 to-gray-800 border-2 border-emerald-400 rounded-2xl p-3.5 text-center shadow-2xl shadow-emerald-500/40 h-52 md:h-60 flex flex-col justify-between ring-2 ring-emerald-400/30 scale-105 backdrop-blur-xl relative overflow-hidden">
               <div class="absolute inset-0 pointer-events-none bg-gradient-to-b from-emerald-500/10 to-transparent"></div>
               <div class="relative z-10">
-                <div class="text-5xl mb-1 animate-bounce drop-shadow-[0_0_15px_rgba(245,158,11,0.6)]">🥇</div>
-                <div class="text-3xl" id="podiumAvatar1">🚂</div>
-                <div class="font-black text-base md:text-lg text-amber-300 mt-1 truncate" id="podiumName1">Sieger</div>
-                <div class="text-sm font-black text-emerald-300 mt-0.5" id="podiumScore1">0 Pkt</div>
+                <div class="text-3xl mb-0.5 animate-bounce drop-shadow-[0_0_15px_rgba(245,158,11,0.6)]">🥇</div>
+                <div class="text-2xl" id="podiumAvatar1">🚂</div>
+                <div class="font-black text-sm md:text-base text-amber-300 mt-0.5 truncate" id="podiumName1">Sieger</div>
+                <div class="text-xs font-black text-emerald-300 mt-0.5" id="podiumScore1">0 Pkt</div>
               </div>
-              <div class="relative z-10 py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500 text-gray-950 font-black text-xs shadow-lg shadow-emerald-500/40 tracking-wider">
+              <div class="relative z-10 py-1.5 px-2 rounded-lg bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500 text-gray-950 font-black text-[10px] md:text-xs shadow-md tracking-wider">
                 🏆 BATTLE-CHAMPION
               </div>
             </div>
 
             <!-- 3. Platz -->
-            <div class="bg-gradient-to-t from-gray-900 to-gray-800/90 border-2 border-amber-900/60 rounded-3xl p-4 text-center shadow-2xl h-56 flex flex-col justify-between backdrop-blur-xl">
+            <div class="bg-gradient-to-t from-gray-900 to-gray-800/90 border-2 border-amber-900/60 rounded-2xl p-3 text-center shadow-xl h-32 md:h-40 flex flex-col justify-between backdrop-blur-xl">
               <div>
-                <div class="text-3xl mb-1 drop-shadow">🥉</div>
-                <div class="text-2xl" id="podiumAvatar3">🚂</div>
-                <div class="font-extrabold text-sm text-white mt-1 truncate" id="podiumName3">Dritter</div>
-                <div class="text-xs font-black text-amber-500 mt-0.5" id="podiumScore3">0 Pkt</div>
+                <div class="text-2xl mb-0.5 drop-shadow">🥉</div>
+                <div class="text-xl" id="podiumAvatar3">🚂</div>
+                <div class="font-extrabold text-xs md:text-sm text-white mt-0.5 truncate" id="podiumName3">Dritter</div>
+                <div class="text-[11px] font-black text-amber-500 mt-0.5" id="podiumScore3">0 Pkt</div>
               </div>
-              <div class="py-2 px-3 rounded-xl bg-gray-950/80 text-xs font-black text-amber-600 border border-amber-900/40">3. PLATZ</div>
+              <div class="py-1 px-2 rounded-lg bg-gray-950/80 text-[10px] font-black text-amber-600 border border-amber-900/40">3. PLATZ</div>
             </div>
           </div>
 
           <!-- Complete Leaderboard List -->
-          <div class="bg-gradient-to-b from-gray-900/95 to-gray-950/95 border border-emerald-500/30 rounded-3xl p-6 w-full shadow-2xl shadow-emerald-950/50 space-y-3 backdrop-blur-xl">
-            <div class="flex items-center justify-between pb-2 border-b border-gray-800">
+          <div class="bg-gradient-to-b from-gray-900/95 to-gray-950/95 border border-emerald-500/30 rounded-2xl p-3 md:p-4 w-full shadow-xl shadow-emerald-950/50 space-y-2 backdrop-blur-xl flex-1 min-h-0">
+            <div class="flex items-center justify-between pb-1.5 border-b border-gray-800">
               <h4 class="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
-                <i data-lucide="list-ordered" class="w-4 h-4 text-emerald-400"></i>
+                <i data-lucide="list-ordered" class="w-3.5 h-3.5 text-emerald-400"></i>
                 <span>Gesamtrangliste aller Teilnehmer</span>
               </h4>
               <span class="text-xs font-bold text-emerald-400">Offizieller Endstand</span>
             </div>
-            <div class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar" id="battleFinalFullLeaderboard">
+            <div class="space-y-1.5 max-h-32 md:max-h-40 overflow-y-auto custom-scrollbar" id="battleFinalFullLeaderboard">
               <!-- Alle Spieler -->
             </div>
           </div>
 
-          <div class="flex items-center gap-3">
-            <button type="button" onclick="resetLiveBattleToSetup()" class="px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-base shadow-xl shadow-emerald-600/35 transition flex items-center gap-2 transform hover:-translate-y-0.5 active:translate-y-0">
+          <div class="flex items-center gap-3 pt-1 shrink-0">
+            <button type="button" onclick="resetLiveBattleToSetup()" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm shadow-xl shadow-emerald-600/35 transition flex items-center gap-2 transform hover:-translate-y-0.5 active:translate-y-0">
               <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
               <span>Neues Quiz-Battle starten</span>
             </button>
@@ -2706,6 +2799,10 @@ window.switchClassroomSubTab = function(subTab) {
     window.initBattleCategories();
   }
 
+  if (subTab !== 'battle') {
+    document.body.classList.remove('battle-running');
+  }
+
   window.updateClassroomCategoryList();
   if (window.lucide) lucide.createIcons();
 };
@@ -2785,20 +2882,20 @@ window.renderHangmanSvg = function(strikes, size = 64, isEliminated = false, ani
 
   const animStyle = animated ? (
     '<style>' +
-      '@keyframes hmDraw { from { stroke-dashoffset: 50; } to { stroke-dashoffset: 0; } }' +
+      '@keyframes hmDraw { from { stroke-dashoffset: 80; } to { stroke-dashoffset: 0; } }' +
       '@keyframes hmPop { 0% { transform: scale(0.4); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }' +
       '@keyframes hmSway { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(3.5deg); } 75% { transform: rotate(-3.5deg); } }' +
     '</style>'
   ) : '';
 
   const animAttr = (del = 0) => animated 
-    ? ('stroke-dasharray="50" stroke-dashoffset="0" style="animation: hmDraw 0.3s ease-out ' + del + 's both;"')
+    ? ('stroke-dasharray="80" stroke-dashoffset="0" style="animation: hmDraw 0.35s ease-out ' + del + 's both;"')
     : '';
 
   let headContent = '';
   if (s >= 1) {
     if (isDead) {
-      headContent = '<circle cx="68" cy="33" r="9" fill="#ef444422" stroke="' + bodyColor + '" stroke-width="3" ' + animAttr(0.04) + '/>' +
+      headContent = '<circle cx="68" cy="33" r="9" fill="#ef444422" stroke="' + bodyColor + '" stroke-width="3" stroke-linecap="round" ' + animAttr(0.04) + '/>' +
         '<g style="animation: hmPop 0.22s ease-out 0.18s both; transform-origin: 68px 33px;">' +
           '<line x1="64" y1="30" x2="67" y2="33" stroke="' + bodyColor + '" stroke-width="2" stroke-linecap="round"/>' +
           '<line x1="67" y1="30" x2="64" y2="33" stroke="' + bodyColor + '" stroke-width="2" stroke-linecap="round"/>' +
@@ -2807,7 +2904,7 @@ window.renderHangmanSvg = function(strikes, size = 64, isEliminated = false, ani
           '<path d="M64 38 Q68 35 72 38" fill="none" stroke="' + bodyColor + '" stroke-width="2" stroke-linecap="round"/>' +
         '</g>';
     } else {
-      headContent = '<circle cx="68" cy="33" r="9" fill="#34d39915" stroke="' + bodyColor + '" stroke-width="3" ' + animAttr(0.04) + '/>' +
+      headContent = '<circle cx="68" cy="33" r="9" fill="#34d39915" stroke="' + bodyColor + '" stroke-width="3" stroke-linecap="round" ' + animAttr(0.04) + '/>' +
         '<g style="animation: hmPop 0.22s ease-out 0.18s both; transform-origin: 68px 33px;">' +
           '<circle cx="65" cy="32" r="1.3" fill="' + bodyColor + '"/>' +
           '<circle cx="71" cy="32" r="1.3" fill="' + bodyColor + '"/>' +
@@ -2832,13 +2929,13 @@ window.renderHangmanSvg = function(strikes, size = 64, isEliminated = false, ani
     '<line x1="24" y1="92" x2="24" y2="10" stroke="' + gallowsColor + '" stroke-width="4" stroke-linecap="round"/>' +
     '<line x1="24" y1="10" x2="68" y2="10" stroke="' + gallowsColor + '" stroke-width="4" stroke-linecap="round"/>' +
     '<line x1="24" y1="26" x2="40" y2="10" stroke="' + gallowsColor + '" stroke-width="3" stroke-linecap="round"/>' +
-    '<line x1="68" y1="10" x2="68" y2="24" stroke="' + ropeColor + '" stroke-width="2.5" stroke-linecap="round"/>' +
+    '<line x1="68" y1="10" x2="68" y2="25" stroke="' + ropeColor + '" stroke-width="2.5" stroke-linecap="round"/>' +
     '<!-- Striche Counter Pips -->' +
     pips +
     '<!-- Männchen -->' +
     '<g ' + swayStyle + '>' +
       headContent +
-      (s >= 2 ? '<line x1="68" y1="42" x2="68" y2="64" stroke="' + bodyColor + '" stroke-width="3.5" stroke-linecap="round" ' + animAttr(0.10) + '/>' : '') +
+      (s >= 2 ? '<line x1="68" y1="41.5" x2="68" y2="64" stroke="' + bodyColor + '" stroke-width="3.5" stroke-linecap="round" ' + animAttr(0.10) + '/>' : '') +
       (s >= 3 ? '<line x1="68" y1="48" x2="53" y2="58" stroke="' + bodyColor + '" stroke-width="3.2" stroke-linecap="round" ' + animAttr(0.16) + '/>' : '') +
       (s >= 4 ? '<line x1="68" y1="48" x2="83" y2="58" stroke="' + bodyColor + '" stroke-width="3.2" stroke-linecap="round" ' + animAttr(0.22) + '/>' : '') +
       (s >= 5 ? '<line x1="68" y1="64" x2="54" y2="82" stroke="' + bodyColor + '" stroke-width="3.2" stroke-linecap="round" ' + animAttr(0.28) + '/>' : '') +
@@ -3006,6 +3103,7 @@ window.createLiveBattleLobby = async function() {
     document.getElementById('battleSetupScreen')?.classList.remove('flex');
     document.getElementById('battleLobbyScreen')?.classList.remove('hidden');
     document.getElementById('battleLobbyScreen')?.classList.add('flex');
+    document.body.classList.add('battle-running');
 
     // QR-Code Zieladresse bestimmen (vorab Server-IP prüfen)
     try {
@@ -3919,30 +4017,30 @@ window.revealBattleRoundResults = async function() {
 
       const opts = Array.isArray(q.options) ? q.options : [];
       const stepsHtml = opts.map((opt, oIdx) => 
-        '<div class="flex items-start gap-2.5 p-3 rounded-2xl bg-gray-950 border border-gray-800">' +
-          '<span class="w-6 h-6 rounded-lg bg-cyan-600 text-white font-black text-xs flex items-center justify-center shrink-0 mt-0.5">' + (oIdx + 1) + '</span>' +
-          '<span class="text-xs md:text-sm font-semibold text-gray-100 flex-1 leading-snug break-words">' + escapeHtml(opt) + '</span>' +
+        '<div class="flex items-center gap-2 py-1 px-2.5 rounded-xl bg-gray-950 border border-gray-800">' +
+          '<span class="w-5 h-5 rounded-lg bg-cyan-600 text-white font-black text-xs flex items-center justify-center shrink-0">' + (oIdx + 1) + '</span>' +
+          '<span class="text-xs font-semibold text-gray-100 flex-1 leading-snug truncate">' + escapeHtml(opt) + '</span>' +
         '</div>'
       ).join('');
 
       distContainer.innerHTML = 
-        '<div class="space-y-2 mb-3">' + stepsHtml + '</div>' +
-        '<div class="pt-3 border-t border-gray-800 space-y-2.5">' +
-          '<div class="space-y-1">' +
+        '<div class="space-y-1.5 mb-2">' + stepsHtml + '</div>' +
+        '<div class="pt-2 border-t border-gray-800 space-y-1.5">' +
+          '<div class="space-y-0.5">' +
             '<div class="flex items-center justify-between text-xs font-bold">' +
-              '<span class="text-emerald-400 font-extrabold flex items-center gap-1.5">✓ Perfekt richtige Reihenfolge</span>' +
-              '<span class="text-gray-300 font-mono">' + correctCount + ' Schüler (' + correctPct + '%)</span>' +
+              '<span class="text-emerald-400 font-extrabold flex items-center gap-1">✓ Richtige Reihenfolge</span>' +
+              '<span class="text-gray-300 font-mono text-[11px]">' + correctCount + ' (' + correctPct + '%)</span>' +
             '</div>' +
-            '<div class="w-full h-2.5 bg-gray-950 rounded-full overflow-hidden border border-gray-800">' +
+            '<div class="w-full h-2 bg-gray-950 rounded-full overflow-hidden border border-gray-800">' +
               '<div class="h-full rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50 transition-all duration-700" style="width: ' + correctPct + '%"></div>' +
             '</div>' +
           '</div>' +
-          '<div class="space-y-1">' +
+          '<div class="space-y-0.5">' +
             '<div class="flex items-center justify-between text-xs font-bold">' +
-              '<span class="text-red-400 font-extrabold flex items-center gap-1.5">✗ Falsche Reihenfolge</span>' +
-              '<span class="text-gray-300 font-mono">' + wrongCount + ' Schüler (' + wrongPct + '%)</span>' +
+              '<span class="text-red-400 font-extrabold flex items-center gap-1">✗ Falsche Reihenfolge</span>' +
+              '<span class="text-gray-300 font-mono text-[11px]">' + wrongCount + ' (' + wrongPct + '%)</span>' +
             '</div>' +
-            '<div class="w-full h-2.5 bg-gray-950 rounded-full overflow-hidden border border-gray-800">' +
+            '<div class="w-full h-2 bg-gray-950 rounded-full overflow-hidden border border-gray-800">' +
               '<div class="h-full rounded-full bg-red-500 shadow-sm shadow-red-500/50 transition-all duration-700" style="width: ' + wrongPct + '%"></div>' +
             '</div>' +
           '</div>' +
@@ -3991,35 +4089,35 @@ window.revealBattleRoundResults = async function() {
         const isDangerOption = dangerIndices.includes(i);
 
         const cardBorder = isCorrectOption 
-          ? 'border-2 border-emerald-500/90 bg-emerald-950/40 shadow-lg shadow-emerald-500/20 ring-1 ring-emerald-500/30' 
+          ? 'border-2 border-emerald-500/90 bg-emerald-950/40 shadow-md shadow-emerald-500/20' 
           : (isDangerOption ? 'border border-red-500/60 bg-red-950/20' : 'border border-gray-800/90 bg-gray-950/70');
 
         let statusBadge = '';
         if (isCorrectOption) {
-          statusBadge = '<span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-500 text-gray-950 flex items-center gap-1 shrink-0 shadow"><i data-lucide="check" class="w-3.5 h-3.5"></i> RICHTIG</span>';
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500 text-gray-950 flex items-center gap-1 shrink-0 shadow"><i data-lucide="check" class="w-3 h-3"></i> RICHTIG</span>';
         } else if (isDangerOption) {
-          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[11px] font-black bg-red-500/20 text-red-300 border border-red-500/40 flex items-center gap-1 shrink-0">⚠️ BETRIEBSGEFAHR (BG)</span>';
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-500/20 text-red-300 border border-red-500/40 flex items-center gap-1 shrink-0">⚠️ BETRIEBSGEFAHR</span>';
         } else {
-          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-gray-800/80 text-gray-400 shrink-0">Falsch</span>';
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-800/80 text-gray-400 shrink-0">Falsch</span>';
         }
 
         const barFillColor = isCorrectOption 
           ? 'bg-emerald-400 shadow-sm shadow-emerald-400/50' 
           : (barFillColors[i] || 'bg-gray-600');
 
-        return '<div class="p-3.5 rounded-2xl transition ' + cardBorder + ' space-y-2">' +
-          '<div class="flex items-start justify-between gap-3">' +
-            '<div class="flex items-start gap-2.5 flex-1 min-w-0">' +
-              '<span class="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black shrink-0 shadow ' + badgeColors[i] + '">' + (optSymbols[i] || optLetters[i]) + '</span>' +
-              '<span class="text-sm md:text-base font-bold text-white break-words leading-snug pt-1 flex-1 ' + (isCorrectOption ? 'text-emerald-100 font-extrabold' : 'text-gray-200') + '">' + escapeHtml(optText) + '</span>' +
+        return '<div class="py-2 px-3 rounded-xl transition ' + cardBorder + ' space-y-1">' +
+          '<div class="flex items-center justify-between gap-2">' +
+            '<div class="flex items-center gap-2 flex-1 min-w-0">' +
+              '<span class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black shrink-0 shadow ' + badgeColors[i] + '">' + (optSymbols[i] || optLetters[i]) + '</span>' +
+              '<span class="text-xs md:text-sm font-bold text-white break-words leading-snug flex-1 ' + (isCorrectOption ? 'text-emerald-100 font-extrabold' : 'text-gray-200') + '">' + escapeHtml(optText) + '</span>' +
             '</div>' +
             statusBadge +
           '</div>' +
-          '<div class="flex items-center gap-3 pt-1 border-t border-gray-800/50">' +
-            '<div class="flex-1 h-2.5 bg-gray-950 rounded-full overflow-hidden border border-gray-800/80">' +
+          '<div class="flex items-center gap-2 pt-0.5 border-t border-gray-800/50">' +
+            '<div class="flex-1 h-2 bg-gray-950 rounded-full overflow-hidden border border-gray-800/80">' +
               '<div class="h-full rounded-full transition-all duration-700 ' + barFillColor + '" style="width: ' + pct + '%"></div>' +
             '</div>' +
-            '<span class="text-xs font-bold font-mono ' + (isCorrectOption ? 'text-emerald-400 font-black' : 'text-gray-400') + ' shrink-0">' + count + ' Schüler (' + pct + '%)</span>' +
+            '<span class="text-[11px] font-bold font-mono ' + (isCorrectOption ? 'text-emerald-400 font-black' : 'text-gray-400') + ' shrink-0">' + count + ' (' + pct + '%)</span>' +
           '</div>' +
         '</div>';
       }).join('');
@@ -4050,10 +4148,10 @@ window.revealBattleRoundResults = async function() {
 
     if (top5Container) {
       if (struckPlayers.length === 0) {
-        top5Container.innerHTML = '<div class="p-6 rounded-2xl bg-emerald-950/20 border border-emerald-500/30 text-center space-y-2">' +
-          '<div class="text-3xl">🛡️</div>' +
-          '<div class="text-sm font-black text-emerald-400">Runde unbeschadet überstanden!</div>' +
-          '<div class="text-xs text-gray-400">Kein aktiver Spieler hat in dieser Runde einen Strich erhalten.</div>' +
+        top5Container.innerHTML = '<div class="p-3.5 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-center space-y-1">' +
+          '<div class="text-2xl">🛡️</div>' +
+          '<div class="text-xs md:text-sm font-black text-emerald-400">Runde unbeschadet überstanden!</div>' +
+          '<div class="text-[11px] text-gray-400">Kein aktiver Spieler hat in dieser Runde einen Strich erhalten.</div>' +
         '</div>';
       } else {
         // Sortiere: Ausgeschiedene zuerst, dann nach meisten Strichen
@@ -4070,36 +4168,36 @@ window.revealBattleRoundResults = async function() {
 
           let strikeReasonHtml = '';
           if (p.last_round_strike_reason === 'wrong') {
-            strikeReasonHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-500/25 text-red-300 border border-red-500/50 animate-pulse">❌ Falsche Antwort (+1)</span>';
+            strikeReasonHtml = '<span class="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-red-500/25 text-red-300 border border-red-500/50 animate-pulse">❌ Falsch (+1)</span>';
           } else if (p.last_round_strike_reason === 'danger') {
-            strikeReasonHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-500/25 text-red-300 border border-red-500/50 animate-pulse">⚠️ Betriebsgefahr (+1)</span>';
+            strikeReasonHtml = '<span class="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-red-500/25 text-red-300 border border-red-500/50 animate-pulse">⚠️ BG (+1)</span>';
           } else if (p.last_round_strike_reason === 'slowest') {
-            strikeReasonHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/25 text-amber-300 border border-amber-500/50 animate-pulse">🐌 Langsamster (+1)</span>';
+            strikeReasonHtml = '<span class="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-amber-500/25 text-amber-300 border border-amber-500/50 animate-pulse">🐌 Langsam (+1)</span>';
           } else if (p.last_round_strike_reason === 'timeout') {
-            strikeReasonHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-500/25 text-red-300 border border-red-500/50 animate-pulse">⏱️ Keine Antwort (+1)</span>';
+            strikeReasonHtml = '<span class="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-red-500/25 text-red-300 border border-red-500/50 animate-pulse">⏱️ Zeit (+1)</span>';
           } else {
-            strikeReasonHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/25 text-amber-300 border border-amber-500/50 animate-pulse">+1 Strich</span>';
+            strikeReasonHtml = '<span class="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-amber-500/25 text-amber-300 border border-amber-500/50 animate-pulse">+1 Strich</span>';
           }
 
           const statusBadge = isDead 
-            ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-600/30 text-red-400 border border-red-500">☠️ AUSGESCHIEDEN</span>'
-            : ('<span class="font-mono font-black text-xs ' + (strikes >= 5 ? 'text-red-400' : (strikes >= 4 ? 'text-orange-400' : 'text-amber-400')) + '">' + strikes + ' / 6 Striche</span>');
+            ? '<span class="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-red-600/30 text-red-400 border border-red-500">☠️ AUS</span>'
+            : ('<span class="font-mono font-black text-[11px] ' + (strikes >= 5 ? 'text-red-400' : (strikes >= 4 ? 'text-orange-400' : 'text-amber-400')) + '">' + strikes + '/6 Striche</span>');
 
           const cardBorder = isDead 
-            ? 'bg-red-950/30 border-2 border-red-500/80 shadow-lg shadow-red-950/40' 
-            : 'bg-gradient-to-r from-red-950/20 via-gray-950 to-amber-950/20 border border-red-500/40 shadow-lg';
+            ? 'bg-red-950/30 border-2 border-red-500/80 shadow-md shadow-red-950/40' 
+            : 'bg-gradient-to-r from-red-950/20 via-gray-950 to-amber-950/20 border border-red-500/40 shadow';
 
-          return '<div class="flex items-center justify-between p-2.5 rounded-2xl ' + cardBorder + ' shadow transition">' +
-            '<div class="flex items-center gap-3 min-w-0 flex-1">' +
-              '<div class="w-12 h-12 flex items-center justify-center shrink-0 bg-gray-900 rounded-xl border border-gray-800 p-0.5 shadow-inner">' +
-                window.renderHangmanSvg(strikes, 44, isDead) +
+          return '<div class="flex items-center justify-between py-1.5 px-2.5 rounded-xl ' + cardBorder + ' shadow transition">' +
+            '<div class="flex items-center gap-2.5 min-w-0 flex-1">' +
+              '<div class="w-9 h-9 flex items-center justify-center shrink-0 bg-gray-900 rounded-lg border border-gray-800 p-0.5 shadow-inner">' +
+                window.renderHangmanSvg(strikes, 32, isDead) +
               '</div>' +
               '<div class="min-w-0 flex-1">' +
-                '<div class="flex items-center gap-2">' +
-                  '<span class="text-lg">' + (p.avatar || '🚂') + '</span>' +
-                  '<span class="font-bold text-sm text-white truncate max-w-[140px]">' + escapeHtml(p.name || 'Spieler') + '</span>' +
+                '<div class="flex items-center gap-1.5">' +
+                  '<span class="text-base leading-none">' + (p.avatar || '🚂') + '</span>' +
+                  '<span class="font-bold text-xs text-white truncate max-w-[130px]">' + escapeHtml(p.name || 'Spieler') + '</span>' +
                 '</div>' +
-                '<div class="flex items-center gap-1.5 mt-1 flex-wrap">' +
+                '<div class="flex items-center gap-1 mt-0.5 flex-wrap">' +
                   statusBadge +
                   strikeReasonHtml +
                 '</div>' +
@@ -4120,23 +4218,23 @@ window.revealBattleRoundResults = async function() {
     const sorted = [...players].sort((a, b) => (b.score || 0) - (a.score || 0));
     if (top5Container) {
       if (sorted.length === 0) {
-        top5Container.innerHTML = '<div class="text-xs text-gray-500 italic py-4 text-center">Keine Spielerpunkte vorhanden.</div>';
+        top5Container.innerHTML = '<div class="text-xs text-gray-500 italic py-3 text-center">Keine Spielerpunkte vorhanden.</div>';
       } else {
         top5Container.innerHTML = sorted.slice(0, 5).map((p, idx) => {
           const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : ('#' + (idx + 1));
           const gain = p.last_earned_points ? ('+' + p.last_earned_points + ' Pkt') : '';
-          const streakBadge = (p.streak && p.streak > 1) ? ('<span class="px-1.5 py-0.5 rounded-full text-[10px] bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">🔥 ' + p.streak + 'x</span>') : '';
+          const streakBadge = (p.streak && p.streak > 1) ? ('<span class="px-1.5 py-0.5 rounded-full text-[9px] bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">🔥 ' + p.streak + 'x</span>') : '';
 
-          return '<div class="flex items-center justify-between p-2.5 rounded-2xl ' + (idx === 0 ? 'bg-gradient-to-r from-emerald-950/40 to-gray-950 border border-emerald-500/40 shadow-emerald-950/30' : 'bg-gray-950 border border-gray-800') + ' shadow">' +
-            '<div class="flex items-center gap-2.5">' +
-              '<span class="font-black text-sm w-6 text-center ' + (idx === 0 ? 'text-emerald-400' : 'text-gray-400') + '">' + medal + '</span>' +
-              '<span class="text-lg">' + (p.avatar || '🚂') + '</span>' +
-              '<span class="font-bold text-xs text-white truncate max-w-[120px]">' + escapeHtml(p.name || 'Spieler') + '</span>' +
+          return '<div class="flex items-center justify-between py-1.5 px-2.5 rounded-xl ' + (idx === 0 ? 'bg-gradient-to-r from-emerald-950/40 to-gray-950 border border-emerald-500/40 shadow-emerald-950/30' : 'bg-gray-950 border border-gray-800') + ' shadow">' +
+            '<div class="flex items-center gap-2 min-w-0">' +
+              '<span class="font-black text-xs w-5 text-center ' + (idx === 0 ? 'text-emerald-400' : 'text-gray-400') + '">' + medal + '</span>' +
+              '<span class="text-base leading-none">' + (p.avatar || '🚂') + '</span>' +
+              '<span class="font-bold text-xs text-white truncate max-w-[110px]">' + escapeHtml(p.name || 'Spieler') + '</span>' +
               streakBadge +
             '</div>' +
-            '<div class="text-right">' +
+            '<div class="text-right shrink-0">' +
               '<div class="font-extrabold text-xs ' + (idx === 0 ? 'text-emerald-400' : 'text-emerald-300/80') + '">' + (p.score || 0) + ' Pkt</div>' +
-              (gain ? '<div class="text-[10px] text-emerald-400 font-bold">' + gain + '</div>' : '') +
+              (gain ? '<div class="text-[9px] text-emerald-400 font-bold">' + gain + '</div>' : '') +
             '</div>' +
           '</div>';
         }).join('');
@@ -4324,6 +4422,7 @@ window.resetLiveBattleToSetup = function() {
 
   document.getElementById('battleSetupScreen')?.classList.remove('hidden');
   document.getElementById('battleSetupScreen')?.classList.add('flex');
+  document.body.classList.remove('battle-running');
   window.initBattleCategories();
 };
 
@@ -5025,14 +5124,70 @@ window.jumpToClassroomItem = function(idx) {
   }
 };
 
-window.toggleClassroomFullscreen = function() {
-  if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen().catch(err => {
-      console.warn('Vollbild nicht verfügbar:', err);
-    });
+window.updateFullscreenUI = function(isFs) {
+  if (isFs === undefined) {
+    isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+  }
+  if (isFs) {
+    document.body.classList.add('is-fullscreen');
+    document.documentElement.classList.add('is-fullscreen');
   } else {
-    if (document.exitFullscreen) {
-      document.exitFullscreen();
+    document.body.classList.remove('is-fullscreen');
+    document.documentElement.classList.remove('is-fullscreen');
+  }
+
+  // Alle Vollbild-Buttons im Admin- und Beamer-Portal aktualisieren
+  document.querySelectorAll('.btn-fs-toggle, #classroomFullscreenBtn').forEach(btn => {
+    const textEl = btn.querySelector('.fs-toggle-text');
+    const iconEl = btn.querySelector('[data-lucide], svg');
+    if (textEl) {
+      if (btn.id === 'classroomFullscreenBtn') {
+        textEl.textContent = isFs ? 'Vollbild beenden' : 'Beamer-Vollbild';
+      } else {
+        textEl.textContent = isFs ? 'Beenden' : 'Vollbild';
+      }
+    }
+    if (iconEl) {
+      iconEl.setAttribute('data-lucide', isFs ? 'minimize' : 'maximize');
+    }
+    btn.setAttribute('title', isFs ? 'Vollbild beenden (Esc)' : 'Vollbildmodus aktivieren (F11)');
+  });
+  if (window.lucide) lucide.createIcons();
+};
+
+document.addEventListener('fullscreenchange', () => window.updateFullscreenUI());
+document.addEventListener('webkitfullscreenchange', () => window.updateFullscreenUI());
+
+window.toggleClassroomFullscreen = function() {
+  const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+  if (!isFs) {
+    const el = document.documentElement;
+    const rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+    if (rfs) {
+      rfs.call(el).then(() => {
+        window.updateFullscreenUI(true);
+      }).catch(err => {
+        console.warn('Vollbild nicht verfügbar (Browser-Restriktion), aktiviere Vollbild-CSS:', err);
+        document.body.classList.toggle('is-fullscreen');
+        window.updateFullscreenUI(document.body.classList.contains('is-fullscreen'));
+      });
+    } else {
+      document.body.classList.toggle('is-fullscreen');
+      window.updateFullscreenUI(document.body.classList.contains('is-fullscreen'));
+    }
+  } else {
+    const efs = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+    if (efs) {
+      efs.call(document).then(() => {
+        window.updateFullscreenUI(false);
+      }).catch(err => {
+        console.warn('Exit fullscreen error:', err);
+        document.body.classList.remove('is-fullscreen');
+        window.updateFullscreenUI(false);
+      });
+    } else {
+      document.body.classList.remove('is-fullscreen');
+      window.updateFullscreenUI(false);
     }
   }
 };
