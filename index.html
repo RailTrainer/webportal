@@ -31,8 +31,8 @@
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.4); border-radius: 3px; }
 
-    @keyframes hmDrawPath { to { stroke-dashoffset: 0 !important; } }
-    @keyframes hmFade { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }
+    @keyframes hmDraw { from { stroke-dashoffset: 50; } to { stroke-dashoffset: 0; } }
+    @keyframes hmPop { 0% { transform: scale(0.4); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
     @keyframes hmSway { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(3.5deg); } 75% { transform: rotate(-3.5deg); } }
 
     /* ======================================================== */
@@ -2746,9 +2746,9 @@ function extractQuestionType(q) {
 function extractQuestionCorrectIndices(q) {
   if (!q) return [];
   const meta = extractQuestionMetadata(q);
-  if (Array.isArray(meta.ci)) return meta.ci;
-  if (Array.isArray(q.correct_indices)) return q.correct_indices;
-  if (Array.isArray(q.correctIndices)) return q.correctIndices;
+  if (Array.isArray(meta.ci)) return meta.ci.map(Number);
+  if (Array.isArray(q.correct_indices)) return q.correct_indices.map(Number);
+  if (Array.isArray(q.correctIndices)) return q.correctIndices.map(Number);
   const single = q.correct_index !== undefined ? q.correct_index : q.correctIndex;
   if (single !== undefined && single !== null && !isNaN(single)) return [Number(single)];
   return [];
@@ -2757,9 +2757,9 @@ function extractQuestionCorrectIndices(q) {
 function extractQuestionDangerIndices(q) {
   if (!q) return [];
   const meta = extractQuestionMetadata(q);
-  if (Array.isArray(meta.di)) return meta.di;
-  if (Array.isArray(q.danger_indices)) return q.danger_indices;
-  if (Array.isArray(q.dangerIndices)) return q.dangerIndices;
+  if (Array.isArray(meta.di)) return meta.di.map(Number);
+  if (Array.isArray(q.danger_indices)) return q.danger_indices.map(Number);
+  if (Array.isArray(q.dangerIndices)) return q.dangerIndices.map(Number);
   return [];
 }
 
@@ -2781,59 +2781,68 @@ window.renderHangmanSvg = function(strikes, size = 64, isEliminated = false, ani
   const isDead = isEliminated || s >= 6;
   const gallowsColor = "#64748b";
   const ropeColor = "#d97706";
-  const bodyColor = isDead ? "#ef4444" : (s >= 4 ? "#f97316" : (s >= 2 ? "#eab308" : "#10b981"));
+  const bodyColor = isDead ? "#ef4444" : (s >= 4 ? "#f97316" : (s >= 2 ? "#fbbf24" : "#34d399"));
 
   const animStyle = animated ? (
     '<style>' +
-      '@keyframes hmDrawPath { to { stroke-dashoffset: 0 !important; } }' +
-      '@keyframes hmFade { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }' +
+      '@keyframes hmDraw { from { stroke-dashoffset: 50; } to { stroke-dashoffset: 0; } }' +
+      '@keyframes hmPop { 0% { transform: scale(0.4); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }' +
       '@keyframes hmSway { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(3.5deg); } 75% { transform: rotate(-3.5deg); } }' +
     '</style>'
   ) : '';
 
-  const dashAttr = (len, dur, del) => animated
-    ? ('stroke-dasharray="' + len + '" stroke-dashoffset="' + len + '" style="animation: hmDrawPath ' + dur + 's cubic-bezier(0.25, 1, 0.5, 1) ' + del + 's forwards;"')
+  const animAttr = (del = 0) => animated 
+    ? ('stroke-dasharray="50" stroke-dashoffset="0" style="animation: hmDraw 0.3s ease-out ' + del + 's both;"')
     : '';
 
   let headContent = '';
   if (s >= 1) {
-    const faceStyle = animated ? 'style="opacity:0;animation:hmFade 0.25s ease-out 0.65s forwards;transform-origin:68px 34px;"' : '';
     if (isDead) {
-      headContent = '<circle cx="68" cy="34" r="8" fill="#ef444422" stroke="' + bodyColor + '" stroke-width="2.5" ' + dashAttr(51, 0.35, 0.35) + '/>' +
-        '<g ' + faceStyle + '>' +
-          '<line x1="64" y1="31" x2="67" y2="34" stroke="' + bodyColor + '" stroke-width="1.5" stroke-linecap="round"/>' +
-          '<line x1="67" y1="31" x2="64" y2="34" stroke="' + bodyColor + '" stroke-width="1.5" stroke-linecap="round"/>' +
-          '<line x1="69" y1="31" x2="72" y2="34" stroke="' + bodyColor + '" stroke-width="1.5" stroke-linecap="round"/>' +
-          '<line x1="72" y1="31" x2="69" y2="34" stroke="' + bodyColor + '" stroke-width="1.5" stroke-linecap="round"/>' +
-          '<path d="M65 39 Q68 36 71 39" fill="none" stroke="' + bodyColor + '" stroke-width="1.5" stroke-linecap="round"/>' +
+      headContent = '<circle cx="68" cy="33" r="9" fill="#ef444422" stroke="' + bodyColor + '" stroke-width="3" ' + animAttr(0.04) + '/>' +
+        '<g style="animation: hmPop 0.22s ease-out 0.18s both; transform-origin: 68px 33px;">' +
+          '<line x1="64" y1="30" x2="67" y2="33" stroke="' + bodyColor + '" stroke-width="2" stroke-linecap="round"/>' +
+          '<line x1="67" y1="30" x2="64" y2="33" stroke="' + bodyColor + '" stroke-width="2" stroke-linecap="round"/>' +
+          '<line x1="69" y1="30" x2="72" y2="33" stroke="' + bodyColor + '" stroke-width="2" stroke-linecap="round"/>' +
+          '<line x1="72" y1="30" x2="69" y2="33" stroke="' + bodyColor + '" stroke-width="2" stroke-linecap="round"/>' +
+          '<path d="M64 38 Q68 35 72 38" fill="none" stroke="' + bodyColor + '" stroke-width="2" stroke-linecap="round"/>' +
         '</g>';
     } else {
-      headContent = '<circle cx="68" cy="34" r="8" fill="#10b98115" stroke="' + bodyColor + '" stroke-width="2.5" ' + dashAttr(51, 0.35, 0.35) + '/>' +
-        '<g ' + faceStyle + '>' +
-          '<circle cx="65" cy="33" r="1.2" fill="' + bodyColor + '"/>' +
-          '<circle cx="71" cy="33" r="1.2" fill="' + bodyColor + '"/>' +
-          '<path d="M65 37 Q68 40 71 37" fill="none" stroke="' + bodyColor + '" stroke-width="1.5" stroke-linecap="round"/>' +
+      headContent = '<circle cx="68" cy="33" r="9" fill="#34d39915" stroke="' + bodyColor + '" stroke-width="3" ' + animAttr(0.04) + '/>' +
+        '<g style="animation: hmPop 0.22s ease-out 0.18s both; transform-origin: 68px 33px;">' +
+          '<circle cx="65" cy="32" r="1.3" fill="' + bodyColor + '"/>' +
+          '<circle cx="71" cy="32" r="1.3" fill="' + bodyColor + '"/>' +
+          '<path d="M65 36 Q68 39 71 36" fill="none" stroke="' + bodyColor + '" stroke-width="1.8" stroke-linecap="round"/>' +
         '</g>';
     }
   }
 
-  const swayStyle = (isDead && animated) ? 'style="transform-origin:68px 12px;animation:hmSway 3s ease-in-out 1.6s infinite;"' : '';
+  const swayStyle = (isDead && animated) ? 'style="transform-origin: 68px 10px; animation: hmSway 3s ease-in-out 0.4s infinite;"' : '';
 
-  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 100 100" class="shrink-0 drop-shadow">' +
+  // 6 Pips am Boden als Fortschrittsbalken
+  let pips = '';
+  for (let i = 0; i < 6; i++) {
+    const pipColor = i < s ? (isDead ? '#ef4444' : (s >= 4 ? '#f97316' : '#fbbf24')) : '#374151';
+    pips += '<rect x="' + (24 + i * 9) + '" y="95" width="7" height="3" rx="1.5" fill="' + pipColor + '"/>';
+  }
+
+  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 100 100" class="shrink-0 drop-shadow overflow-visible select-none">' +
     animStyle +
     '<!-- Galgen -->' +
-    '<line x1="12" y1="92" x2="56" y2="92" stroke="' + gallowsColor + '" stroke-width="3.5" stroke-linecap="round" ' + dashAttr(44, 0.18, 0.02) + '/>' +
-    '<line x1="28" y1="92" x2="28" y2="12" stroke="' + gallowsColor + '" stroke-width="3.5" stroke-linecap="round" ' + dashAttr(80, 0.22, 0.10) + '/>' +
-    '<line x1="28" y1="12" x2="68" y2="12" stroke="' + gallowsColor + '" stroke-width="3.5" stroke-linecap="round" ' + dashAttr(40, 0.18, 0.20) + '/>' +
-    '<line x1="28" y1="26" x2="42" y2="12" stroke="' + gallowsColor + '" stroke-width="2.5" stroke-linecap="round" ' + dashAttr(20, 0.15, 0.25) + '/>' +
-    '<line x1="68" y1="12" x2="68" y2="26" stroke="' + ropeColor + '" stroke-width="2" stroke-linecap="round" ' + dashAttr(14, 0.15, 0.30) + '/>' +
+    '<line x1="10" y1="92" x2="54" y2="92" stroke="' + gallowsColor + '" stroke-width="4" stroke-linecap="round"/>' +
+    '<line x1="24" y1="92" x2="24" y2="10" stroke="' + gallowsColor + '" stroke-width="4" stroke-linecap="round"/>' +
+    '<line x1="24" y1="10" x2="68" y2="10" stroke="' + gallowsColor + '" stroke-width="4" stroke-linecap="round"/>' +
+    '<line x1="24" y1="26" x2="40" y2="10" stroke="' + gallowsColor + '" stroke-width="3" stroke-linecap="round"/>' +
+    '<line x1="68" y1="10" x2="68" y2="24" stroke="' + ropeColor + '" stroke-width="2.5" stroke-linecap="round"/>' +
+    '<!-- Striche Counter Pips -->' +
+    pips +
+    '<!-- Männchen -->' +
     '<g ' + swayStyle + '>' +
       headContent +
-      (s >= 2 ? '<line x1="68" y1="42" x2="68" y2="64" stroke="' + bodyColor + '" stroke-width="2.8" stroke-linecap="round" ' + dashAttr(22, 0.25, 0.65) + '/>' : '') +
-      (s >= 3 ? '<line x1="68" y1="48" x2="55" y2="58" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round" ' + dashAttr(18, 0.22, 0.85) + '/>' : '') +
-      (s >= 4 ? '<line x1="68" y1="48" x2="81" y2="58" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round" ' + dashAttr(18, 0.22, 1.02) + '/>' : '') +
-      (s >= 5 ? '<line x1="68" y1="64" x2="55" y2="82" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round" ' + dashAttr(24, 0.22, 1.18) + '/>' : '') +
-      (s >= 6 ? '<line x1="68" y1="64" x2="81" y2="82" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round" ' + dashAttr(24, 0.25, 1.35) + '/>' : '') +
+      (s >= 2 ? '<line x1="68" y1="42" x2="68" y2="64" stroke="' + bodyColor + '" stroke-width="3.5" stroke-linecap="round" ' + animAttr(0.10) + '/>' : '') +
+      (s >= 3 ? '<line x1="68" y1="48" x2="53" y2="58" stroke="' + bodyColor + '" stroke-width="3.2" stroke-linecap="round" ' + animAttr(0.16) + '/>' : '') +
+      (s >= 4 ? '<line x1="68" y1="48" x2="83" y2="58" stroke="' + bodyColor + '" stroke-width="3.2" stroke-linecap="round" ' + animAttr(0.22) + '/>' : '') +
+      (s >= 5 ? '<line x1="68" y1="64" x2="54" y2="82" stroke="' + bodyColor + '" stroke-width="3.2" stroke-linecap="round" ' + animAttr(0.28) + '/>' : '') +
+      (s >= 6 ? '<line x1="68" y1="64" x2="82" y2="82" stroke="' + bodyColor + '" stroke-width="3.2" stroke-linecap="round" ' + animAttr(0.34) + '/>' : '') +
     '</g>' +
   '</svg>';
 };
@@ -2844,6 +2853,11 @@ function processHangmanRound(session, qIdx) {
   // Nur aktive, noch nicht ausgeschiedene Spieler bewerten
   const activePlayers = session.players.filter(p => !p.is_eliminated);
   if (activePlayers.length === 0) return;
+
+  const q = (battleQuestions && battleQuestions[qIdx]) ? battleQuestions[qIdx] : session.current_question_data;
+  const qType = q ? extractQuestionType(q) : 'single';
+  const correctIndices = q ? extractQuestionCorrectIndices(q) : [];
+  const dangerIndices = q ? extractQuestionDangerIndices(q) : [];
 
   // Welche aktiven Spieler haben in dieser Runde geantwortet?
   const answered = activePlayers.filter(p => 
@@ -2870,6 +2884,27 @@ function processHangmanRound(session, qIdx) {
     p.hangman_strikes = p.hangman_strikes || 0;
     const hasAnswered = (p.last_answered_q_index === qIdx && p.last_answer !== null && p.last_answer !== undefined);
 
+    // Unabhängige, verlässliche Überprüfung der Richtigkeit auf dem Server:
+    if (q && hasAnswered) {
+      if (qType === 'order') {
+        const optCount = Array.isArray(q.options) ? q.options.length : 0;
+        const ans = Array.isArray(p.last_answer) ? p.last_answer.map(Number) : [];
+        p.is_correct = (ans.length === optCount && ans.every((val, i) => val === i));
+        p.is_danger = false;
+      } else if (qType === 'multiple') {
+        const ans = Array.isArray(p.last_answer) ? p.last_answer.map(Number) : [Number(p.last_answer)];
+        // Streng: ALLE richtigen Antworten müssen gegeben sein und KEINE falschen!
+        const hasAllCorrect = correctIndices.length > 0 && correctIndices.every(idx => ans.includes(idx));
+        const hasNoWrong = ans.every(idx => correctIndices.includes(idx));
+        p.is_correct = (hasAllCorrect && hasNoWrong);
+        p.is_danger = ans.some(idx => dangerIndices.includes(idx));
+      } else {
+        const chosen = Number(p.last_answer);
+        p.is_correct = (correctIndices.length === 1 && correctIndices.includes(chosen));
+        p.is_danger = dangerIndices.includes(chosen);
+      }
+    }
+
     let gotStrike = false;
     let strikeReason = null;
 
@@ -2882,7 +2917,7 @@ function processHangmanRound(session, qIdx) {
       gotStrike = true;
       strikeReason = 'danger';
     } else if (!p.is_correct) {
-      // 3. Falsche Antwort
+      // 3. Falsche Antwort oder nicht alle richtigen Antworten gegeben!
       gotStrike = true;
       strikeReason = 'wrong';
     } else if (p.id === slowestPlayerId && answered.length > 1) {
@@ -3729,14 +3764,29 @@ window.revealBattleRoundResults = async function() {
   battleSound.stopGroove();
   battleSound.playCorrect();
 
-  // Neueste Spieler-Antworten ziehen
+  // Neueste Spieler-Antworten ziehen (Lokaler Server & Cloud Supabase)
   try {
     const url = window.getBattleApiUrl('/api/battle/session?pin=' + encodeURIComponent(battleSession.pin));
     const res = await fetch(url);
     if (res.ok) {
       const data = await res.json();
-      if (data && data.players) {
+      if (data && data.players && data.players.length > 0) {
         battleSession.players = data.players || [];
+      }
+    }
+  } catch {}
+
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/chat_messages?id=eq.battle_' + encodeURIComponent(battleSession.pin) + '&select=*', {
+      headers: restHeaders
+    });
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows) && rows.length > 0 && rows[0].text) {
+        const remote = JSON.parse(rows[0].text);
+        if (remote && remote.players && remote.players.length > 0) {
+          battleSession.players = remote.players || [];
+        }
       }
     }
   } catch {}
