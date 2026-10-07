@@ -31,6 +31,10 @@
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.4); border-radius: 3px; }
 
+    @keyframes hmDrawPath { to { stroke-dashoffset: 0 !important; } }
+    @keyframes hmFade { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }
+    @keyframes hmSway { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(3.5deg); } 75% { transform: rotate(-3.5deg); } }
+
     /* ======================================================== */
     /* LIGHT MODE ADAPTATION (VOLLSTÄNDIGER HELL-MODUS)         */
     /* ======================================================== */
@@ -2781,20 +2785,21 @@ window.renderHangmanSvg = function(strikes, size = 64, isEliminated = false, ani
 
   const animStyle = animated ? (
     '<style>' +
-      '@keyframes hmDraw { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }' +
+      '@keyframes hmDrawPath { to { stroke-dashoffset: 0 !important; } }' +
       '@keyframes hmFade { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }' +
       '@keyframes hmSway { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(3.5deg); } 75% { transform: rotate(-3.5deg); } }' +
-      '.hm-d { stroke-dasharray: 100; stroke-dashoffset: 100; animation: hmDraw 0.25s cubic-bezier(0.25, 1, 0.5, 1) forwards; }' +
     '</style>'
   ) : '';
 
-  const dAttr = (dur, del) => animated ? ('pathLength="100" class="hm-d" style="animation-duration:' + dur + 's;animation-delay:' + del + 's;"') : '';
+  const dashAttr = (len, dur, del) => animated
+    ? ('stroke-dasharray="' + len + '" stroke-dashoffset="' + len + '" style="animation: hmDrawPath ' + dur + 's cubic-bezier(0.25, 1, 0.5, 1) ' + del + 's forwards;"')
+    : '';
 
   let headContent = '';
   if (s >= 1) {
     const faceStyle = animated ? 'style="opacity:0;animation:hmFade 0.25s ease-out 0.65s forwards;transform-origin:68px 34px;"' : '';
     if (isDead) {
-      headContent = '<circle cx="68" cy="34" r="8" fill="#ef444422" stroke="' + bodyColor + '" stroke-width="2.5" ' + dAttr(0.35, 0.35) + '/>' +
+      headContent = '<circle cx="68" cy="34" r="8" fill="#ef444422" stroke="' + bodyColor + '" stroke-width="2.5" ' + dashAttr(51, 0.35, 0.35) + '/>' +
         '<g ' + faceStyle + '>' +
           '<line x1="64" y1="31" x2="67" y2="34" stroke="' + bodyColor + '" stroke-width="1.5" stroke-linecap="round"/>' +
           '<line x1="67" y1="31" x2="64" y2="34" stroke="' + bodyColor + '" stroke-width="1.5" stroke-linecap="round"/>' +
@@ -2803,7 +2808,7 @@ window.renderHangmanSvg = function(strikes, size = 64, isEliminated = false, ani
           '<path d="M65 39 Q68 36 71 39" fill="none" stroke="' + bodyColor + '" stroke-width="1.5" stroke-linecap="round"/>' +
         '</g>';
     } else {
-      headContent = '<circle cx="68" cy="34" r="8" fill="#10b98115" stroke="' + bodyColor + '" stroke-width="2.5" ' + dAttr(0.35, 0.35) + '/>' +
+      headContent = '<circle cx="68" cy="34" r="8" fill="#10b98115" stroke="' + bodyColor + '" stroke-width="2.5" ' + dashAttr(51, 0.35, 0.35) + '/>' +
         '<g ' + faceStyle + '>' +
           '<circle cx="65" cy="33" r="1.2" fill="' + bodyColor + '"/>' +
           '<circle cx="71" cy="33" r="1.2" fill="' + bodyColor + '"/>' +
@@ -2817,18 +2822,18 @@ window.renderHangmanSvg = function(strikes, size = 64, isEliminated = false, ani
   return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 100 100" class="shrink-0 drop-shadow">' +
     animStyle +
     '<!-- Galgen -->' +
-    '<line x1="12" y1="92" x2="56" y2="92" stroke="' + gallowsColor + '" stroke-width="3.5" stroke-linecap="round" ' + dAttr(0.18, 0.02) + '/>' +
-    '<line x1="28" y1="92" x2="28" y2="12" stroke="' + gallowsColor + '" stroke-width="3.5" stroke-linecap="round" ' + dAttr(0.22, 0.10) + '/>' +
-    '<line x1="28" y1="12" x2="68" y2="12" stroke="' + gallowsColor + '" stroke-width="3.5" stroke-linecap="round" ' + dAttr(0.18, 0.20) + '/>' +
-    '<line x1="28" y1="26" x2="42" y2="12" stroke="' + gallowsColor + '" stroke-width="2.5" stroke-linecap="round" ' + dAttr(0.15, 0.25) + '/>' +
-    '<line x1="68" y1="12" x2="68" y2="26" stroke="' + ropeColor + '" stroke-width="2" stroke-linecap="round" ' + dAttr(0.15, 0.30) + '/>' +
+    '<line x1="12" y1="92" x2="56" y2="92" stroke="' + gallowsColor + '" stroke-width="3.5" stroke-linecap="round" ' + dashAttr(44, 0.18, 0.02) + '/>' +
+    '<line x1="28" y1="92" x2="28" y2="12" stroke="' + gallowsColor + '" stroke-width="3.5" stroke-linecap="round" ' + dashAttr(80, 0.22, 0.10) + '/>' +
+    '<line x1="28" y1="12" x2="68" y2="12" stroke="' + gallowsColor + '" stroke-width="3.5" stroke-linecap="round" ' + dashAttr(40, 0.18, 0.20) + '/>' +
+    '<line x1="28" y1="26" x2="42" y2="12" stroke="' + gallowsColor + '" stroke-width="2.5" stroke-linecap="round" ' + dashAttr(20, 0.15, 0.25) + '/>' +
+    '<line x1="68" y1="12" x2="68" y2="26" stroke="' + ropeColor + '" stroke-width="2" stroke-linecap="round" ' + dashAttr(14, 0.15, 0.30) + '/>' +
     '<g ' + swayStyle + '>' +
       headContent +
-      (s >= 2 ? '<line x1="68" y1="42" x2="68" y2="64" stroke="' + bodyColor + '" stroke-width="2.8" stroke-linecap="round" ' + dAttr(0.25, 0.65) + '/>' : '') +
-      (s >= 3 ? '<line x1="68" y1="48" x2="55" y2="58" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round" ' + dAttr(0.22, 0.85) + '/>' : '') +
-      (s >= 4 ? '<line x1="68" y1="48" x2="81" y2="58" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round" ' + dAttr(0.22, 1.02) + '/>' : '') +
-      (s >= 5 ? '<line x1="68" y1="64" x2="55" y2="82" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round" ' + dAttr(0.22, 1.18) + '/>' : '') +
-      (s >= 6 ? '<line x1="68" y1="64" x2="81" y2="82" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round" ' + dAttr(0.25, 1.35) + '/>' : '') +
+      (s >= 2 ? '<line x1="68" y1="42" x2="68" y2="64" stroke="' + bodyColor + '" stroke-width="2.8" stroke-linecap="round" ' + dashAttr(22, 0.25, 0.65) + '/>' : '') +
+      (s >= 3 ? '<line x1="68" y1="48" x2="55" y2="58" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round" ' + dashAttr(18, 0.22, 0.85) + '/>' : '') +
+      (s >= 4 ? '<line x1="68" y1="48" x2="81" y2="58" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round" ' + dashAttr(18, 0.22, 1.02) + '/>' : '') +
+      (s >= 5 ? '<line x1="68" y1="64" x2="55" y2="82" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round" ' + dashAttr(24, 0.22, 1.18) + '/>' : '') +
+      (s >= 6 ? '<line x1="68" y1="64" x2="81" y2="82" stroke="' + bodyColor + '" stroke-width="2.5" stroke-linecap="round" ' + dashAttr(24, 0.25, 1.35) + '/>' : '') +
     '</g>' +
   '</svg>';
 };
@@ -2876,8 +2881,12 @@ function processHangmanRound(session, qIdx) {
       // 2. Betriebsgefährdende Antwort (BG)
       gotStrike = true;
       strikeReason = 'danger';
+    } else if (!p.is_correct) {
+      // 3. Falsche Antwort
+      gotStrike = true;
+      strikeReason = 'wrong';
     } else if (p.id === slowestPlayerId && answered.length > 1) {
-      // 3. Als Letzter geantwortet (bei mind. 2 antwortenden Spielern)
+      // 4. Als Letzter geantwortet (selbst wenn richtig!)
       gotStrike = true;
       strikeReason = 'slowest';
     }
@@ -3981,63 +3990,66 @@ window.revealBattleRoundResults = async function() {
   const iconEl = document.getElementById('battleLeaderboardIcon');
 
   if (isHangman) {
-    if (titleTextEl) titleTextEl.textContent = 'Hangman Knock-Out Arena';
+    const struckPlayers = players.filter(p => !!p.got_strike_this_round);
+    if (titleTextEl) titleTextEl.textContent = 'Straf-Striche diese Runde';
     if (badgeTextEl) {
-      badgeTextEl.textContent = '6 Striche = Aus';
-      badgeTextEl.className = 'px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-500/20 text-purple-300 border border-purple-500/30';
+      badgeTextEl.textContent = struckPlayers.length + ' Bestraft';
+      badgeTextEl.className = 'px-2 py-0.5 rounded-full text-[10px] font-black ' + (struckPlayers.length > 0 ? 'bg-red-500/20 text-red-300 border border-red-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30');
     }
-    if (iconEl) iconEl.setAttribute('data-lucide', 'swords');
-
-    // Sortiere: Noch aktive Spieler zuerst (nach wenigsten Strichen, dann Punkte), dann ausgeschiedene
-    const hangmanSorted = [...players].sort((a, b) => {
-      const aDead = a.is_eliminated || (a.hangman_strikes || 0) >= 6;
-      const bDead = b.is_eliminated || (b.hangman_strikes || 0) >= 6;
-      if (aDead !== bDead) return aDead ? 1 : -1;
-      const strikesDiff = (a.hangman_strikes || 0) - (b.hangman_strikes || 0);
-      if (strikesDiff !== 0) return strikesDiff;
-      return (b.score || 0) - (a.score || 0);
-    });
+    if (iconEl) iconEl.setAttribute('data-lucide', 'flame');
 
     if (top5Container) {
-      if (hangmanSorted.length === 0) {
-        top5Container.innerHTML = '<div class="text-xs text-gray-500 italic py-4 text-center">Keine Spieler vorhanden.</div>';
+      if (struckPlayers.length === 0) {
+        top5Container.innerHTML = '<div class="p-6 rounded-2xl bg-emerald-950/20 border border-emerald-500/30 text-center space-y-2">' +
+          '<div class="text-3xl">🛡️</div>' +
+          '<div class="text-sm font-black text-emerald-400">Runde unbeschadet überstanden!</div>' +
+          '<div class="text-xs text-gray-400">Kein aktiver Spieler hat in dieser Runde einen Strich erhalten.</div>' +
+        '</div>';
       } else {
-        top5Container.innerHTML = hangmanSorted.map(p => {
+        // Sortiere: Ausgeschiedene zuerst, dann nach meisten Strichen
+        struckPlayers.sort((a, b) => {
+          const aDead = a.is_eliminated || (a.hangman_strikes || 0) >= 6;
+          const bDead = b.is_eliminated || (b.hangman_strikes || 0) >= 6;
+          if (aDead !== bDead) return bDead ? 1 : -1;
+          return (b.hangman_strikes || 0) - (a.hangman_strikes || 0);
+        });
+
+        top5Container.innerHTML = struckPlayers.map(p => {
           const strikes = Math.min(6, Math.max(0, p.hangman_strikes || 0));
           const isDead = p.is_eliminated || strikes >= 6;
 
           let strikeReasonHtml = '';
-          if (p.got_strike_this_round) {
-            if (p.last_round_strike_reason === 'slowest') {
-              strikeReasonHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/25 text-amber-300 border border-amber-500/50 animate-pulse">🐌 Langsamster (+1)</span>';
-            } else if (p.last_round_strike_reason === 'danger') {
-              strikeReasonHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-500/25 text-red-300 border border-red-500/50 animate-pulse">⚠️ Betriebsgefahr (+1)</span>';
-            } else if (p.last_round_strike_reason === 'timeout') {
-              strikeReasonHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-500/25 text-red-300 border border-red-500/50 animate-pulse">⏱️ Keine Antwort (+1)</span>';
-            }
-          } else if (!isDead) {
-            strikeReasonHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">🛡️ Überlebt</span>';
+          if (p.last_round_strike_reason === 'wrong') {
+            strikeReasonHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-500/25 text-red-300 border border-red-500/50 animate-pulse">❌ Falsche Antwort (+1)</span>';
+          } else if (p.last_round_strike_reason === 'danger') {
+            strikeReasonHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-500/25 text-red-300 border border-red-500/50 animate-pulse">⚠️ Betriebsgefahr (+1)</span>';
+          } else if (p.last_round_strike_reason === 'slowest') {
+            strikeReasonHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/25 text-amber-300 border border-amber-500/50 animate-pulse">🐌 Langsamster (+1)</span>';
+          } else if (p.last_round_strike_reason === 'timeout') {
+            strikeReasonHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-500/25 text-red-300 border border-red-500/50 animate-pulse">⏱️ Keine Antwort (+1)</span>';
+          } else {
+            strikeReasonHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/25 text-amber-300 border border-amber-500/50 animate-pulse">+1 Strich</span>';
           }
 
           const statusBadge = isDead 
             ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-600/30 text-red-400 border border-red-500">☠️ AUSGESCHIEDEN</span>'
-            : ('<span class="font-mono font-black text-xs ' + (strikes >= 4 ? 'text-orange-400' : 'text-emerald-400') + '">' + strikes + ' / 6 Striche</span>');
+            : ('<span class="font-mono font-black text-xs ' + (strikes >= 5 ? 'text-red-400' : (strikes >= 4 ? 'text-orange-400' : 'text-amber-400')) + '">' + strikes + ' / 6 Striche</span>');
 
           const cardBorder = isDead 
-            ? 'bg-red-950/20 border border-red-900/60 opacity-60' 
-            : (p.got_strike_this_round ? 'bg-gradient-to-r from-amber-950/30 to-gray-950 border border-amber-500/50 shadow-amber-950/20' : 'bg-gray-950 border border-gray-800');
+            ? 'bg-red-950/30 border-2 border-red-500/80 shadow-lg shadow-red-950/40' 
+            : 'bg-gradient-to-r from-red-950/20 via-gray-950 to-amber-950/20 border border-red-500/40 shadow-lg';
 
-          return '<div class="flex items-center justify-between p-2 rounded-2xl ' + cardBorder + ' shadow transition">' +
-            '<div class="flex items-center gap-2.5 min-w-0 flex-1">' +
-              '<div class="w-11 h-11 flex items-center justify-center shrink-0 bg-gray-900 rounded-xl border border-gray-800 p-0.5">' +
-                window.renderHangmanSvg(strikes, 42, isDead) +
+          return '<div class="flex items-center justify-between p-2.5 rounded-2xl ' + cardBorder + ' shadow transition">' +
+            '<div class="flex items-center gap-3 min-w-0 flex-1">' +
+              '<div class="w-12 h-12 flex items-center justify-center shrink-0 bg-gray-900 rounded-xl border border-gray-800 p-0.5 shadow-inner">' +
+                window.renderHangmanSvg(strikes, 44, isDead) +
               '</div>' +
               '<div class="min-w-0 flex-1">' +
-                '<div class="flex items-center gap-1.5">' +
-                  '<span class="text-base">' + (p.avatar || '🚂') + '</span>' +
-                  '<span class="font-bold text-xs text-white truncate max-w-[130px]">' + escapeHtml(p.name || 'Spieler') + '</span>' +
+                '<div class="flex items-center gap-2">' +
+                  '<span class="text-lg">' + (p.avatar || '🚂') + '</span>' +
+                  '<span class="font-bold text-sm text-white truncate max-w-[140px]">' + escapeHtml(p.name || 'Spieler') + '</span>' +
                 '</div>' +
-                '<div class="flex items-center gap-1.5 mt-0.5 flex-wrap">' +
+                '<div class="flex items-center gap-1.5 mt-1 flex-wrap">' +
                   statusBadge +
                   strikeReasonHtml +
                 '</div>' +
