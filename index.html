@@ -1275,7 +1275,7 @@
               </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label class="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1 flex items-center gap-1.5">
                   <i data-lucide="help-circle" class="w-3.5 h-3.5 text-emerald-400"></i>
@@ -1299,6 +1299,19 @@
                   <option value="15">15 Sekunden</option>
                   <option value="20" selected>20 Sekunden</option>
                   <option value="30">30 Sekunden</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                  <i data-lucide="music" class="w-3.5 h-3.5 text-emerald-400"></i>
+                  <span>Hintergrundmusik</span>
+                </label>
+                <select id="battleMusicSelect" class="w-full px-3 py-2.5 bg-gray-950/90 border border-gray-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-xl text-xs md:text-sm font-semibold text-gray-100 focus:outline-none transition shadow-inner">
+                  <option value="tetris" selected>🕹️ Tetris (Original 8-Bit)</option>
+                  <option value="mario">🍄 Super Mario Land (Game Boy)</option>
+                  <option value="kahoot">🎵 Kahoot Beat (Groove)</option>
+                  <option value="none">🔇 Musik Aus</option>
                 </select>
               </div>
             </div>
@@ -1361,19 +1374,9 @@
                   </button>
                 </div>
 
-                <div id="battleServerStatusBadge" class="flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-semibold">
+                <div id="battleServerStatusBadge" class="flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-semibold">
                   <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span id="battleServerStatusText">Server aktiv (192.168.188.78:3000)</span>
-                </div>
-
-                <div class="p-2 rounded-xl bg-gray-950/90 border border-gray-800 text-left text-[10px] text-gray-300 space-y-0.5 leading-snug">
-                  <div class="flex items-center gap-1 font-bold text-white text-[11px]">
-                    <i data-lucide="wifi" class="w-3 h-3 text-emerald-400"></i>
-                    <span>WLAN-Voraussetzung:</span>
-                  </div>
-                  <div class="text-gray-400">
-                    Smartphone muss im <strong>selben WLAN</strong> (z.B. FRITZ!Box) sein wie dieser PC.
-                  </div>
+                  <span id="battleServerStatusText">Cloud-Online-Modus aktiv 🌐</span>
                 </div>
               </div>
             </div>
@@ -1413,10 +1416,18 @@
             <div class="flex items-center gap-2 md:gap-3 flex-wrap">
               <span class="px-3 py-1 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black text-xs md:text-sm shadow-md shadow-emerald-600/30" id="battleQNumBadge">Frage 1 / 10</span>
               <span class="text-xs font-extrabold text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-1 rounded-xl" id="battleQCatBadge">#Signale</span>
-              <button type="button" onclick="window.toggleBattleMusic()" id="btnBattleMusicToggle" class="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gray-800/80 hover:bg-gray-700 text-xs font-bold text-emerald-300 border border-emerald-500/30 transition shadow" title="Kahoot Hintergrundmusik an/aus">
-                <i data-lucide="volume-2" class="w-3.5 h-3.5" id="battleMusicIcon"></i>
-                <span id="battleMusicToggleText">Musik: An</span>
-              </button>
+              <span id="battleMultipleTopBadge" class="hidden px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-500 to-purple-600 text-white font-black text-xs border border-yellow-300 shadow-md animate-pulse">✦ MEHRFACHAUSWAHL</span>
+              <div class="flex items-center gap-1 bg-gray-800/80 rounded-xl border border-emerald-500/30 p-0.5 shadow">
+                <button type="button" onclick="window.toggleBattleMusic()" id="btnBattleMusicToggle" class="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-700 text-xs font-bold text-emerald-300 transition" title="Hintergrundmusik an/aus">
+                  <i data-lucide="volume-2" class="w-3.5 h-3.5" id="battleMusicIcon"></i>
+                  <span id="battleMusicToggleText">Musik</span>
+                </button>
+                <select id="battleLiveMusicSelect" onchange="window.setBattleMusicTrack(this.value)" class="bg-gray-900 border-0 rounded-lg text-xs font-bold text-emerald-300 py-1 px-1.5 focus:outline-none cursor-pointer" title="Hintergrundmusik auswählen">
+                  <option value="tetris">🕹️ Tetris</option>
+                  <option value="mario">🍄 Mario Land</option>
+                  <option value="kahoot">🎵 Kahoot</option>
+                </select>
+              </div>
               <button type="button" onclick="window.toggleClassroomFullscreen()" class="btn-fs-toggle flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gray-800/80 hover:bg-gray-700 text-xs font-bold text-amber-300 border border-amber-500/30 transition shadow" title="Beamer-Vollbild an/aus (F11)">
                 <i data-lucide="maximize" class="w-3.5 h-3.5 text-amber-400"></i>
                 <span class="fs-toggle-text hidden sm:inline">Vollbild</span>
@@ -1440,7 +1451,7 @@
           <!-- Question Content Card -->
           <div class="bg-gradient-to-b from-gray-900/95 to-gray-950/95 border-2 border-emerald-500/25 rounded-2xl md:rounded-3xl p-3.5 md:p-4 shadow-2xl shadow-emerald-950/40 space-y-2 backdrop-blur-xl transition-all duration-300 shrink-0">
             <div id="battleQuestionImageContainer" class="hidden justify-center mb-1">
-              <div id="battleQuestionImageBox" onclick="window.toggleBattleImageFocus()" class="relative group cursor-pointer max-h-32 md:max-h-40 max-w-sm rounded-xl bg-gray-950 border-2 border-emerald-500/30 hover:border-emerald-400 p-1.5 overflow-hidden shadow-2xl shadow-emerald-950/50 transition-all duration-300 hover:scale-[1.01]" title="Klicken für Großansicht">
+              <div id="battleQuestionImageBox" onclick="window.openBattleImageLightbox()" class="relative group cursor-pointer max-h-32 md:max-h-40 max-w-sm rounded-xl bg-gray-950 border-2 border-emerald-500/30 hover:border-emerald-400 p-1.5 overflow-hidden shadow-2xl shadow-emerald-950/50 transition-all duration-300 hover:scale-[1.02]" title="Klicken für riesige Beamer-Großansicht">
                 <img id="battleQuestionImage" src="" alt="Signalabbildung" class="max-h-28 md:max-h-36 object-contain mx-auto rounded-lg transition-all duration-300">
                 <div id="battleImageZoomHint" class="absolute bottom-1.5 right-1.5 px-2 py-0.5 rounded-lg bg-gray-950/85 backdrop-blur border border-emerald-500/40 text-[10px] font-bold text-emerald-300 flex items-center gap-1 opacity-90 group-hover:opacity-100 transition shadow">
                   <i data-lucide="maximize-2" class="w-3 h-3 text-emerald-400"></i>
@@ -1452,9 +1463,10 @@
           </div>
 
           <!-- Mehrfachauswahl Banner (wird nur bei Multiple-Choice-Fragen eingeblendet) -->
-          <div id="battleMultipleBanner" class="hidden py-1.5 px-3 rounded-xl bg-gradient-to-r from-purple-950/80 via-indigo-950/80 to-purple-950/80 border border-purple-500/60 text-purple-200 font-black text-xs md:text-sm shadow-xl flex items-center justify-center gap-2 animate-pulse shrink-0">
-            <span class="text-base">✨</span>
-            <span id="battleMultipleBannerText">MEHRFACHAUSWAHL: Mehrere Antworten sind richtig! Wähle alle zutreffenden Optionen auf deinem Smartphone.</span>
+          <div id="battleMultipleBanner" class="hidden py-3 px-4 md:py-3.5 md:px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-purple-600 to-indigo-600 border-2 border-yellow-300 ring-4 ring-purple-500/40 text-white font-black text-sm md:text-base lg:text-lg shadow-2xl flex items-center justify-center gap-3 animate-pulse shrink-0">
+            <span class="text-xl md:text-2xl animate-bounce">⚡</span>
+            <span id="battleMultipleBannerText">ACHTUNG MEHRFACHAUSWAHL: Mehrere Antworten sind richtig! Wähle alle zutreffenden Optionen auf deinem Smartphone.</span>
+            <span class="text-xl md:text-2xl animate-bounce">⚡</span>
           </div>
 
           <!-- Reihenfolge Banner (wird nur bei Order-Fragen eingeblendet) -->
@@ -1560,7 +1572,7 @@
           <!-- Question Content Card (Frage & Abbildung auf Beamer) -->
           <div class="bg-gradient-to-b from-gray-900/95 to-gray-950/95 border-2 border-emerald-500/25 rounded-2xl md:rounded-3xl p-3 md:p-3.5 shadow-xl shadow-emerald-950/40 space-y-1.5 backdrop-blur-xl shrink-0">
             <div id="battleResultQuestionImageContainer" class="hidden justify-center mb-1">
-              <div class="max-h-24 md:max-h-28 max-w-xs rounded-xl bg-gray-950 border border-emerald-500/30 p-1.5 overflow-hidden shadow-xl shadow-emerald-950/50">
+              <div class="max-h-24 md:max-h-28 max-w-xs rounded-xl bg-gray-950 border border-emerald-500/30 hover:border-emerald-400 p-1.5 overflow-hidden shadow-xl shadow-emerald-950/50 cursor-pointer transition hover:scale-105" onclick="window.openBattleImageLightbox()" title="Klicken für riesige Beamer-Großansicht">
                 <img id="battleResultQuestionImage" src="" alt="Signalabbildung" class="max-h-20 md:max-h-24 object-contain mx-auto rounded-lg">
               </div>
             </div>
@@ -2315,13 +2327,19 @@
   </div>
 
   <!-- IMAGE LIGHTBOX MODAL -->
-  <div id="imageLightboxModal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md hidden items-center justify-center p-4" onclick="closeImageLightbox()">
-    <div class="relative max-w-4xl max-h-[90vh] flex flex-col items-center" onclick="event.stopPropagation()">
-      <button onclick="closeImageLightbox()" class="absolute -top-12 right-0 p-2 rounded-full bg-gray-800 hover:bg-gray-700 text-white transition flex items-center gap-1.5 text-xs font-semibold px-3">
-        <i data-lucide="x" class="w-4 h-4"></i>
-        <span>Schließen</span>
-      </button>
-      <img id="lightboxImage" src="" alt="Großansicht" class="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl border border-gray-800 bg-gray-950">
+  <div id="imageLightboxModal" class="fixed inset-0 z-50 bg-black/95 backdrop-blur-md hidden items-center justify-center p-3 md:p-6 cursor-zoom-out" onclick="closeImageLightbox()">
+    <div class="relative max-w-6xl w-full max-h-[92vh] flex flex-col items-center justify-center cursor-default" onclick="event.stopPropagation()">
+      <div class="w-full flex items-center justify-between pb-2">
+        <div id="lightboxBattleTimerBadge" class="hidden px-3.5 py-1.5 rounded-full bg-gray-900/90 border border-emerald-500/50 text-emerald-400 font-mono font-black text-sm md:text-base flex items-center gap-2 shadow-lg">
+          <i data-lucide="clock" class="w-4 h-4 text-emerald-400 animate-pulse"></i>
+          <span id="lightboxBattleTimerText">20s</span>
+        </div>
+        <button onclick="closeImageLightbox()" class="ml-auto p-2 rounded-full bg-gray-800 hover:bg-gray-700 text-white transition flex items-center gap-1.5 text-xs font-semibold px-3 shadow">
+          <i data-lucide="x" class="w-4 h-4"></i>
+          <span>Schließen (ESC)</span>
+        </button>
+      </div>
+      <img id="lightboxImage" src="" alt="Großansicht" class="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl border-2 border-emerald-500/40 bg-gray-950">
     </div>
   </div>
 
@@ -2669,10 +2687,22 @@ window.openImageLightbox = function(src) {
   if (!src) return;
   const modal = document.getElementById('imageLightboxModal');
   const img = document.getElementById('lightboxImage');
+  const timerBadge = document.getElementById('lightboxBattleTimerBadge');
+  const timerText = document.getElementById('lightboxBattleTimerText');
   if (img) img.src = src;
   if (modal) {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+  }
+  if (timerBadge && timerText) {
+    if (typeof battleSession !== 'undefined' && battleSession?.status === 'question') {
+      timerBadge.classList.remove('hidden');
+      timerBadge.classList.add('flex');
+      timerText.textContent = (typeof battleRemainingTime !== 'undefined' ? battleRemainingTime : 20) + 's';
+    } else {
+      timerBadge.classList.add('hidden');
+      timerBadge.classList.remove('flex');
+    }
   }
   if (window.lucide) lucide.createIcons();
 };
@@ -3057,6 +3087,11 @@ window.createLiveBattleLobby = async function() {
   const qCount = countSel ? parseInt(countSel.value, 10) : 10;
   battleTimeLimit = timerSel ? parseInt(timerSel.value, 10) : 20;
   const gameMode = modeSel ? modeSel.value : 'classic';
+  const musicSel = document.getElementById('battleMusicSelect');
+  const selectedMusic = musicSel ? musicSel.value : 'tetris';
+  if (window.battleSound) {
+    battleSound.setTrack(selectedMusic);
+  }
 
   // Fragen zusammenstellen (Inklusive Reihenfolge-Aufgaben)
   let pool = allQuestions.filter(q => (selectedCat === 'all' || q.category === selectedCat));
@@ -3160,7 +3195,12 @@ function updateBattleServerStatus(isOnline, ip, port) {
   if (!badge || !txt) return;
   if (isOnline) {
     badge.className = 'flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold';
-    txt.textContent = 'Server aktiv (' + (ip || '192.168.188.78') + ':' + (port || '3000') + ')';
+    txt.textContent = 'Lokaler Server aktiv (' + (ip || '192.168.188.78') + ':' + (port || '3000') + ')';
+    badge.firstElementChild?.classList.remove('bg-amber-400', 'bg-red-400', 'animate-ping');
+    badge.firstElementChild?.classList.add('bg-emerald-400', 'animate-pulse');
+  } else if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+    badge.className = 'flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold';
+    txt.textContent = 'Cloud-Online-Modus aktiv 🌐';
     badge.firstElementChild?.classList.remove('bg-amber-400', 'bg-red-400', 'animate-ping');
     badge.firstElementChild?.classList.add('bg-emerald-400', 'animate-pulse');
   } else {
@@ -3251,15 +3291,18 @@ window.renderBattleQrCode = function(url) {
   }
 };
 
-// --- BATTLE WEB AUDIO SYNTHESIZER (KAHOOT-STYLE MUSIC & SOUND FX) ---
+// --- BATTLE WEB AUDIO SYNTHESIZER (TETRIS, SUPER MARIO LAND, KAHOOT & SOUND FX) ---
 class BattleSoundEngine {
   constructor() {
     this.ctx = null;
     this.isPlaying = false;
     this.musicEnabled = true;
     this.loopTimer = null;
-    this.tempo = 135;
     this.step = 0;
+    this.currentTrack = localStorage.getItem('battle_music_track') || 'tetris';
+    if (this.currentTrack === 'none') {
+      this.musicEnabled = false;
+    }
   }
 
   initContext() {
@@ -3273,7 +3316,7 @@ class BattleSoundEngine {
   }
 
   playNote(freq, type, duration, gainVal = 0.15, startTime = null) {
-    if (!this.ctx || !this.musicEnabled) return;
+    if (!this.ctx || !this.musicEnabled || !freq || freq <= 0) return;
     try {
       const now = startTime !== null ? startTime : this.ctx.currentTime;
       const osc = this.ctx.createOscillator();
@@ -3293,36 +3336,272 @@ class BattleSoundEngine {
     } catch {}
   }
 
+  playNoise(duration, gainVal = 0.04, startTime = null) {
+    if (!this.ctx || !this.musicEnabled) return;
+    try {
+      const now = startTime !== null ? startTime : this.ctx.currentTime;
+      const bufferSize = Math.floor(this.ctx.sampleRate * duration);
+      if (bufferSize <= 0) return;
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.value = 1200;
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(gainVal, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+      noise.start(now);
+      noise.stop(now + duration);
+    } catch {}
+  }
+
+  setTrack(trackName) {
+    if (trackName === 'none') {
+      this.currentTrack = 'none';
+      this.musicEnabled = false;
+      this.stopGroove();
+      this.updateMusicUI();
+      localStorage.setItem('battle_music_track', 'none');
+      return;
+    }
+    this.currentTrack = trackName;
+    this.musicEnabled = true;
+    localStorage.setItem('battle_music_track', trackName);
+    this.updateMusicUI();
+    if (this.isPlaying) {
+      this.stopGroove();
+      this.startGroove();
+    }
+  }
+
+  updateMusicUI() {
+    const btnText = document.getElementById('battleMusicToggleText');
+    const icon = document.getElementById('battleMusicIcon');
+    const liveSel = document.getElementById('battleLiveMusicSelect');
+    const lobbySel = document.getElementById('battleMusicSelect');
+
+    if (btnText) {
+      btnText.textContent = this.musicEnabled ? 'Musik: An' : 'Musik: Aus';
+    }
+    if (icon) {
+      icon.setAttribute('data-lucide', this.musicEnabled ? 'volume-2' : 'volume-x');
+    }
+    if (liveSel && this.currentTrack !== 'none') {
+      liveSel.value = this.currentTrack;
+    }
+    if (lobbySel) {
+      lobbySel.value = this.musicEnabled ? this.currentTrack : 'none';
+    }
+    if (window.lucide) lucide.createIcons();
+  }
+
   startGroove() {
     this.initContext();
-    if (!this.musicEnabled || this.isPlaying) return;
+    if (!this.musicEnabled || this.currentTrack === 'none' || this.isPlaying) return;
     this.isPlaying = true;
     this.step = 0;
 
+    if (this.loopTimer) clearInterval(this.loopTimer);
+
+    if (this.currentTrack === 'mario') {
+      this.startMarioTrack();
+    } else if (this.currentTrack === 'kahoot') {
+      this.startKahootTrack();
+    } else {
+      this.startTetrisTrack();
+    }
+  }
+
+  startKahootTrack() {
+    const tempo = 135;
     const bassScale = [130.81, 155.56, 174.61, 196.00, 233.08];
     const synthNotes = [261.63, 311.13, 349.23, 392.00, 466.16, 523.25];
-    const beatInterval = (60 / this.tempo) * 1000 / 2;
+    const beatInterval = (60 / tempo) * 1000 / 2;
 
-    if (this.loopTimer) clearInterval(this.loopTimer);
     this.loopTimer = setInterval(() => {
       if (!this.isPlaying || !this.musicEnabled) return;
       this.initContext();
       if (!this.ctx) return;
-
       const now = this.ctx.currentTime;
       if (this.step % 2 === 0) {
         this.playNote(75, 'sine', 0.12, 0.22, now);
       }
       const bassFreq = bassScale[this.step % bassScale.length];
       this.playNote(bassFreq, 'triangle', 0.18, 0.15, now);
-
       if (this.step % 4 === 1 || this.step % 4 === 3) {
         const synthFreq = synthNotes[(this.step * 2) % synthNotes.length];
         this.playNote(synthFreq, 'square', 0.1, 0.04, now);
       }
-
       this.step = (this.step + 1) % 16;
     }, beatInterval);
+  }
+
+  startTetrisTrack() {
+    // Korobeiniki (Tetris Theme A) Game Boy 8-Bit Chiptune
+    const tempo = 146;
+    const stepInterval = (60 / tempo) * 1000 / 2; // eighth note ~205ms
+
+    const melody = [
+      { f: 659.25, d: 0.35 }, // E5
+      { f: 493.88, d: 0.18 }, // B4
+      { f: 523.25, d: 0.18 }, // C5
+      { f: 587.33, d: 0.35 }, // D5
+      { f: 523.25, d: 0.18 }, // C5
+      { f: 493.88, d: 0.18 }, // B4
+      { f: 440.00, d: 0.35 }, // A4
+      { f: 440.00, d: 0.18 }, // A4
+      { f: 523.25, d: 0.18 }, // C5
+      { f: 659.25, d: 0.35 }, // E5
+      { f: 587.33, d: 0.18 }, // D5
+      { f: 523.25, d: 0.18 }, // C5
+      { f: 493.88, d: 0.50 }, // B4
+      { f: 523.25, d: 0.18 }, // C5
+      { f: 587.33, d: 0.35 }, // D5
+      { f: 659.25, d: 0.35 }, // E5
+      { f: 523.25, d: 0.35 }, // C5
+      { f: 440.00, d: 0.35 }, // A4
+      { f: 440.00, d: 0.35 }, // A4
+      { f: 0,      d: 0.18 }, // rest
+      { f: 587.33, d: 0.35 }, // D5
+      { f: 698.46, d: 0.18 }, // F5
+      { f: 880.00, d: 0.35 }, // A5
+      { f: 783.99, d: 0.18 }, // G5
+      { f: 698.46, d: 0.18 }, // F5
+      { f: 659.25, d: 0.50 }, // E5
+      { f: 523.25, d: 0.18 }, // C5
+      { f: 659.25, d: 0.35 }, // E5
+      { f: 587.33, d: 0.18 }, // D5
+      { f: 523.25, d: 0.18 }, // C5
+      { f: 493.88, d: 0.35 }, // B4
+      { f: 493.88, d: 0.18 }, // B4
+      { f: 523.25, d: 0.18 }, // C5
+      { f: 587.33, d: 0.35 }, // D5
+      { f: 659.25, d: 0.35 }, // E5
+      { f: 523.25, d: 0.35 }, // C5
+      { f: 440.00, d: 0.35 }, // A4
+      { f: 440.00, d: 0.35 }, // A4
+      { f: 0,      d: 0.18 }  // rest
+    ];
+
+    const bassNotes = [
+      110.00, 164.81, 110.00, 164.81, // A2, E3, A2, E3
+      103.83, 164.81, 103.83, 164.81, // G#2, E3, G#2, E3
+      110.00, 164.81, 110.00, 164.81, // A2, E3, A2, E3
+      146.83, 220.00, 146.83, 220.00, // D3, A3, D3, A3
+      130.81, 196.00, 130.81, 196.00, // C3, G3, C3, G3
+      82.41,  123.47, 82.41,  123.47, // E2, B2, E2, B2
+      110.00, 164.81, 110.00, 110.00  // A2, E3, A2, A2
+    ];
+
+    this.loopTimer = setInterval(() => {
+      if (!this.isPlaying || !this.musicEnabled) return;
+      this.initContext();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+
+      // Melody
+      const m = melody[this.step % melody.length];
+      if (m && m.f > 0) {
+        this.playNote(m.f, 'square', m.d, 0.08, now);
+      }
+
+      // Bass
+      const b = bassNotes[this.step % bassNotes.length];
+      if (b) {
+        this.playNote(b, 'triangle', 0.16, 0.18, now);
+      }
+
+      // Hi-hat on offbeat, kick on beat 0
+      if (this.step % 2 === 1) {
+        this.playNoise(0.035, 0.03, now);
+      } else if (this.step % 4 === 0) {
+        this.playNote(85, 'sine', 0.08, 0.16, now);
+      }
+
+      this.step = (this.step + 1) % melody.length;
+    }, stepInterval);
+  }
+
+  startMarioTrack() {
+    // Super Mario Land (Game Boy 1989 Birabuto / Overworld Theme)
+    const tempo = 154;
+    const stepInterval = (60 / tempo) * 1000 / 2; // eighth note ~195ms
+
+    const melody = [
+      { f: 659.25, d: 0.12 }, // E5
+      { f: 659.25, d: 0.12 }, // E5
+      { f: 0,      d: 0.12 }, // rest
+      { f: 659.25, d: 0.12 }, // E5
+      { f: 0,      d: 0.12 }, // rest
+      { f: 523.25, d: 0.12 }, // C5
+      { f: 659.25, d: 0.28 }, // E5
+      { f: 783.99, d: 0.28 }, // G5
+      { f: 0,      d: 0.18 }, // rest
+      { f: 392.00, d: 0.28 }, // G4
+      { f: 0,      d: 0.18 }, // rest
+      { f: 523.25, d: 0.22 }, // C5
+      { f: 0,      d: 0.12 }, // rest
+      { f: 392.00, d: 0.22 }, // G4
+      { f: 0,      d: 0.12 }, // rest
+      { f: 329.63, d: 0.22 }, // E4
+      { f: 0,      d: 0.12 }, // rest
+      { f: 440.00, d: 0.22 }, // A4
+      { f: 493.88, d: 0.22 }, // B4
+      { f: 466.16, d: 0.15 }, // Bb4
+      { f: 440.00, d: 0.22 }, // A4
+      { f: 392.00, d: 0.22 }, // G4
+      { f: 659.25, d: 0.22 }, // E5
+      { f: 783.99, d: 0.22 }, // G5
+      { f: 880.00, d: 0.28 }, // A5
+      { f: 698.46, d: 0.15 }, // F5
+      { f: 783.99, d: 0.22 }, // G5
+      { f: 0,      d: 0.12 }, // rest
+      { f: 659.25, d: 0.22 }, // E5
+      { f: 523.25, d: 0.18 }, // C5
+      { f: 587.33, d: 0.18 }, // D5
+      { f: 493.88, d: 0.28 }  // B4
+    ];
+
+    const bass = [
+      130.81, 196.00, 130.81, 196.00, // C3, G3, C3, G3
+      164.81, 246.94, 164.81, 246.94, // E3, B3, E3, B3
+      174.61, 261.63, 174.61, 261.63, // F3, C4, F3, C4
+      196.00, 293.66, 196.00, 293.66  // G3, D4, G3, D4
+    ];
+
+    this.loopTimer = setInterval(() => {
+      if (!this.isPlaying || !this.musicEnabled) return;
+      this.initContext();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+
+      const m = melody[this.step % melody.length];
+      if (m && m.f > 0) {
+        this.playNote(m.f, 'square', m.d, 0.08, now);
+      }
+
+      const b = bass[this.step % bass.length];
+      if (b) {
+        this.playNote(b, 'triangle', 0.15, 0.17, now);
+      }
+
+      if (this.step % 4 === 2) {
+        this.playNoise(0.045, 0.04, now);
+      } else if (this.step % 2 === 0) {
+        this.playNote(90, 'sine', 0.07, 0.18, now);
+      }
+
+      this.step = (this.step + 1) % melody.length;
+    }, stepInterval);
   }
 
   stopGroove() {
@@ -3364,23 +3643,22 @@ class BattleSoundEngine {
 
   toggleMusic() {
     this.musicEnabled = !this.musicEnabled;
-    const btnText = document.getElementById('battleMusicToggleText');
-    const icon = document.getElementById('battleMusicIcon');
     if (this.musicEnabled) {
-      if (btnText) btnText.textContent = 'Musik: An';
-      if (icon) icon.setAttribute('data-lucide', 'volume-2');
+      if (this.currentTrack === 'none') {
+        this.currentTrack = 'tetris';
+      }
       this.startGroove();
     } else {
-      if (btnText) btnText.textContent = 'Musik: Aus';
-      if (icon) icon.setAttribute('data-lucide', 'volume-x');
       this.stopGroove();
     }
-    if (window.lucide) lucide.createIcons();
+    this.updateMusicUI();
   }
 }
 
 const battleSound = new BattleSoundEngine();
+window.battleSound = battleSound;
 window.toggleBattleMusic = () => battleSound.toggleMusic();
+window.setBattleMusicTrack = (track) => battleSound.setTrack(track);
 
 window.getBattleApiUrl = function(path) {
   const custom = localStorage.getItem('railtrainer_battle_custom_url');
@@ -3426,6 +3704,53 @@ window.syncBattleSession = async function(sessionObj) {
   }
 };
 
+async function syncRemoteAnswersFromIndividualRecords() {
+  if (!battleSession?.pin) return;
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/chat_messages?category=eq.__battle_ans_' + encodeURIComponent(battleSession.pin) + '__&select=*', {
+      headers: restHeaders
+    });
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows) && rows.length > 0) {
+        if (!Array.isArray(battleSession.players)) battleSession.players = [];
+        rows.forEach(row => {
+          try {
+            const data = JSON.parse(row.text);
+            if (!data || !data.playerId || data.qIndex !== battleCurrentQIdx) return;
+            let player = battleSession.players.find(p => p.id === data.playerId);
+            if (!player) {
+              player = {
+                id: data.playerId,
+                name: data.name || 'Spieler',
+                avatar: data.avatar || '🚂',
+                score: 0,
+                streak: 0,
+                hangman_strikes: 0,
+                is_eliminated: false
+              };
+              battleSession.players.push(player);
+            }
+            if (player.last_answered_q_index !== data.qIndex) {
+              player.last_answer = data.answer;
+              player.last_answered_q_index = data.qIndex;
+              player.last_answer_time = data.answerTime;
+              player.is_correct = data.isCorrect;
+              player.is_danger = data.isDanger;
+              player.last_earned_points = data.earnedPoints;
+              player.score = (player.score || 0) + (data.earnedPoints || 0);
+              if (data.isCorrect) player.streak = (player.streak || 0) + 1;
+              else player.streak = 0;
+            }
+          } catch (e) {}
+        });
+      }
+    }
+  } catch (e) {
+    console.warn('Error fetching individual answers:', e);
+  }
+}
+
 function startHostPolling() {
   if (battlePollInterval) clearInterval(battlePollInterval);
   battlePollInterval = setInterval(async () => {
@@ -3441,6 +3766,9 @@ function startHostPolling() {
           battleSession.players = remote.players || [];
           if (remote.first_answer_time && !battleSession.first_answer_time) {
             battleSession.first_answer_time = remote.first_answer_time;
+          }
+          if (battleSession.status === 'question') {
+            await syncRemoteAnswersFromIndividualRecords();
           }
           updateHostUIFromState();
           return;
@@ -3461,6 +3789,9 @@ function startHostPolling() {
             battleSession.players = remote.players || [];
             if (remote.first_answer_time && !battleSession.first_answer_time) {
               battleSession.first_answer_time = remote.first_answer_time;
+            }
+            if (battleSession.status === 'question') {
+              await syncRemoteAnswersFromIndividualRecords();
             }
             updateHostUIFromState();
           }
@@ -3570,45 +3901,16 @@ function startBattleTimerCountdown() {
   }, 1000);
 }
 
-window.toggleBattleImageFocus = function() {
-  isBattleImageFocused = !isBattleImageFocused;
-  const imgBox = document.getElementById('battleQuestionImageBox');
-  const imgEl = document.getElementById('battleQuestionImage');
-  const zoomHintText = document.getElementById('battleImageZoomHintText');
-  const optGrid = document.getElementById('battleOptionsGrid');
-  const orderBanner = document.getElementById('battleOrderBanner');
-  const multiBanner = document.getElementById('battleMultipleBanner');
+window.openBattleImageLightbox = function() {
   const q = battleQuestions[battleCurrentQIdx];
-  const qType = extractQuestionType(q);
-
-  if (isBattleImageFocused) {
-    if (optGrid) optGrid.classList.add('hidden');
-    if (orderBanner) { orderBanner.classList.add('hidden'); orderBanner.classList.remove('flex'); }
-    if (multiBanner) { multiBanner.classList.add('hidden'); multiBanner.classList.remove('flex'); }
-    if (imgBox) {
-      imgBox.classList.remove('max-h-64', 'max-w-md');
-      imgBox.classList.add('max-h-[70vh]', 'max-w-5xl', 'w-full', 'ring-4', 'ring-emerald-400/40');
-    }
-    if (imgEl) {
-      imgEl.classList.remove('max-h-60');
-      imgEl.classList.add('max-h-[66vh]', 'w-auto');
-    }
-    if (zoomHintText) zoomHintText.textContent = 'Verkleinern (Antworten wieder anzeigen)';
-  } else {
-    if (optGrid) optGrid.classList.remove('hidden');
-    if (orderBanner && qType === 'order') { orderBanner.classList.remove('hidden'); orderBanner.classList.add('flex'); }
-    if (multiBanner && qType === 'multiple') { multiBanner.classList.remove('hidden'); multiBanner.classList.add('flex'); }
-    if (imgBox) {
-      imgBox.classList.add('max-h-64', 'max-w-md');
-      imgBox.classList.remove('max-h-[70vh]', 'max-w-5xl', 'w-full', 'ring-4', 'ring-emerald-400/40');
-    }
-    if (imgEl) {
-      imgEl.classList.add('max-h-60');
-      imgEl.classList.remove('max-h-[66vh]', 'w-auto');
-    }
-    if (zoomHintText) zoomHintText.textContent = 'Großansicht (Klick)';
+  const src = q ? (q.image_url || q.imageUrl) : null;
+  if (src) {
+    window.openImageLightbox(src);
   }
-  if (window.lucide) lucide.createIcons();
+};
+
+window.toggleBattleImageFocus = function() {
+  window.openBattleImageLightbox();
 };
 
 window.startLiveBattleGame = async function() {
@@ -3736,6 +4038,7 @@ async function presentBattleQuestion(qIdx) {
 
   // Banner für Mehrfachauswahl-Modus
   const multiBanner = document.getElementById('battleMultipleBanner');
+  const multiTopBadge = document.getElementById('battleMultipleTopBadge');
   if (multiBanner) {
     if (isMultiple) {
       multiBanner.classList.remove('hidden');
@@ -3743,6 +4046,15 @@ async function presentBattleQuestion(qIdx) {
     } else {
       multiBanner.classList.add('hidden');
       multiBanner.classList.remove('flex');
+    }
+  }
+  if (multiTopBadge) {
+    if (isMultiple) {
+      multiTopBadge.classList.remove('hidden');
+      multiTopBadge.classList.add('inline-flex');
+    } else {
+      multiTopBadge.classList.add('hidden');
+      multiTopBadge.classList.remove('inline-flex');
     }
   }
 
@@ -3888,6 +4200,10 @@ window.revealBattleRoundResults = async function() {
       }
     }
   } catch {}
+
+  // 350ms Kulanzzeit & vollständiger Abgleich aller Schüler-Antworten (verhindert fälschliche Timeouts / Minuspunkte)
+  await new Promise(r => setTimeout(r, 350));
+  await syncRemoteAnswersFromIndividualRecords();
 
   // Hangman Runden-Auswertung falls Hangman Modus
   if (battleSession.game_mode === 'hangman') {

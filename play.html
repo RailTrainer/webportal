@@ -163,11 +163,17 @@
       </div>
 
       <!-- MEHRFACHAUSWAHL HINWEIS -->
-      <div id="battleMultipleAlert" class="hidden p-3 rounded-2xl bg-purple-950/80 border-2 border-purple-500/60 text-purple-200 text-xs font-bold items-center gap-2.5 shadow-lg mb-2 shrink-0 animate-pulse">
-        <span class="text-lg">✨</span>
+      <div id="battleMultipleAlert" class="hidden p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-purple-700 via-indigo-700 to-purple-800 border-2 border-purple-300 ring-4 ring-purple-500/30 text-white shadow-2xl mb-2.5 shrink-0 items-center gap-3 animate-pulse">
+        <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center text-xl shrink-0 font-black shadow">
+          ☑️
+        </div>
         <div class="flex-1 leading-snug">
-          <div class="text-[11px] uppercase tracking-wider text-purple-300 font-black">Mehrfachauswahl</div>
-          <div>Wähle <strong>alle richtigen Antworten</strong> aus und tippe anschließend auf 'Antworten einloggen'.</div>
+          <div class="text-xs uppercase tracking-wider text-purple-200 font-black flex items-center gap-1">
+            <span>⚡ ACHTUNG: MEHRFACHAUSWAHL</span>
+          </div>
+          <div class="text-xs sm:text-sm font-extrabold text-white mt-0.5">
+            Mehrere Antworten sind richtig! Wähle alle zutreffenden aus und tippe anschließend auf <strong>'Bestätigen'</strong>.
+          </div>
         </div>
       </div>
 
@@ -213,13 +219,6 @@
         </button>
       </div>
 
-      <!-- MEHRFACHAUSWAHL ABSENDE-BUTTON -->
-      <button type="button" onclick="handleSubmitMultiple()" id="btnSubmitMultiple" class="hidden w-full py-3.5 mt-2 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-emerald-600 hover:from-purple-500 hover:to-emerald-500 active:scale-95 text-white font-black text-sm tracking-wide shadow-xl shadow-purple-600/30 transition items-center justify-center gap-2 shrink-0">
-        <i data-lucide="check-circle" class="w-4 h-4"></i>
-        <span id="btnSubmitMultipleText">Antworten einloggen (0 ausgewählt)</span>
-      </button>
-
-
       <!-- REIHENFOLGE SORTIER-CONTAINER FÜR SMARTPHONE -->
       <div id="battleOrderContainer" class="hidden flex-col gap-2 flex-1 min-h-0 overflow-y-auto custom-scrollbar p-0.5 pb-2">
         <div class="p-2.5 rounded-2xl bg-cyan-950/60 border border-cyan-500/40 text-cyan-200 text-xs flex items-center gap-2 shrink-0">
@@ -227,9 +226,13 @@
           <span>Bringe die Schritte mit <strong>▲ / ▼ Tasten</strong> oder <strong>Ziehen</strong> in die richtige Reihenfolge:</span>
         </div>
         <div id="battleOrderItemsList" class="space-y-2 flex-1 overflow-y-auto custom-scrollbar"></div>
-        <button type="button" onclick="handleSubmitOrder()" id="btnSubmitOrder" class="w-full py-3.5 mt-1 rounded-2xl bg-gradient-to-r from-cyan-600 via-teal-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 active:scale-95 text-white font-extrabold text-sm tracking-wide shadow-xl shadow-cyan-600/30 transition flex items-center justify-center gap-2 shrink-0">
-          <i data-lucide="check-circle" class="w-4 h-4"></i>
-          <span>Reihenfolge einloggen</span>
+      </div>
+
+      <!-- HAUPT-ABGABE-BUTTON (DEUTLICH SICHTBAR, FÜR SINGLE-CHOICE, MULTIPLE-CHOICE & REIHENFOLGE) -->
+      <div id="battleSubmitBar" class="w-full pt-2.5 pb-1 shrink-0">
+        <button type="button" onclick="handleConfirmSubmit()" id="btnSubmitAnswer" class="w-full py-4 px-4 rounded-2xl bg-gray-800 text-gray-400 border border-gray-700/80 font-black text-sm sm:text-base tracking-wide shadow-xl transition-all flex items-center justify-center gap-2.5 opacity-50 pointer-events-none active:scale-95">
+          <i data-lucide="check-circle-2" class="w-5 h-5 shrink-0" id="submitAnswerIcon"></i>
+          <span id="btnSubmitAnswerText" class="truncate">Wähle zuerst eine Antwort aus...</span>
         </button>
       </div>
     </section>
@@ -405,6 +408,8 @@
     let currentOrderPermutation = [];
     let currentOrderQIndex = -1;
     let selectedMultipleIndices = new Set();
+    let selectedSingleIndex = null;
+    let lastSubmittedAnswer = null;
     let questionTimerInterval = null;
 
     function extractPlayQuestionMetadata(q) {
@@ -816,6 +821,19 @@
         } else {
           timerEl.className = 'text-amber-400 font-extrabold';
         }
+
+        // Automatische Abgabe der bereits ausgewählten Antwort bei Ablauf des Timers
+        if (rem <= 0 && !hasAnsweredCurrentQ) {
+          const q = currentSession?.current_question_data;
+          const qType = extractPlayQuestionType(q);
+          if (qType === 'multiple' && selectedMultipleIndices.size > 0) {
+            window.handleSubmitMultiple();
+          } else if (qType === 'order') {
+            window.handleSubmitOrder();
+          } else if (selectedSingleIndex !== null) {
+            window.commitSingleChoiceAnswer(selectedSingleIndex);
+          }
+        }
       };
       updateTimerUI();
       questionTimerInterval = setInterval(updateTimerUI, 500);
@@ -838,6 +856,7 @@
         } else if (status === 'question') {
           hasAnsweredCurrentQ = false;
           selectedMultipleIndices.clear();
+          selectedSingleIndex = null;
 
           const isHangman = session.game_mode === 'hangman';
           const isEliminated = isHangman && me && (me.is_eliminated || (me.hangman_strikes || 0) >= 6);
@@ -853,6 +872,17 @@
           }
         } else if (status === 'round_result') {
           if (questionTimerInterval) clearInterval(questionTimerInterval);
+          if (!hasAnsweredCurrentQ) {
+            const q = currentSession?.current_question_data;
+            const qType = extractPlayQuestionType(q);
+            if (qType === 'multiple' && selectedMultipleIndices.size > 0) {
+              window.handleSubmitMultiple();
+            } else if (qType === 'order') {
+              window.handleSubmitOrder();
+            } else if (selectedSingleIndex !== null) {
+              window.commitSingleChoiceAnswer(selectedSingleIndex);
+            }
+          }
           renderRoundResultScreen(session);
           showScreen('screen-round-result');
         } else if (status === 'podium' || status === 'finished') {
@@ -912,13 +942,10 @@
       const orderContainer = document.getElementById('battleOrderContainer');
       const toggleBtn = document.getElementById('btnToggleMobileLayout');
       const multiAlert = document.getElementById('battleMultipleAlert');
-      const multiSubmit = document.getElementById('btnSubmitMultiple');
-      const multiSubmitText = document.getElementById('btnSubmitMultipleText');
 
       if (isOrder) {
         if (container) container.classList.add('hidden');
         if (multiAlert) multiAlert.classList.add('hidden');
-        if (multiSubmit) multiSubmit.classList.add('hidden');
         if (orderContainer) {
           orderContainer.classList.remove('hidden');
           orderContainer.classList.add('flex');
@@ -932,6 +959,7 @@
         }
 
         renderOrderItems(options);
+        updateSubmitButtonState('order');
         return;
       }
 
@@ -943,7 +971,7 @@
       if (container) container.classList.remove('hidden');
       if (toggleBtn) toggleBtn.classList.remove('hidden');
 
-      // Mehrfachauswahl Banner & Button steuern
+      // Mehrfachauswahl Banner steuern
       if (multiAlert) {
         if (isMultiple) {
           multiAlert.classList.remove('hidden');
@@ -951,16 +979,6 @@
         } else {
           multiAlert.classList.add('hidden');
           multiAlert.classList.remove('flex');
-        }
-      }
-      if (multiSubmit) {
-        if (isMultiple) {
-          multiSubmit.classList.remove('hidden');
-          multiSubmit.classList.add('flex', 'opacity-50', 'pointer-events-none');
-          if (multiSubmitText) multiSubmitText.textContent = 'Antworten einloggen (0 ausgewählt)';
-        } else {
-          multiSubmit.classList.add('hidden');
-          multiSubmit.classList.remove('flex');
         }
       }
 
@@ -1004,13 +1022,22 @@
 
         if (options[i]) {
           btn.classList.remove('hidden');
-          btn.classList.remove('ring-4', 'ring-emerald-300', 'ring-emerald-400', 'scale-[1.02]', 'shadow-emerald-500/50');
+          btn.classList.remove('ring-4', 'ring-emerald-300', 'ring-emerald-400', 'ring-white', 'ring-purple-300', 'scale-[1.02]', 'scale-[1.03]', 'shadow-emerald-500/50', 'shadow-white/40', 'shadow-purple-500/50');
+          if (badge) badge.classList.remove('ring-2', 'ring-white', 'ring-purple-300');
           txt.textContent = options[i];
 
           if (isMultiple) {
             btn.onclick = () => window.handleToggleMultipleOption(i);
+            if (selectedMultipleIndices.has(i)) {
+              btn.classList.add('ring-4', 'ring-purple-300', 'scale-[1.03]', 'shadow-2xl', 'shadow-purple-500/50');
+              if (badge) badge.classList.add('ring-2', 'ring-purple-300');
+            }
           } else {
             btn.onclick = () => window.handleSelectOption(i);
+            if (selectedSingleIndex === i) {
+              btn.classList.add('ring-4', 'ring-white', 'scale-[1.03]', 'shadow-2xl', 'shadow-white/40');
+              if (badge) badge.classList.add('ring-2', 'ring-white');
+            }
           }
 
           if (isListMode) {
@@ -1055,6 +1082,7 @@
           btn.classList.add('hidden');
         }
       }
+      updateSubmitButtonState(qType);
     }
 
     function renderOrderItems(options) {
@@ -1161,86 +1189,228 @@
       });
     }
 
-    window.handleSubmitOrder = async function() {
+    function updateSubmitButtonState(qType) {
+      const submitBtn = document.getElementById('btnSubmitAnswer');
+      const submitText = document.getElementById('btnSubmitAnswerText');
+      if (!submitBtn || !submitText) return;
+
+      if (hasAnsweredCurrentQ) {
+        submitBtn.className = 'w-full py-4 px-4 rounded-2xl bg-gray-800 text-gray-500 border border-gray-700/60 font-black text-sm sm:text-base tracking-wide shadow-xl flex items-center justify-center gap-2.5 opacity-60 pointer-events-none';
+        submitText.textContent = 'Antwort bereits abgegeben ✓';
+        return;
+      }
+
+      const optLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+
+      if (qType === 'multiple') {
+        const count = selectedMultipleIndices.size;
+        if (count > 0) {
+          submitBtn.className = 'w-full py-4 px-4 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-500 hover:from-purple-500 hover:to-indigo-500 text-white border-2 border-purple-300 ring-4 ring-purple-500/40 shadow-2xl shadow-purple-600/40 font-black text-sm sm:text-base tracking-wide flex items-center justify-center gap-2.5 cursor-pointer active:scale-95 transition-all animate-pulse';
+          submitText.textContent = count + ' Antwort' + (count > 1 ? 'en' : '') + ' bestätigen & abgeben ✓';
+        } else {
+          submitBtn.className = 'w-full py-4 px-4 rounded-2xl bg-gray-800/90 text-gray-400 border border-gray-700/80 font-black text-sm sm:text-base tracking-wide shadow-xl flex items-center justify-center gap-2.5 opacity-50 pointer-events-none transition-all';
+          submitText.textContent = 'Wähle mindestens 1 Antwort aus...';
+        }
+      } else if (qType === 'order') {
+        submitBtn.className = 'w-full py-4 px-4 rounded-2xl bg-gradient-to-r from-cyan-600 via-teal-600 to-cyan-500 hover:from-cyan-500 hover:to-teal-500 text-white border-2 border-cyan-300 ring-4 ring-cyan-500/40 shadow-2xl shadow-cyan-600/40 font-black text-sm sm:text-base tracking-wide flex items-center justify-center gap-2.5 cursor-pointer active:scale-95 transition-all';
+        submitText.textContent = 'Reihenfolge bestätigen & abgeben ✓';
+      } else {
+        // Single choice
+        if (selectedSingleIndex !== null && selectedSingleIndex !== undefined) {
+          const letter = optLetters[selectedSingleIndex] || (selectedSingleIndex + 1);
+          submitBtn.className = 'w-full py-4 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-500 text-white border-2 border-emerald-300 ring-4 ring-emerald-500/40 shadow-2xl shadow-emerald-600/40 font-black text-sm sm:text-base tracking-wide flex items-center justify-center gap-2.5 cursor-pointer active:scale-95 transition-all animate-pulse';
+          submitText.textContent = 'Antwort ' + letter + ' bestätigen & abgeben ✓';
+        } else {
+          submitBtn.className = 'w-full py-4 px-4 rounded-2xl bg-gray-800/90 text-gray-400 border border-gray-700/80 font-black text-sm sm:text-base tracking-wide shadow-xl flex items-center justify-center gap-2.5 opacity-50 pointer-events-none transition-all';
+          submitText.textContent = 'Wähle zuerst eine Antwort aus...';
+        }
+      }
+    }
+
+    window.handleSelectOption = function(idx) {
+      if (hasAnsweredCurrentQ) return;
+      selectedSingleIndex = idx;
+
+      for (let i = 0; i <= 7; i++) {
+        const btn = document.getElementById('btn_opt_' + i);
+        const badge = document.getElementById('opt_badge_' + i);
+        if (!btn) continue;
+        if (i === idx) {
+          btn.classList.add('ring-4', 'ring-white', 'scale-[1.03]', 'shadow-2xl', 'shadow-white/40');
+          if (badge) badge.classList.add('ring-2', 'ring-white');
+        } else {
+          btn.classList.remove('ring-4', 'ring-white', 'scale-[1.03]', 'shadow-2xl', 'shadow-white/40');
+          if (badge) badge.classList.remove('ring-2', 'ring-white');
+        }
+      }
+
+      updateSubmitButtonState('single');
+    };
+
+    window.handleToggleMultipleOption = function(idx) {
+      if (hasAnsweredCurrentQ) return;
+      if (selectedMultipleIndices.has(idx)) {
+        selectedMultipleIndices.delete(idx);
+      } else {
+        selectedMultipleIndices.add(idx);
+      }
+
+      for (let i = 0; i <= 7; i++) {
+        const btn = document.getElementById('btn_opt_' + i);
+        const badge = document.getElementById('opt_badge_' + i);
+        if (!btn) continue;
+        if (selectedMultipleIndices.has(i)) {
+          btn.classList.add('ring-4', 'ring-purple-300', 'scale-[1.03]', 'shadow-2xl', 'shadow-purple-500/50');
+          if (badge) badge.classList.add('ring-2', 'ring-purple-300');
+        } else {
+          btn.classList.remove('ring-4', 'ring-purple-300', 'scale-[1.03]', 'shadow-2xl', 'shadow-purple-500/50');
+          if (badge) badge.classList.remove('ring-2', 'ring-purple-300');
+        }
+      }
+
+      updateSubmitButtonState('multiple');
+    };
+
+    window.handleConfirmSubmit = function() {
       if (hasAnsweredCurrentQ || !currentSession) return;
-      if (currentSession.game_mode === 'hangman') {
-        const players = currentSession.players || [];
-        const me = players.find(p => p.id === myPlayerId);
-        if (me && (me.is_eliminated || (me.hangman_strikes || 0) >= 6)) return;
-      }
-      hasAnsweredCurrentQ = true;
-
       const q = currentSession.current_question_data;
-      const options = (q && Array.isArray(q.options)) ? q.options : [];
-
-      const subChoice = document.getElementById('submittedChoiceText');
-      if (subChoice) {
-        const listHtml = currentOrderPermutation.map((origIdx, slot) => {
-          return '<div class="flex items-start gap-2 py-1.5 border-b border-gray-800/60 last:border-0">' +
-            '<span class="w-5 h-5 rounded-md text-[10px] bg-cyan-600 text-white font-black flex items-center justify-center shrink-0 mt-0.5 shadow">' + (slot + 1) + '</span>' +
-            '<span class="text-gray-200 font-semibold text-xs leading-snug break-words flex-1 text-left">' + escapeHtml(options[origIdx] || '') + '</span>' +
-          '</div>';
-        }).join('');
-        subChoice.innerHTML = '<div class="space-y-1.5">' +
-          '<div class="text-cyan-300 font-black text-xs flex items-center gap-1.5">' +
-            '<span class="w-2 h-2 rounded-full bg-cyan-400"></span>' +
-            '<span>Eingeloggte Reihenfolge:</span>' +
-          '</div>' +
-          '<div class="space-y-0.5">' + listHtml + '</div>' +
-        '</div>';
-      }
-      showScreen('screen-submitted');
-      updateSubmittedHangmanUI();
-
-      const answerTime = Date.now();
-      // Die korrekte Reihenfolge verlangt, dass die Indizes 0, 1, ..., N-1 in exakt aufsteigender Folge sortiert wurden
-      const isCorrect = (currentOrderPermutation.length === options.length && currentOrderPermutation.every((val, i) => val === i));
-
-      const timeLimitSecs = currentSession.time_limit || 20;
-      const elapsedSecs = currentSession.first_answer_time ? Math.max(0, (answerTime - currentSession.first_answer_time) / 1000) : 0;
-      const remainingSecs = Math.max(0, timeLimitSecs - elapsedSecs);
-      let earnedPoints = 0;
-
-      if (isCorrect) {
-        const speedBonus = Math.round((remainingSecs / timeLimitSecs) * 500);
-        earnedPoints = 500 + speedBonus;
-      }
-
-      try {
-        const freshSession = await fetchSessionByPin(currentPin);
-        if (!freshSession) return;
-        const players = freshSession.players || [];
-        const meIdx = players.findIndex(p => p.id === myPlayerId);
-
-        const extraData = {};
-        if (!freshSession.first_answer_time) {
-          extraData.first_answer_time = answerTime;
-          extraData.timer_active = true;
+      const qType = extractPlayQuestionType(q);
+      if (qType === 'multiple') {
+        if (selectedMultipleIndices.size > 0) {
+          window.handleSubmitMultiple();
         }
-
-        if (meIdx !== -1) {
-          const prevScore = players[meIdx].score || 0;
-          const prevStreak = isCorrect ? ((players[meIdx].streak || 0) + 1) : 0;
-          players[meIdx] = {
-            ...players[meIdx],
-            score: prevScore + earnedPoints,
-            streak: prevStreak,
-            last_answer: currentOrderPermutation,
-            last_answered_q_index: currentSession.current_q_index,
-            last_answer_time: answerTime,
-            is_correct: isCorrect,
-            is_danger: false,
-            last_earned_points: earnedPoints
-          };
-          await updateSessionPlayers(freshSession.id, players, extraData);
+      } else if (qType === 'order') {
+        window.handleSubmitOrder();
+      } else {
+        if (selectedSingleIndex !== null && selectedSingleIndex !== undefined) {
+          window.commitSingleChoiceAnswer(selectedSingleIndex);
         }
-      } catch (e) {
-        console.error('Order submit error', e);
       }
     };
 
-    window.handleSelectOption = async function(idx) {
-      if (hasAnsweredCurrentQ || !currentSession) return;
+    async function submitPlayerAnswerReliable(qIndex, answerValue, isCorrect, isDanger, earnedPoints, answerTime) {
+      // 1. Lokalen Zustand sofort absichern (verhindert Falschanzeige bei Latenz)
+      lastSubmittedAnswer = {
+        qIndex: qIndex,
+        answer: answerValue,
+        isCorrect: isCorrect,
+        isDanger: isDanger,
+        earnedPoints: earnedPoints,
+        answerTime: answerTime
+      };
+      myScore = (myScore || 0) + (earnedPoints || 0);
+      if (isCorrect) myStreak = (myStreak || 0) + 1;
+      else myStreak = 0;
+
+      const payload = {
+        playerId: myPlayerId,
+        name: myPlayerName,
+        avatar: selectedAvatar,
+        qIndex: qIndex,
+        answer: answerValue,
+        isCorrect: isCorrect,
+        isDanger: isDanger,
+        earnedPoints: earnedPoints,
+        answerTime: answerTime
+      };
+
+      // 2. Individual Answer Record in chat_messages (Supabase Cloud) mit 3 Retries
+      // Jeder Schüler schreibt in eine separate Zeile (keine Lock-/Race-Conditions!)
+      const messageId = 'battle_ans_' + currentPin + '_' + qIndex + '_' + myPlayerId;
+      const category = '__battle_ans_' + currentPin + '__';
+
+      const sendIndividualSupabase = async () => {
+        return await fetch(SUPABASE_URL + '/rest/v1/chat_messages', {
+          method: 'POST',
+          headers: { ...restHeaders, 'Prefer': 'resolution=merge-duplicates' },
+          body: JSON.stringify([{
+            id: messageId,
+            category: category,
+            sender_id: myPlayerId,
+            sender_name: myPlayerName || 'Spieler',
+            sender_role: 'player',
+            text: JSON.stringify(payload),
+            timestamp: answerTime
+          }])
+        });
+      };
+
+      (async () => {
+        let sent = false;
+        for (let attempt = 1; attempt <= 3 && !sent; attempt++) {
+          try {
+            const res = await sendIndividualSupabase();
+            if (res.ok) {
+              sent = true;
+              break;
+            }
+          } catch (e) {
+            console.warn(`Antwort-Sync Versuch ${attempt} fehlgeschlagen`, e);
+          }
+          if (!sent && attempt < 3) {
+            await new Promise(r => setTimeout(r, 200 * attempt));
+          }
+        }
+      })();
+
+      // 3. Lokale LAN-API (falls auf lokalem Server gespielt wird)
+      try {
+        fetch(getPlayApiUrl('/api/battle/answer'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin: currentPin, ...payload })
+        }).catch(() => {});
+      } catch(e) {}
+
+      // 4. Session Snapshot Update (Smart Merge mit dem Haupt-Session-Objekt)
+      try {
+        const freshSession = await fetchSessionByPin(currentPin);
+        if (freshSession) {
+          const players = freshSession.players || [];
+          const meIdx = players.findIndex(p => p.id === myPlayerId);
+          const extraData = {};
+          if (!freshSession.first_answer_time) {
+            extraData.first_answer_time = answerTime;
+            extraData.timer_active = true;
+          }
+          if (meIdx !== -1) {
+            players[meIdx] = {
+              ...players[meIdx],
+              score: (players[meIdx].score || 0) + earnedPoints,
+              streak: isCorrect ? ((players[meIdx].streak || 0) + 1) : 0,
+              last_answer: answerValue,
+              last_answered_q_index: qIndex,
+              last_answer_time: answerTime,
+              is_correct: isCorrect,
+              is_danger: isDanger,
+              last_earned_points: earnedPoints
+            };
+          } else {
+            players.push({
+              id: myPlayerId,
+              name: myPlayerName,
+              avatar: selectedAvatar,
+              score: earnedPoints,
+              streak: isCorrect ? 1 : 0,
+              last_answer: answerValue,
+              last_answered_q_index: qIndex,
+              last_answer_time: answerTime,
+              is_correct: isCorrect,
+              is_danger: isDanger,
+              last_earned_points: earnedPoints,
+              hangman_strikes: 0,
+              is_eliminated: false
+            });
+          }
+          await updateSessionPlayers(freshSession.id, players, extraData);
+        }
+      } catch(e) {
+        console.warn('Session player update fallback warning', e);
+      }
+    }
+
+    window.commitSingleChoiceAnswer = async function(idx) {
+      if (hasAnsweredCurrentQ || !currentSession || idx === null || idx === undefined) return;
       if (currentSession.game_mode === 'hangman') {
         const players = currentSession.players || [];
         const me = players.find(p => p.id === myPlayerId);
@@ -1278,70 +1448,7 @@
         earnedPoints = 500 + speedBonus;
       }
 
-      try {
-        const freshSession = await fetchSessionByPin(currentPin);
-        if (!freshSession) return;
-        const players = freshSession.players || [];
-        const meIdx = players.findIndex(p => p.id === myPlayerId);
-
-        const extraData = {};
-        if (!freshSession.first_answer_time) {
-          extraData.first_answer_time = answerTime;
-          extraData.timer_active = true;
-        }
-
-        if (meIdx !== -1) {
-          const prevScore = players[meIdx].score || 0;
-          const prevStreak = isCorrect ? ((players[meIdx].streak || 0) + 1) : 0;
-          players[meIdx] = {
-            ...players[meIdx],
-            score: prevScore + earnedPoints,
-            streak: prevStreak,
-            last_answer: idx,
-            last_answered_q_index: currentSession.current_q_index,
-            last_answer_time: answerTime,
-            is_correct: isCorrect,
-            is_danger: isDanger,
-            last_earned_points: earnedPoints
-          };
-          await updateSessionPlayers(freshSession.id, players, extraData);
-        }
-      } catch (e) {
-        console.error('Answer send error', e);
-      }
-    };
-
-    window.handleToggleMultipleOption = function(idx) {
-      if (hasAnsweredCurrentQ) return;
-      if (selectedMultipleIndices.has(idx)) {
-        selectedMultipleIndices.delete(idx);
-      } else {
-        selectedMultipleIndices.add(idx);
-      }
-
-      for (let i = 0; i <= 7; i++) {
-        const btn = document.getElementById('btn_opt_' + i);
-        if (!btn) continue;
-        if (selectedMultipleIndices.has(i)) {
-          btn.classList.add('ring-4', 'ring-emerald-300', 'scale-[1.02]', 'shadow-emerald-500/50');
-        } else {
-          btn.classList.remove('ring-4', 'ring-emerald-300', 'scale-[1.02]', 'shadow-emerald-500/50');
-        }
-      }
-
-      const submitBtn = document.getElementById('btnSubmitMultiple');
-      const submitText = document.getElementById('btnSubmitMultipleText');
-      const count = selectedMultipleIndices.size;
-      if (submitText) {
-        submitText.textContent = 'Antworten einloggen (' + count + ' ausgewählt)';
-      }
-      if (submitBtn) {
-        if (count > 0) {
-          submitBtn.classList.remove('opacity-50', 'pointer-events-none');
-        } else {
-          submitBtn.classList.add('opacity-50', 'pointer-events-none');
-        }
-      }
+      await submitPlayerAnswerReliable(currentSession.current_q_index, idx, isCorrect, isDanger, earnedPoints, answerTime);
     };
 
     window.handleSubmitMultiple = async function() {
@@ -1395,37 +1502,55 @@
         earnedPoints = 500 + speedBonus;
       }
 
-      try {
-        const freshSession = await fetchSessionByPin(currentPin);
-        if (!freshSession) return;
-        const players = freshSession.players || [];
-        const meIdx = players.findIndex(p => p.id === myPlayerId);
+      await submitPlayerAnswerReliable(currentSession.current_q_index, chosenIndices, isCorrect, isDanger, earnedPoints, answerTime);
+    };
 
-        const extraData = {};
-        if (!freshSession.first_answer_time) {
-          extraData.first_answer_time = answerTime;
-          extraData.timer_active = true;
-        }
-
-        if (meIdx !== -1) {
-          const prevScore = players[meIdx].score || 0;
-          const prevStreak = isCorrect ? ((players[meIdx].streak || 0) + 1) : 0;
-          players[meIdx] = {
-            ...players[meIdx],
-            score: prevScore + earnedPoints,
-            streak: prevStreak,
-            last_answer: chosenIndices,
-            last_answered_q_index: currentSession.current_q_index,
-            last_answer_time: answerTime,
-            is_correct: isCorrect,
-            is_danger: isDanger,
-            last_earned_points: earnedPoints
-          };
-          await updateSessionPlayers(freshSession.id, players, extraData);
-        }
-      } catch (e) {
-        console.error('Multiple submit error', e);
+    window.handleSubmitOrder = async function() {
+      if (hasAnsweredCurrentQ || !currentSession) return;
+      if (currentSession.game_mode === 'hangman') {
+        const players = currentSession.players || [];
+        const me = players.find(p => p.id === myPlayerId);
+        if (me && (me.is_eliminated || (me.hangman_strikes || 0) >= 6)) return;
       }
+      hasAnsweredCurrentQ = true;
+
+      const q = currentSession.current_question_data;
+      const options = (q && Array.isArray(q.options)) ? q.options : [];
+
+      const subChoice = document.getElementById('submittedChoiceText');
+      if (subChoice) {
+        const listHtml = currentOrderPermutation.map((origIdx, slot) => {
+          return '<div class="flex items-start gap-2 py-1.5 border-b border-gray-800/60 last:border-0">' +
+            '<span class="w-5 h-5 rounded-md text-[10px] bg-cyan-600 text-white font-black flex items-center justify-center shrink-0 mt-0.5 shadow">' + (slot + 1) + '</span>' +
+            '<span class="text-gray-200 font-semibold text-xs leading-snug break-words flex-1 text-left">' + escapeHtml(options[origIdx] || '') + '</span>' +
+          '</div>';
+        }).join('');
+        subChoice.innerHTML = '<div class="space-y-1.5">' +
+          '<div class="text-cyan-300 font-black text-xs flex items-center gap-1.5">' +
+            '<span class="w-2 h-2 rounded-full bg-cyan-400"></span>' +
+            '<span>Eingeloggte Reihenfolge:</span>' +
+          '</div>' +
+          '<div class="space-y-0.5">' + listHtml + '</div>' +
+        '</div>';
+      }
+      showScreen('screen-submitted');
+      updateSubmittedHangmanUI();
+
+      const answerTime = Date.now();
+      // Die korrekte Reihenfolge verlangt, dass die Indizes 0, 1, ..., N-1 in exakt aufsteigender Folge sortiert wurden
+      const isCorrect = (currentOrderPermutation.length === options.length && currentOrderPermutation.every((val, i) => val === i));
+
+      const timeLimitSecs = currentSession.time_limit || 20;
+      const elapsedSecs = currentSession.first_answer_time ? Math.max(0, (answerTime - currentSession.first_answer_time) / 1000) : 0;
+      const remainingSecs = Math.max(0, timeLimitSecs - elapsedSecs);
+      let earnedPoints = 0;
+
+      if (isCorrect) {
+        const speedBonus = Math.round((remainingSecs / timeLimitSecs) * 500);
+        earnedPoints = 500 + speedBonus;
+      }
+
+      await submitPlayerAnswerReliable(currentSession.current_q_index, [...currentOrderPermutation], isCorrect, false, earnedPoints, answerTime);
     };
 
     function renderRoundResultScreen(session) {
@@ -1450,10 +1575,19 @@
         });
       }
 
-      const hasAnsweredThisRound = (me.last_answered_q_index === (session.current_q_index || 0)) && me.last_answer !== null && me.last_answer !== undefined;
-      const isCorrect = hasAnsweredThisRound && me.is_correct;
-      const isDanger = hasAnsweredThisRound && me.is_danger;
-      const earned = hasAnsweredThisRound ? (me.last_earned_points || 0) : 0;
+      const currentQIdx = session.current_q_index || 0;
+      let hasAnsweredThisRound = (me.last_answered_q_index === currentQIdx) && me.last_answer !== null && me.last_answer !== undefined;
+      let isCorrect = hasAnsweredThisRound && me.is_correct;
+      let isDanger = hasAnsweredThisRound && me.is_danger;
+      let earned = hasAnsweredThisRound ? (me.last_earned_points || 0) : 0;
+
+      // Robustes Fallback falls Server-Snapshot noch durch Polling-Verzögerung hinterherhängt
+      if (!hasAnsweredThisRound && lastSubmittedAnswer && lastSubmittedAnswer.qIndex === currentQIdx) {
+        hasAnsweredThisRound = true;
+        isCorrect = lastSubmittedAnswer.isCorrect;
+        isDanger = lastSubmittedAnswer.isDanger;
+        earned = lastSubmittedAnswer.earnedPoints;
+      }
 
       if (isCorrect) {
         card.className = 'bg-gradient-to-b from-gray-900 via-gray-900 to-emerald-950/40 border-2 border-emerald-400 rounded-3xl p-6 shadow-2xl shadow-emerald-500/20 ring-4 ring-emerald-500/20 space-y-3';
