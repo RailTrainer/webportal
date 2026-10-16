@@ -1414,11 +1414,24 @@
                   <span>Hintergrundmusik</span>
                 </label>
                 <select id="battleMusicSelect" class="w-full px-3 py-2.5 bg-gray-950/90 border border-gray-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-xl text-xs md:text-sm font-semibold text-gray-100 focus:outline-none transition shadow-inner">
-                  <option value="tetris" selected>🕹️ Tetris (Original 8-Bit)</option>
-                  <option value="mario">🍄 Super Mario Land (Game Boy)</option>
+                  <option value="tetris" selected>🕹️ Tetris (Original Theme A)</option>
+                  <option value="mario">🍄 Super Mario Bros. (Original Theme)</option>
                   <option value="kahoot">🎵 Kahoot Beat (Groove)</option>
                   <option value="none">🔇 Musik Aus</option>
                 </select>
+                <!-- Original Audio Elements for Background Music -->
+                <audio id="battleAudioTetris" preload="auto" loop class="hidden">
+                  <source src="audio/tetris.mp3" type="audio/mpeg">
+                  <source src="./audio/tetris.mp3" type="audio/mpeg">
+                  <source src="admin-portal/audio/tetris.mp3" type="audio/mpeg">
+                  <source src="https://ia801506.us.archive.org/5/items/gdps-2.2-song-791018/791018.mp3" type="audio/mpeg">
+                </audio>
+                <audio id="battleAudioMario" preload="auto" loop class="hidden">
+                  <source src="audio/mario.mp3" type="audio/mpeg">
+                  <source src="./audio/mario.mp3" type="audio/mpeg">
+                  <source src="admin-portal/audio/mario.mp3" type="audio/mpeg">
+                  <source src="https://archive.org/download/gs_nintendo-super-mario-history-1985-2010/01%20Super%20Mario%20Bros.%20Ground%20Theme.mp3" type="audio/mpeg">
+                </audio>
               </div>
             </div>
 
@@ -1529,8 +1542,8 @@
                   <span id="battleMusicToggleText">Musik</span>
                 </button>
                 <select id="battleLiveMusicSelect" onchange="window.setBattleMusicTrack(this.value)" class="bg-gray-900 border-0 rounded-lg text-xs font-bold text-emerald-300 py-1 px-1.5 focus:outline-none cursor-pointer" title="Hintergrundmusik auswählen">
-                  <option value="tetris">🕹️ Tetris</option>
-                  <option value="mario">🍄 Mario Land</option>
+                  <option value="tetris">🕹️ Tetris Original</option>
+                  <option value="mario">🍄 Super Mario Original</option>
                   <option value="kahoot">🎵 Kahoot</option>
                 </select>
               </div>
@@ -1786,7 +1799,7 @@
             <div class="bg-gradient-to-t from-gray-900 to-gray-800/90 border-2 border-gray-600/80 rounded-2xl p-3 text-center shadow-xl h-40 md:h-48 flex flex-col justify-between backdrop-blur-xl">
               <div>
                 <div class="text-2xl mb-0.5 drop-shadow">🥈</div>
-                <div class="text-xl" id="podiumAvatar2">🚂</div>
+                <div class="text-xl" id="podiumAvatar2">👨‍✈️</div>
                 <div class="font-extrabold text-xs md:text-sm text-white mt-0.5 truncate" id="podiumName2">Zweiter</div>
                 <div class="text-[11px] font-black text-gray-300 mt-0.5" id="podiumScore2">0 Pkt</div>
               </div>
@@ -1798,7 +1811,7 @@
               <div class="absolute inset-0 pointer-events-none bg-gradient-to-b from-emerald-500/10 to-transparent"></div>
               <div class="relative z-10">
                 <div class="text-3xl mb-0.5 animate-bounce drop-shadow-[0_0_15px_rgba(245,158,11,0.6)]">🥇</div>
-                <div class="text-2xl" id="podiumAvatar1">🚂</div>
+                <div class="text-2xl" id="podiumAvatar1">👨‍✈️</div>
                 <div class="font-black text-sm md:text-base text-amber-300 mt-0.5 truncate" id="podiumName1">Sieger</div>
                 <div class="text-xs font-black text-emerald-300 mt-0.5" id="podiumScore1">0 Pkt</div>
               </div>
@@ -1811,7 +1824,7 @@
             <div class="bg-gradient-to-t from-gray-900 to-gray-800/90 border-2 border-amber-900/60 rounded-2xl p-3 text-center shadow-xl h-32 md:h-40 flex flex-col justify-between backdrop-blur-xl">
               <div>
                 <div class="text-2xl mb-0.5 drop-shadow">🥉</div>
-                <div class="text-xl" id="podiumAvatar3">🚂</div>
+                <div class="text-xl" id="podiumAvatar3">👨‍✈️</div>
                 <div class="font-extrabold text-xs md:text-sm text-white mt-0.5 truncate" id="podiumName3">Dritter</div>
                 <div class="text-[11px] font-black text-amber-500 mt-0.5" id="podiumScore3">0 Pkt</div>
               </div>
@@ -3588,18 +3601,40 @@ window.renderBattleQrCode = function(url) {
   }
 };
 
-// --- BATTLE WEB AUDIO SYNTHESIZER (TETRIS, SUPER MARIO LAND, KAHOOT & SOUND FX) ---
+// --- BATTLE SOUND ENGINE (ORIGINAL TETRIS & SUPER MARIO AUDIO TRACKS, KAHOOT & SOUND FX) ---
 class BattleSoundEngine {
   constructor() {
     this.ctx = null;
     this.isPlaying = false;
     this.musicEnabled = true;
     this.loopTimer = null;
-    this.step = 0;
+    this.activeAudio = null;
     this.currentTrack = localStorage.getItem('battle_music_track') || 'tetris';
     if (this.currentTrack === 'none') {
       this.musicEnabled = false;
     }
+  }
+
+  getAudioElement(trackName) {
+    if (trackName === 'tetris') {
+      let el = document.getElementById('battleAudioTetris');
+      if (!el) {
+        el = new Audio('audio/tetris.mp3');
+        el.loop = true;
+      }
+      el.volume = 0.35;
+      return el;
+    }
+    if (trackName === 'mario') {
+      let el = document.getElementById('battleAudioMario');
+      if (!el) {
+        el = new Audio('audio/mario.mp3');
+        el.loop = true;
+      }
+      el.volume = 0.32;
+      return el;
+    }
+    return null;
   }
 
   initContext() {
@@ -3612,55 +3647,6 @@ class BattleSoundEngine {
     }
   }
 
-  playNote(freq, type, duration, gainVal = 0.15, startTime = null) {
-    if (!this.ctx || !this.musicEnabled || !freq || freq <= 0) return;
-    try {
-      const now = startTime !== null ? startTime : this.ctx.currentTime;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, now);
-
-      gain.gain.setValueAtTime(gainVal, now);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-
-      osc.start(now);
-      osc.stop(now + duration);
-    } catch {}
-  }
-
-  playNoise(duration, gainVal = 0.04, startTime = null) {
-    if (!this.ctx || !this.musicEnabled) return;
-    try {
-      const now = startTime !== null ? startTime : this.ctx.currentTime;
-      const bufferSize = Math.floor(this.ctx.sampleRate * duration);
-      if (bufferSize <= 0) return;
-      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        data[i] = Math.random() * 2 - 1;
-      }
-      const noise = this.ctx.createBufferSource();
-      noise.buffer = buffer;
-      const filter = this.ctx.createBiquadFilter();
-      filter.type = 'highpass';
-      filter.frequency.value = 1200;
-      const gain = this.ctx.createGain();
-      gain.gain.setValueAtTime(gainVal, now);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-      noise.connect(filter);
-      filter.connect(gain);
-      gain.connect(this.ctx.destination);
-      noise.start(now);
-      noise.stop(now + duration);
-    } catch {}
-  }
-
   setTrack(trackName) {
     if (trackName === 'none') {
       this.currentTrack = 'none';
@@ -3670,12 +3656,13 @@ class BattleSoundEngine {
       localStorage.setItem('battle_music_track', 'none');
       return;
     }
+    const wasPlaying = this.isPlaying;
+    this.stopGroove();
     this.currentTrack = trackName;
     this.musicEnabled = true;
     localStorage.setItem('battle_music_track', trackName);
     this.updateMusicUI();
-    if (this.isPlaying) {
-      this.stopGroove();
+    if (wasPlaying) {
       this.startGroove();
     }
   }
@@ -3702,211 +3689,139 @@ class BattleSoundEngine {
   }
 
   startGroove() {
-    this.initContext();
-    if (!this.musicEnabled || this.currentTrack === 'none' || this.isPlaying) return;
+    if (!this.musicEnabled || this.currentTrack === 'none') return;
+    this.stopGroove(false);
     this.isPlaying = true;
-    this.step = 0;
 
-    if (this.loopTimer) clearInterval(this.loopTimer);
-
-    if (this.currentTrack === 'mario') {
-      this.startMarioTrack();
-    } else if (this.currentTrack === 'kahoot') {
+    if (this.currentTrack === 'kahoot') {
       this.startKahootTrack();
-    } else {
-      this.startTetrisTrack();
+      return;
+    }
+
+    const audio = this.getAudioElement(this.currentTrack);
+    if (audio) {
+      this.activeAudio = audio;
+      audio.currentTime = 0;
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(err => {
+          console.warn('Audio Autoplay blockiert, warte auf Nutzerinteraktion:', err);
+          const resumeOnInteraction = () => {
+            if (this.isPlaying && this.musicEnabled && this.activeAudio) {
+              this.activeAudio.play().catch(() => {});
+            }
+            document.removeEventListener('click', resumeOnInteraction);
+            document.removeEventListener('keydown', resumeOnInteraction);
+          };
+          document.addEventListener('click', resumeOnInteraction, { once: true });
+          document.addEventListener('keydown', resumeOnInteraction, { once: true });
+        });
+      }
     }
   }
 
-  startKahootTrack() {
-    const tempo = 135;
-    const bassScale = [130.81, 155.56, 174.61, 196.00, 233.08];
-    const synthNotes = [261.63, 311.13, 349.23, 392.00, 466.16, 523.25];
-    const beatInterval = (60 / tempo) * 1000 / 2;
+  stopGroove(fullStop = true) {
+    if (fullStop) this.isPlaying = false;
 
-    this.loopTimer = setInterval(() => {
-      if (!this.isPlaying || !this.musicEnabled) return;
-      this.initContext();
-      if (!this.ctx) return;
-      const now = this.ctx.currentTime;
-      if (this.step % 2 === 0) {
-        this.playNote(75, 'sine', 0.12, 0.22, now);
-      }
-      const bassFreq = bassScale[this.step % bassScale.length];
-      this.playNote(bassFreq, 'triangle', 0.18, 0.15, now);
-      if (this.step % 4 === 1 || this.step % 4 === 3) {
-        const synthFreq = synthNotes[(this.step * 2) % synthNotes.length];
-        this.playNote(synthFreq, 'square', 0.1, 0.04, now);
-      }
-      this.step = (this.step + 1) % 16;
-    }, beatInterval);
-  }
+    if (this.activeAudio) {
+      try {
+        this.activeAudio.pause();
+        this.activeAudio.currentTime = 0;
+      } catch (e) {}
+      this.activeAudio = null;
+    }
 
-  startTetrisTrack() {
-    // Korobeiniki (Tetris Theme A) Game Boy 8-Bit Chiptune
-    const tempo = 146;
-    const stepInterval = (60 / tempo) * 1000 / 2; // eighth note ~205ms
+    const tetrisEl = document.getElementById('battleAudioTetris');
+    if (tetrisEl) {
+      try { tetrisEl.pause(); tetrisEl.currentTime = 0; } catch (e) {}
+    }
 
-    const melody = [
-      { f: 659.25, d: 0.35 }, // E5
-      { f: 493.88, d: 0.18 }, // B4
-      { f: 523.25, d: 0.18 }, // C5
-      { f: 587.33, d: 0.35 }, // D5
-      { f: 523.25, d: 0.18 }, // C5
-      { f: 493.88, d: 0.18 }, // B4
-      { f: 440.00, d: 0.35 }, // A4
-      { f: 440.00, d: 0.18 }, // A4
-      { f: 523.25, d: 0.18 }, // C5
-      { f: 659.25, d: 0.35 }, // E5
-      { f: 587.33, d: 0.18 }, // D5
-      { f: 523.25, d: 0.18 }, // C5
-      { f: 493.88, d: 0.50 }, // B4
-      { f: 523.25, d: 0.18 }, // C5
-      { f: 587.33, d: 0.35 }, // D5
-      { f: 659.25, d: 0.35 }, // E5
-      { f: 523.25, d: 0.35 }, // C5
-      { f: 440.00, d: 0.35 }, // A4
-      { f: 440.00, d: 0.35 }, // A4
-      { f: 0,      d: 0.18 }, // rest
-      { f: 587.33, d: 0.35 }, // D5
-      { f: 698.46, d: 0.18 }, // F5
-      { f: 880.00, d: 0.35 }, // A5
-      { f: 783.99, d: 0.18 }, // G5
-      { f: 698.46, d: 0.18 }, // F5
-      { f: 659.25, d: 0.50 }, // E5
-      { f: 523.25, d: 0.18 }, // C5
-      { f: 659.25, d: 0.35 }, // E5
-      { f: 587.33, d: 0.18 }, // D5
-      { f: 523.25, d: 0.18 }, // C5
-      { f: 493.88, d: 0.35 }, // B4
-      { f: 493.88, d: 0.18 }, // B4
-      { f: 523.25, d: 0.18 }, // C5
-      { f: 587.33, d: 0.35 }, // D5
-      { f: 659.25, d: 0.35 }, // E5
-      { f: 523.25, d: 0.35 }, // C5
-      { f: 440.00, d: 0.35 }, // A4
-      { f: 440.00, d: 0.35 }, // A4
-      { f: 0,      d: 0.18 }  // rest
-    ];
+    const marioEl = document.getElementById('battleAudioMario');
+    if (marioEl) {
+      try { marioEl.pause(); marioEl.currentTime = 0; } catch (e) {}
+    }
 
-    const bassNotes = [
-      110.00, 164.81, 110.00, 164.81, // A2, E3, A2, E3
-      103.83, 164.81, 103.83, 164.81, // G#2, E3, G#2, E3
-      110.00, 164.81, 110.00, 164.81, // A2, E3, A2, E3
-      146.83, 220.00, 146.83, 220.00, // D3, A3, D3, A3
-      130.81, 196.00, 130.81, 196.00, // C3, G3, C3, G3
-      82.41,  123.47, 82.41,  123.47, // E2, B2, E2, B2
-      110.00, 164.81, 110.00, 110.00  // A2, E3, A2, A2
-    ];
-
-    this.loopTimer = setInterval(() => {
-      if (!this.isPlaying || !this.musicEnabled) return;
-      this.initContext();
-      if (!this.ctx) return;
-      const now = this.ctx.currentTime;
-
-      // Melody
-      const m = melody[this.step % melody.length];
-      if (m && m.f > 0) {
-        this.playNote(m.f, 'square', m.d, 0.08, now);
-      }
-
-      // Bass
-      const b = bassNotes[this.step % bassNotes.length];
-      if (b) {
-        this.playNote(b, 'triangle', 0.16, 0.18, now);
-      }
-
-      // Hi-hat on offbeat, kick on beat 0
-      if (this.step % 2 === 1) {
-        this.playNoise(0.035, 0.03, now);
-      } else if (this.step % 4 === 0) {
-        this.playNote(85, 'sine', 0.08, 0.16, now);
-      }
-
-      this.step = (this.step + 1) % melody.length;
-    }, stepInterval);
-  }
-
-  startMarioTrack() {
-    // Super Mario Land (Game Boy 1989 Birabuto / Overworld Theme)
-    const tempo = 154;
-    const stepInterval = (60 / tempo) * 1000 / 2; // eighth note ~195ms
-
-    const melody = [
-      { f: 659.25, d: 0.12 }, // E5
-      { f: 659.25, d: 0.12 }, // E5
-      { f: 0,      d: 0.12 }, // rest
-      { f: 659.25, d: 0.12 }, // E5
-      { f: 0,      d: 0.12 }, // rest
-      { f: 523.25, d: 0.12 }, // C5
-      { f: 659.25, d: 0.28 }, // E5
-      { f: 783.99, d: 0.28 }, // G5
-      { f: 0,      d: 0.18 }, // rest
-      { f: 392.00, d: 0.28 }, // G4
-      { f: 0,      d: 0.18 }, // rest
-      { f: 523.25, d: 0.22 }, // C5
-      { f: 0,      d: 0.12 }, // rest
-      { f: 392.00, d: 0.22 }, // G4
-      { f: 0,      d: 0.12 }, // rest
-      { f: 329.63, d: 0.22 }, // E4
-      { f: 0,      d: 0.12 }, // rest
-      { f: 440.00, d: 0.22 }, // A4
-      { f: 493.88, d: 0.22 }, // B4
-      { f: 466.16, d: 0.15 }, // Bb4
-      { f: 440.00, d: 0.22 }, // A4
-      { f: 392.00, d: 0.22 }, // G4
-      { f: 659.25, d: 0.22 }, // E5
-      { f: 783.99, d: 0.22 }, // G5
-      { f: 880.00, d: 0.28 }, // A5
-      { f: 698.46, d: 0.15 }, // F5
-      { f: 783.99, d: 0.22 }, // G5
-      { f: 0,      d: 0.12 }, // rest
-      { f: 659.25, d: 0.22 }, // E5
-      { f: 523.25, d: 0.18 }, // C5
-      { f: 587.33, d: 0.18 }, // D5
-      { f: 493.88, d: 0.28 }  // B4
-    ];
-
-    const bass = [
-      130.81, 196.00, 130.81, 196.00, // C3, G3, C3, G3
-      164.81, 246.94, 164.81, 246.94, // E3, B3, E3, B3
-      174.61, 261.63, 174.61, 261.63, // F3, C4, F3, C4
-      196.00, 293.66, 196.00, 293.66  // G3, D4, G3, D4
-    ];
-
-    this.loopTimer = setInterval(() => {
-      if (!this.isPlaying || !this.musicEnabled) return;
-      this.initContext();
-      if (!this.ctx) return;
-      const now = this.ctx.currentTime;
-
-      const m = melody[this.step % melody.length];
-      if (m && m.f > 0) {
-        this.playNote(m.f, 'square', m.d, 0.08, now);
-      }
-
-      const b = bass[this.step % bass.length];
-      if (b) {
-        this.playNote(b, 'triangle', 0.15, 0.17, now);
-      }
-
-      if (this.step % 4 === 2) {
-        this.playNoise(0.045, 0.04, now);
-      } else if (this.step % 2 === 0) {
-        this.playNote(90, 'sine', 0.07, 0.18, now);
-      }
-
-      this.step = (this.step + 1) % melody.length;
-    }, stepInterval);
-  }
-
-  stopGroove() {
-    this.isPlaying = false;
     if (this.loopTimer) {
       clearInterval(this.loopTimer);
       this.loopTimer = null;
     }
+  }
+
+  startKahootTrack() {
+    this.initContext();
+    const tempo = 135;
+    const bassScale = [130.81, 155.56, 174.61, 196.00, 233.08];
+    const synthNotes = [261.63, 311.13, 349.23, 392.00, 466.16, 523.25];
+    const beatInterval = (60 / tempo) * 1000 / 2;
+    let step = 0;
+
+    this.loopTimer = setInterval(() => {
+      if (!this.isPlaying || !this.musicEnabled) return;
+      this.initContext();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+      if (step % 2 === 0) {
+        this.playNote(75, 'sine', 0.12, 0.22, now);
+      }
+      const bassFreq = bassScale[step % bassScale.length];
+      this.playNote(bassFreq, 'triangle', 0.18, 0.15, now);
+      if (step % 4 === 1 || step % 4 === 3) {
+        const synthFreq = synthNotes[(step * 2) % synthNotes.length];
+        this.playNote(synthFreq, 'square', 0.1, 0.04, now);
+      }
+      step = (step + 1) % 16;
+    }, beatInterval);
+  }
+
+  playNote(freq, type, duration, gainVal = 0.15, startTime = null) {
+    this.initContext();
+    if (!this.ctx || !this.musicEnabled || !freq || freq <= 0) return;
+    try {
+      const now = startTime !== null ? startTime : this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, now);
+
+      gain.gain.setValueAtTime(gainVal, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + duration);
+    } catch {}
+  }
+
+  playNoise(duration, gainVal = 0.04, startTime = null) {
+    this.initContext();
+    if (!this.ctx || !this.musicEnabled) return;
+    try {
+      const now = startTime !== null ? startTime : this.ctx.currentTime;
+      const bufferSize = Math.floor(this.ctx.sampleRate * duration);
+      if (bufferSize <= 0) return;
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.value = 1200;
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(gainVal, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+      noise.start(now);
+      noise.stop(now + duration);
+    } catch {}
   }
 
   playTick() {
@@ -3949,6 +3864,7 @@ class BattleSoundEngine {
       this.stopGroove();
     }
     this.updateMusicUI();
+    showToast(this.musicEnabled ? 'Hintergrundmusik aktiviert 🎵' : 'Hintergrundmusik stummgeschaltet 🔇');
   }
 }
 
@@ -4020,7 +3936,7 @@ async function syncRemoteAnswersFromIndividualRecords() {
               player = {
                 id: data.playerId,
                 name: data.name || 'Spieler',
-                avatar: data.avatar || '🚂',
+                avatar: data.avatar || '👨‍✈️',
                 score: 0,
                 streak: 0,
                 hangman_strikes: 0,
@@ -4114,7 +4030,7 @@ function updateHostUIFromState() {
     } else {
       listEl.innerHTML = players.map(p => 
         '<div class="flex items-center gap-2.5 bg-gradient-to-r from-gray-950 to-emerald-950/40 border border-emerald-500/30 hover:border-emerald-400/60 px-4 py-2 rounded-2xl shadow-lg shadow-black/40 transition-all hover:scale-105">' +
-          '<span class="text-xl filter drop-shadow">' + (p.avatar || '🚂') + '</span>' +
+          '<span class="text-xl filter drop-shadow">' + (p.avatar || '👨‍✈️') + '</span>' +
           '<span class="text-sm font-bold text-white tracking-wide">' + escapeHtml(p.name || 'Spieler') + '</span>' +
           '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>' +
         '</div>'
@@ -4807,7 +4723,7 @@ window.revealBattleRoundResults = async function() {
               '</div>' +
               '<div class="min-w-0 flex-1">' +
                 '<div class="flex items-center gap-1.5">' +
-                  '<span class="text-base leading-none">' + (p.avatar || '🚂') + '</span>' +
+                  '<span class="text-base leading-none">' + (p.avatar || '👨‍✈️') + '</span>' +
                   '<span class="font-bold text-xs text-white truncate max-w-[130px]">' + escapeHtml(p.name || 'Spieler') + '</span>' +
                 '</div>' +
                 '<div class="flex items-center gap-1 mt-0.5 flex-wrap">' +
@@ -4841,7 +4757,7 @@ window.revealBattleRoundResults = async function() {
           return '<div class="flex items-center justify-between py-1.5 px-2.5 rounded-xl ' + (idx === 0 ? 'bg-gradient-to-r from-emerald-950/40 to-gray-950 border border-emerald-500/40 shadow-emerald-950/30' : 'bg-gray-950 border border-gray-800') + ' shadow">' +
             '<div class="flex items-center gap-2 min-w-0">' +
               '<span class="font-black text-xs w-5 text-center ' + (idx === 0 ? 'text-emerald-400' : 'text-gray-400') + '">' + medal + '</span>' +
-              '<span class="text-base leading-none">' + (p.avatar || '🚂') + '</span>' +
+              '<span class="text-base leading-none">' + (p.avatar || '👨‍✈️') + '</span>' +
               '<span class="font-bold text-xs text-white truncate max-w-[110px]">' + escapeHtml(p.name || 'Spieler') + '</span>' +
               streakBadge +
             '</div>' +
@@ -4969,15 +4885,15 @@ window.renderBattlePodium = function() {
   };
 
   document.getElementById('podiumName1').textContent = p1 ? (p1.name || 'Champion') : '-';
-  document.getElementById('podiumAvatar1').textContent = p1 ? (p1.avatar || '🥇') : '🚂';
+  document.getElementById('podiumAvatar1').textContent = p1 ? (p1.avatar || '🥇') : '👨‍✈️';
   document.getElementById('podiumScore1').textContent = formatPodiumScore(p1);
 
   document.getElementById('podiumName2').textContent = p2 ? (p2.name || 'Zweiter') : '-';
-  document.getElementById('podiumAvatar2').textContent = p2 ? (p2.avatar || '🥈') : '🚂';
+  document.getElementById('podiumAvatar2').textContent = p2 ? (p2.avatar || '🥈') : '👨‍✈️';
   document.getElementById('podiumScore2').textContent = formatPodiumScore(p2);
 
   document.getElementById('podiumName3').textContent = p3 ? (p3.name || 'Dritter') : '-';
-  document.getElementById('podiumAvatar3').textContent = p3 ? (p3.avatar || '🥉') : '🚂';
+  document.getElementById('podiumAvatar3').textContent = p3 ? (p3.avatar || '🥉') : '👨‍✈️';
   document.getElementById('podiumScore3').textContent = formatPodiumScore(p3);
 
   const fullList = document.getElementById('battleFinalFullLeaderboard');
@@ -4993,7 +4909,7 @@ window.renderBattlePodium = function() {
         '<div class="flex items-center gap-3">' +
           '<span class="font-extrabold text-xs w-20 ' + (idx === 0 ? 'text-emerald-400 font-black' : idx === 1 ? 'text-gray-300' : idx === 2 ? 'text-amber-600' : 'text-gray-500') + '">' + medal + '</span>' +
           (isHangman ? ('<div class="w-8 h-8 flex items-center justify-center shrink-0">' + window.renderHangmanSvg(p.hangman_strikes, 32, dead) + '</div>') : '') +
-          '<span class="text-xl filter drop-shadow">' + (p.avatar || '🚂') + '</span>' +
+          '<span class="text-xl filter drop-shadow">' + (p.avatar || '👨‍✈️') + '</span>' +
           '<span class="font-bold text-sm text-white">' + escapeHtml(p.name || 'Spieler') + '</span>' +
         '</div>' +
         rightCol +
@@ -5016,6 +4932,7 @@ window.renderBattlePodium = function() {
 window.resetLiveBattleToSetup = function() {
   if (battlePollInterval) clearInterval(battlePollInterval);
   if (battleTimerInterval) clearInterval(battleTimerInterval);
+  if (window.battleSound) battleSound.stopGroove();
 
   if (battleSession?.pin) {
     try {
