@@ -419,6 +419,12 @@
         <span>Kategorien</span>
       </button>
 
+      <button onclick="switchTab('tickets')" id="tab-btn-tickets" class="nav-tab flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-gray-400 hover:bg-gray-800 hover:text-white">
+        <i data-lucide="message-square" class="w-4 h-4"></i>
+        <span>Tickets & Support</span>
+        <span id="badge-tickets-count" class="ml-auto text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">0</span>
+      </button>
+
       <button onclick="switchTab('import')" id="tab-btn-import" class="nav-tab flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-gray-400 hover:bg-gray-800 hover:text-white">
         <i data-lucide="upload" class="w-4 h-4"></i>
         <span>CSV / Excel Import</span>
@@ -673,6 +679,79 @@
         <div id="categoriesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
       </section>
 
+      <!-- TAB: TICKETS -->
+      <section id="tab-tickets" class="tab-content hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <div class="flex items-center gap-2.5">
+              <h2 class="text-2xl font-bold text-white tracking-tight">Tickets & Support-Anfragen</h2>
+              <span id="ticketsOpenBadge" class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                <i data-lucide="inbox" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span id="ticketsOpenStatText">0 offen</span>
+              </span>
+            </div>
+            <p class="text-sm text-gray-400">Prüfungsfragen-Meldungen, Fehlerberichte und Supportanfragen von Schülern einsehen und beantworten.</p>
+          </div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <button onclick="openCreateTicketModal()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs sm:text-sm shadow-lg shadow-brand-600/30 transition">
+              <i data-lucide="plus-circle" class="w-4 h-4"></i>
+              <span>Neues Ticket anlegen</span>
+            </button>
+            <button onclick="loadTickets()" class="p-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-xl border border-gray-700 transition" title="Tickets aktualisieren">
+              <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- FILTER & SUCHE FÜR TICKETS -->
+        <div class="space-y-3 mb-6 bg-gray-900 p-4 rounded-2xl border border-gray-800">
+          <div class="flex flex-col md:flex-row gap-3 items-center justify-between">
+            <div class="w-full relative">
+              <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-3 text-gray-400"></i>
+              <input type="text" id="searchTicketsInput" oninput="filterTickets()" placeholder="Tickets nach Titel, Beschreibung, Frage oder Schüler durchsuchen..." class="w-full pl-10 pr-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-brand-500 transition">
+            </div>
+            <div class="flex items-center gap-2 w-full md:w-auto shrink-0">
+              <select id="filterTicketType" onchange="filterTickets()" class="w-full md:w-auto px-3 py-2 bg-gray-950 border border-gray-800 rounded-xl text-xs font-semibold text-gray-300 focus:outline-none focus:border-brand-500">
+                <option value="all">Alle Ticket-Typen</option>
+                <option value="question_error">⚠️ Fehler in Prüfungsfrage</option>
+                <option value="app_bug">🐛 App-Fehler / Bug</option>
+                <option value="password_reset">🔑 Passwort-Zurücksetzung</option>
+                <option value="question_help">❓ Fachfrage / Verständnis</option>
+                <option value="general_feedback">💡 Feedback / Verbesserung</option>
+                <option value="other">📌 Sonstiges</option>
+              </select>
+              <select id="filterTicketPriority" onchange="filterTickets()" class="w-full md:w-auto px-3 py-2 bg-gray-950 border border-gray-800 rounded-xl text-xs font-semibold text-gray-300 focus:outline-none focus:border-brand-500">
+                <option value="all">Alle Prioritäten</option>
+                <option value="urgent">🔴 Dringend</option>
+                <option value="high">🟠 Hoch</option>
+                <option value="medium">🟡 Normal</option>
+                <option value="low">⚪ Niedrig</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- STATUS TABS -->
+          <div class="flex items-center gap-2 flex-wrap pt-2 border-t border-gray-800/80">
+            <span class="text-xs text-gray-400 font-semibold mr-1">Status:</span>
+            <button type="button" onclick="setTicketStatusFilter('all')" id="btn-ticket-filter-all" class="px-3 py-1.5 rounded-xl text-xs font-bold transition border bg-brand-600 text-white border-brand-500">
+              Alle (<span id="ticket-count-all">0</span>)
+            </button>
+            <button type="button" onclick="setTicketStatusFilter('open')" id="btn-ticket-filter-open" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition border bg-gray-950 text-gray-400 border-gray-800 hover:text-amber-300 hover:border-amber-500/40">
+              ⏳ Offen (<span id="ticket-count-open">0</span>)
+            </button>
+            <button type="button" onclick="setTicketStatusFilter('in_progress')" id="btn-ticket-filter-in_progress" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition border bg-gray-950 text-gray-400 border-gray-800 hover:text-blue-300 hover:border-blue-500/40">
+              🔄 In Bearbeitung (<span id="ticket-count-in_progress">0</span>)
+            </button>
+            <button type="button" onclick="setTicketStatusFilter('resolved')" id="btn-ticket-filter-resolved" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition border bg-gray-950 text-gray-400 border-gray-800 hover:text-emerald-300 hover:border-emerald-500/40">
+              ✓ Gelöst / Geschlossen (<span id="ticket-count-resolved">0</span>)
+            </button>
+          </div>
+        </div>
+
+        <!-- TICKETS LIST CONTAINER -->
+        <div id="ticketsContainer" class="space-y-4"></div>
+      </section>
+
       <!-- TAB 4: IMPORT -->
       <section id="tab-import" class="tab-content hidden">
         <div class="mb-6">
@@ -754,14 +833,41 @@
       <section id="tab-users" class="tab-content hidden">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h2 class="text-2xl font-bold text-white tracking-tight">Benutzerübersicht</h2>
-            <p class="text-sm text-gray-400">Übersicht aller registrierten Benutzer, Schüler, Prüfer und Ausbilder.</p>
+            <h2 class="text-2xl font-bold text-white tracking-tight">Benutzer- & Rollenverwaltung</h2>
+            <p class="text-sm text-gray-400">Übersicht aller registrierten Benutzer, Schüler, Prüfer und Ausbilder mit Rollenberechtigungen.</p>
           </div>
-          <div id="userLockControls">
-            <button id="userUnlockBtn" onclick="window.unlockUserManagement()" class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-semibold border border-gray-700 transition">
-              <i data-lucide="lock" class="w-4 h-4 text-amber-400"></i>
-              <span>Rollen-Bearbeitung gesperrt</span>
+          <div id="userLockControls" class="flex items-center gap-2 flex-wrap">
+            <button id="btnOpenRolePermissions" onclick="openRolePermissionsModal()" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-bold shadow-md shadow-brand-600/30 transition">
+              <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
+              <span>Rollen & Berechtigungen bearbeiten</span>
             </button>
+            <button id="userUnlockBtn" onclick="window.unlockUserManagement()" class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-semibold border border-gray-700 transition">
+              <i data-lucide="shield" class="w-4 h-4 text-amber-400"></i>
+              <span>Admin-Rechte aktiv</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ROLLEN-BERECHTIGUNGEN ÜBERSICHTS-KARTE -->
+        <div id="rolePermissionsOverviewCard" class="bg-gray-900 border border-gray-800 rounded-2xl p-5 mb-6 shadow-lg space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-800/80">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30">
+                <i data-lucide="key" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <h3 class="text-sm font-bold text-white">Rollen-Berechtigungen im Webportal</h3>
+                <p class="text-xs text-gray-400">Aktive Berechtigungen für Moderatoren und Schüler (vom Admin konfigurierbar)</p>
+              </div>
+            </div>
+            <button onclick="openRolePermissionsModal()" class="text-xs font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 transition self-start sm:self-auto">
+              <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+              <span>Rechte anpassen</span>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="rolePermissionsGridSummary">
+            <!-- Wird dynamisch durch renderRolePermissionsOverview() befüllt -->
           </div>
         </div>
 
@@ -2315,6 +2421,197 @@
         <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-800">
           <button type="button" onclick="closeCategoryModal()" class="px-4 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-semibold transition">Abbrechen</button>
           <button type="submit" class="px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-sm font-bold shadow-lg shadow-brand-600/30 transition">Kategorie speichern</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ROLE PERMISSIONS MODAL -->
+  <div id="rolePermissionsModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-gray-900 border border-gray-800 rounded-3xl w-full max-w-2xl max-h-[92vh] overflow-y-auto custom-scrollbar shadow-2xl p-6 space-y-6">
+      
+      <!-- MODAL HEADER -->
+      <div class="flex items-center justify-between pb-4 border-b border-gray-800">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30">
+            <i data-lucide="shield-check" class="w-5 h-5 text-indigo-400"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-black text-white">Rollen & Berechtigungen verwalten</h3>
+            <p class="text-xs text-gray-400">Lege fest, welche Funktionen für die Rollen im Webportal freigeschaltet sind.</p>
+          </div>
+        </div>
+        <button onclick="closeRolePermissionsModal()" class="p-2 text-gray-400 hover:text-white rounded-xl hover:bg-gray-800 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- ROLE SELECTOR TABS -->
+      <div>
+        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Zu bearbeitende Rolle auswählen:</label>
+        <div class="grid grid-cols-3 gap-2 bg-gray-950 p-1.5 rounded-2xl border border-gray-800">
+          <button type="button" onclick="switchRolePermModalTab('moderator')" id="btn-perm-role-moderator" class="py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition bg-brand-600 text-white shadow">
+            <span>🛡️ Dozent / Mod</span>
+          </button>
+          <button type="button" onclick="switchRolePermModalTab('user')" id="btn-perm-role-user" class="py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition text-gray-400 hover:text-white hover:bg-gray-800">
+            <span>🎓 Schüler / User</span>
+          </button>
+          <button type="button" onclick="switchRolePermModalTab('admin')" id="btn-perm-role-admin" class="py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition text-gray-400 hover:text-white hover:bg-gray-800">
+            <span>👑 Ausbilder (Admin)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- PERMISSION TOGGLES FOR SELECTED ROLE -->
+      <div id="rolePermTogglesContainer" class="space-y-3">
+        <!-- Werden per renderRolePermModalToggles() gerendert -->
+      </div>
+
+      <!-- HINWEISBOX -->
+      <div class="p-3.5 rounded-2xl bg-indigo-950/30 border border-indigo-500/20 text-xs text-indigo-300 flex items-start gap-2.5">
+        <i data-lucide="info" class="w-4 h-4 text-indigo-400 shrink-0 mt-0.5"></i>
+        <div class="leading-relaxed text-[11px] text-gray-300">
+          Änderungen werden in der Cloud gespeichert und gelten für alle Accounts der gewählten Rolle. Admins (Hauptausbilder) besitzen stets vollen Zugriff.
+        </div>
+      </div>
+
+      <!-- MODAL ACTIONS -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-gray-800">
+        <button type="button" onclick="resetRolePermissionsToDefault()" class="text-xs font-semibold text-gray-400 hover:text-amber-400 transition flex items-center gap-1.5">
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+          <span>Standards wiederherstellen</span>
+        </button>
+        <div class="flex items-center gap-2.5 w-full sm:w-auto">
+          <button type="button" onclick="closeRolePermissionsModal()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold text-xs transition">
+            Abbrechen
+          </button>
+          <button type="button" onclick="saveRolePermissionsModal()" id="btnSaveRolePermissions" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-lg shadow-emerald-600/30 transition flex items-center justify-center gap-2">
+            <i data-lucide="check" class="w-4 h-4"></i>
+            <span>Berechtigungen speichern</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TICKET RESPONSE MODAL -->
+  <div id="ticketResponseModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-gray-900 border border-gray-800 rounded-3xl w-full max-w-xl max-h-[92vh] overflow-y-auto custom-scrollbar shadow-2xl p-6 space-y-5">
+      <div class="flex items-center justify-between pb-3 border-b border-gray-800">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30">
+            <i data-lucide="message-square" class="w-5 h-5 text-amber-400"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white">Auf Ticket antworten</h3>
+            <p class="text-xs text-gray-400" id="ticketResponseModalSub">Schüler-Rückmeldung verfassen</p>
+          </div>
+        </div>
+        <button onclick="closeTicketResponseModal()" class="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="p-3.5 rounded-2xl bg-gray-950 border border-gray-800 space-y-2 text-xs">
+        <div class="flex items-center justify-between">
+          <span id="ticketResponseHeaderType" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-800 text-gray-300">Ticket</span>
+          <span id="ticketResponseHeaderAuthor" class="text-gray-400 font-mono">Schüler</span>
+        </div>
+        <div class="font-bold text-white text-sm" id="ticketResponseHeaderTitle">Titel</div>
+        <div class="text-gray-300 leading-snug break-words" id="ticketResponseHeaderDesc">Beschreibung...</div>
+      </div>
+
+      <form id="ticketResponseForm" onsubmit="handleSaveTicketResponse(event)" class="space-y-4">
+        <input type="hidden" id="ticketResponseId">
+        <div>
+          <label class="block text-xs font-bold text-gray-300 uppercase mb-1.5">Deine Antwort / Rückmeldung *</label>
+          <textarea id="ticketResponseText" rows="4" required placeholder="Erkläre die Lösung, korrigierte Antwort oder Info an den Schüler..." class="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-xs text-gray-100 placeholder-gray-600 focus:outline-none focus:border-brand-500 transition"></textarea>
+        </div>
+
+        <div class="flex items-center justify-between p-3 rounded-xl bg-gray-950 border border-gray-800">
+          <label class="flex items-center gap-2 text-xs font-semibold text-gray-200 cursor-pointer select-none">
+            <input type="checkbox" id="ticketResponseMarkResolved" checked class="w-4 h-4 rounded accent-emerald-500 cursor-pointer">
+            <span>Ticket nach dem Antworten als <strong class="text-emerald-400">Gelöst ✓</strong> markieren</span>
+          </label>
+        </div>
+
+        <div class="flex items-center justify-end gap-2.5 pt-2">
+          <button type="button" onclick="closeTicketResponseModal()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold text-xs rounded-xl transition">Abbrechen</button>
+          <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-brand-600/30 transition flex items-center gap-2">
+            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+            <span>Antwort absenden</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TICKET CREATE MODAL -->
+  <div id="ticketCreateModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-gray-900 border border-gray-800 rounded-3xl w-full max-w-lg max-h-[92vh] overflow-y-auto custom-scrollbar shadow-2xl p-6 space-y-5">
+      <div class="flex items-center justify-between pb-3 border-b border-gray-800">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center border border-brand-500/30">
+            <i data-lucide="plus-circle" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white">Neues Ticket anlegen</h3>
+            <p class="text-xs text-gray-400">Erstelle ein neues Support- oder Prüfungs-Ticket</p>
+          </div>
+        </div>
+        <button onclick="closeCreateTicketModal()" class="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <form id="ticketCreateForm" onsubmit="handleSaveNewTicket(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-gray-300 uppercase mb-1">Betreff / Titel *</label>
+          <input type="text" id="new_ticket_title" required placeholder="z.B. Signal Zs 1 Beschreibung unklar" class="w-full px-3.5 py-2 bg-gray-950 border border-gray-800 rounded-xl text-xs text-gray-100 placeholder-gray-600 focus:outline-none focus:border-brand-500 transition">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-gray-300 uppercase mb-1">Kategorie / Typ *</label>
+            <select id="new_ticket_type" class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-xl text-xs text-gray-200 focus:outline-none focus:border-brand-500">
+              <option value="question_error">⚠️ Fehler in Prüfungsfrage</option>
+              <option value="app_bug">🐛 App-Fehler / Bug</option>
+              <option value="password_reset">🔑 Passwort-Zurücksetzung</option>
+              <option value="question_help">❓ Fachfrage / Verständnis</option>
+              <option value="general_feedback">💡 Feedback / Verbesserung</option>
+              <option value="other">📌 Sonstiges</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-300 uppercase mb-1">Priorität *</label>
+            <select id="new_ticket_priority" class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-xl text-xs text-gray-200 focus:outline-none focus:border-brand-500">
+              <option value="medium" selected>🟡 Normal</option>
+              <option value="high">🟠 Hoch</option>
+              <option value="urgent">🔴 Dringend</option>
+              <option value="low">⚪ Niedrig</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-gray-300 uppercase mb-1">Name des Erstellers</label>
+            <input type="text" id="new_ticket_username" placeholder="z.B. Max Mustermann" class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-xl text-xs text-gray-100 placeholder-gray-600 focus:outline-none focus:border-brand-500 transition">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-300 uppercase mb-1">E-Mail</label>
+            <input type="email" id="new_ticket_useremail" placeholder="max@bahn.de" class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-xl text-xs text-gray-100 placeholder-gray-600 focus:outline-none focus:border-brand-500 transition">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-300 uppercase mb-1">Problembeschreibung *</label>
+          <textarea id="new_ticket_desc" rows="4" required placeholder="Genaue Beschreibung des Problems oder der Frage..." class="w-full px-3.5 py-2 bg-gray-950 border border-gray-800 rounded-xl text-xs text-gray-100 placeholder-gray-600 focus:outline-none focus:border-brand-500 transition"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-2.5 pt-2">
+          <button type="button" onclick="closeCreateTicketModal()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold text-xs rounded-xl transition">Abbrechen</button>
+          <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-brand-600/30 transition flex items-center gap-2">
+            <i data-lucide="check" class="w-3.5 h-3.5"></i>
+            <span>Ticket anlegen</span>
+          </button>
         </div>
       </form>
     </div>
@@ -5638,6 +5935,10 @@ window.isQuestionVerified = function(id) {
 
 window.toggleQuestionVerification = async function(id, e) {
   if (e) e.stopPropagation();
+  if (typeof window.hasPermission === 'function' && !window.hasPermission('can_verify_content')) {
+    showToast('Zugriff verweigert: Keine Berechtigung zum Freigeben von Prüfungsfragen.', true);
+    return;
+  }
   const q = allQuestions.find(item => item.id === id);
   const currentVerified = q ? (q.is_verified === true || verifiedQuestionIds.has(id)) : verifiedQuestionIds.has(id);
   const newStatus = !currentVerified;
@@ -5886,6 +6187,10 @@ window.isFlashcardVerified = function(id) {
 
 window.toggleFlashcardVerification = async function(id, e) {
   if (e) e.stopPropagation();
+  if (typeof window.hasPermission === 'function' && !window.hasPermission('can_verify_content')) {
+    showToast('Zugriff verweigert: Keine Berechtigung zum Freigeben von Lernkarten.', true);
+    return;
+  }
   const fc = allFlashcards.find(item => item.id === id);
   const currentVerified = fc ? (fc.is_verified === true || verifiedFlashcardIds.has(id)) : verifiedFlashcardIds.has(id);
   const newStatus = !currentVerified;
@@ -6981,6 +7286,12 @@ window.loadAllData = async function() {
     if (!Array.isArray(allAttempts)) allAttempts = [];
     renderStats();
 
+    // Rollenberechtigungen und Tickets laden
+    if (typeof window.loadRolePermissions === 'function') await window.loadRolePermissions();
+    if (typeof window.loadTickets === 'function') await window.loadTickets();
+    if (typeof window.applyRolePermissionsToUI === 'function') window.applyRolePermissionsToUI();
+    if (typeof window.renderRolePermissionsOverview === 'function') window.renderRolePermissionsOverview();
+
     // Falls Unterrichts-Modus aktiv, Daten aktualisieren
     if (typeof window.updateClassroomCategoryList === 'function') window.updateClassroomCategoryList();
     if (typeof window.prepareClassroomData === 'function') window.prepareClassroomData();
@@ -6993,6 +7304,20 @@ window.loadAllData = async function() {
 };
 
 window.switchTab = function(tabId) {
+  // Rollenberechtigungen absichern
+  if (tabId === 'users' && typeof window.hasPermission === 'function' && !window.hasPermission('can_manage_users')) {
+    showToast('Zugriff verweigert: Der Benutzer-Bereich ist für deine Rolle nicht freigeschaltet.', true);
+    return;
+  }
+  if (tabId === 'tickets' && typeof window.hasPermission === 'function' && !window.hasPermission('can_manage_tickets')) {
+    showToast('Zugriff verweigert: Der Tickets-Bereich ist für deine Rolle nicht freigeschaltet.', true);
+    return;
+  }
+  if (tabId === 'categories' && typeof window.hasPermission === 'function' && !window.hasPermission('can_manage_categories')) {
+    showToast('Zugriff verweigert: Der Kategorien-Bereich ist für deine Rolle nicht freigeschaltet.', true);
+    return;
+  }
+
   document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
   document.querySelectorAll('.nav-tab').forEach(el => {
     el.classList.remove('bg-brand-600', 'text-white', 'shadow', 'shadow-brand-600/20');
@@ -7012,6 +7337,12 @@ window.switchTab = function(tabId) {
   }
   if (tabId === 'duplicates') {
     renderDuplicatesTab();
+  }
+  if (tabId === 'tickets' && typeof window.renderTickets === 'function') {
+    window.renderTickets();
+  }
+  if (tabId === 'users' && typeof window.renderRolePermissionsOverview === 'function') {
+    window.renderRolePermissionsOverview();
   }
 
   if (window.lucide) lucide.createIcons();
@@ -7462,7 +7793,12 @@ window.openQuestionModal = function() {
   if (form) form.reset();
   document.getElementById('q_id').value = '';
   const qVer = document.getElementById('q_verified');
-  if (qVer) qVer.checked = true;
+  const canVerify = typeof window.hasPermission === 'function' ? window.hasPermission('can_verify_content') : true;
+  if (qVer) {
+    qVer.checked = canVerify;
+    qVer.disabled = !canVerify;
+    qVer.title = canVerify ? '' : 'Nur mit Freigabe-Berechtigung veränderbar';
+  }
 
   window.setQuestionMode('classic');
   window.orderSteps = ['', '', '', ''];
@@ -7509,7 +7845,12 @@ window.editQuestion = function(id) {
     window.clearImage('q');
   }
   const qVer = document.getElementById('q_verified');
-  if (qVer) qVer.checked = (q.is_verified === true || verifiedQuestionIds.has(q.id));
+  const canVerify = typeof window.hasPermission === 'function' ? window.hasPermission('can_verify_content') : true;
+  if (qVer) {
+    qVer.checked = (q.is_verified === true || verifiedQuestionIds.has(q.id));
+    qVer.disabled = !canVerify;
+    qVer.title = canVerify ? '' : 'Nur mit Freigabe-Berechtigung veränderbar';
+  }
 
   const isOrder = q.questionType === 'order' || q.question_type === 'order' || ((q.explanation || '').includes('"qt":"order"'));
   if (isOrder) {
@@ -7589,7 +7930,11 @@ window.handleSaveQuestion = async function(e, andNext = false) {
   const text = document.getElementById('q_text').value.trim();
   const explanation = document.getElementById('q_explanation').value.trim();
   const imageUrl = document.getElementById('q_image')?.value.trim() || null;
-  const isVerified = document.getElementById('q_verified')?.checked || false;
+  let isVerified = document.getElementById('q_verified')?.checked || false;
+  if (typeof window.hasPermission === 'function' && !window.hasPermission('can_verify_content')) {
+    const existingQ = id ? allQuestions.find(x => x.id === id) : null;
+    isVerified = existingQ ? (existingQ.is_verified === true) : false;
+  }
 
   const isOrder = (window.currentQuestionMode === 'order');
   let options = [];
@@ -7927,7 +8272,12 @@ window.openFlashcardModal = function() {
   if (form) form.reset();
   document.getElementById('fc_id').value = '';
   const fcVer = document.getElementById('fc_verified');
-  if (fcVer) fcVer.checked = true;
+  const canVerify = typeof window.hasPermission === 'function' ? window.hasPermission('can_verify_content') : true;
+  if (fcVer) {
+    fcVer.checked = canVerify;
+    fcVer.disabled = !canVerify;
+    fcVer.title = canVerify ? '' : 'Nur mit Freigabe-Berechtigung veränderbar';
+  }
   window.clearImage('fc');
   window.switchImageTab('fc', 'file');
 
@@ -7964,7 +8314,12 @@ window.editFlashcard = function(id) {
     window.clearImage('fc');
   }
   const fcVer = document.getElementById('fc_verified');
-  if (fcVer) fcVer.checked = verifiedFlashcardIds.has(fc.id);
+  const canVerify = typeof window.hasPermission === 'function' ? window.hasPermission('can_verify_content') : true;
+  if (fcVer) {
+    fcVer.checked = verifiedFlashcardIds.has(fc.id);
+    fcVer.disabled = !canVerify;
+    fcVer.title = canVerify ? '' : 'Nur mit Freigabe-Berechtigung veränderbar';
+  }
 
   const metaEl = document.getElementById('flashcardModalMetaInfo');
   if (metaEl) {
@@ -8017,7 +8372,11 @@ window.handleSaveFlashcard = async function(e, andNext = false) {
   const content = document.getElementById('fc_content').value.trim();
   const reference = document.getElementById('fc_reference').value.trim();
   const imageUrl = document.getElementById('fc_image')?.value.trim() || null;
-  const isVerified = document.getElementById('fc_verified')?.checked || false;
+  let isVerified = document.getElementById('fc_verified')?.checked || false;
+  if (typeof window.hasPermission === 'function' && !window.hasPermission('can_verify_content')) {
+    const existingFc = isNew ? null : allFlashcards.find(item => item.id === id);
+    isVerified = existingFc ? (existingFc.is_verified === true) : false;
+  }
 
   if (!category || !title || !content) {
     alert('Bitte Kategorie, Titel und Erklärung ausfüllen.');
@@ -8294,6 +8653,10 @@ window.toggleAllFlashcardCategories = function(selectAll) {
 };
 
 window.openCategoryModal = function() {
+  if (typeof window.hasPermission === 'function' && !window.hasPermission('can_manage_categories')) {
+    showToast('Zugriff verweigert: Keine Berechtigung zum Erstellen von Kategorien.', true);
+    return;
+  }
   const form = document.getElementById('categoryForm');
   if (form) form.reset();
   const modal = document.getElementById('categoryModal');
@@ -8313,6 +8676,10 @@ window.closeCategoryModal = function() {
 
 window.handleSaveCategory = async function(e) {
   if (e) e.preventDefault();
+  if (typeof window.hasPermission === 'function' && !window.hasPermission('can_manage_categories')) {
+    showToast('Zugriff verweigert: Keine Berechtigung zum Verwalten von Kategorien.', true);
+    return;
+  }
   const name = document.getElementById('cat_name').value.trim();
   const description = document.getElementById('cat_desc').value.trim();
   const color = document.getElementById('cat_color').value;
@@ -8332,6 +8699,10 @@ window.handleSaveCategory = async function(e) {
 };
 
 window.deleteCategory = async function(name) {
+  if (typeof window.hasPermission === 'function' && !window.hasPermission('can_manage_categories')) {
+    showToast('Zugriff verweigert: Keine Berechtigung zum Löschen von Kategorien.', true);
+    return;
+  }
   if (!confirm('Kategorie "' + name + '" löschen?')) return;
   try {
     await fetch(SUPABASE_URL + '/rest/v1/categories?name=eq.' + encodeURIComponent(name), { method: 'DELETE', headers: restHeaders });
@@ -8433,7 +8804,10 @@ window.parseCsvFile = function(file) {
 
 window.commitCsvImport = async function() {
   if (parsedCsvRows.length === 0) return;
-  const isVerified = document.getElementById('csvImportAsVerified')?.checked ?? true;
+  let isVerified = document.getElementById('csvImportAsVerified')?.checked ?? true;
+  if (typeof window.hasPermission === 'function' && !window.hasPermission('can_verify_content')) {
+    isVerified = false;
+  }
 
   let updatedCount = 0;
   let newCount = 0;
@@ -8641,6 +9015,8 @@ function updateHeaderUserUI() {
     role.textContent = roleText;
     role.className = r === 'admin' ? 'text-red-400 font-semibold' : (r === 'moderator' || r === 'mod') ? 'text-amber-400 font-semibold' : 'text-emerald-400 font-semibold';
   }
+  if (typeof window.applyRolePermissionsToUI === 'function') window.applyRolePermissionsToUI();
+  if (typeof window.renderRolePermissionsOverview === 'function') window.renderRolePermissionsOverview();
   if (window.lucide) lucide.createIcons();
 }
 
@@ -8828,6 +9204,7 @@ window.handlePortalLogout = function() {
   if (name) name.textContent = 'Nicht eingeloggt';
   const role = document.getElementById('headerUserRole');
   if (role) role.textContent = '-';
+  if (typeof window.applyRolePermissionsToUI === 'function') window.applyRolePermissionsToUI();
 };
 
 window.renderUsers = function() {
@@ -9014,6 +9391,938 @@ window.updateUserTitle = async function(userId, newTitle) {
   } catch (err) {
     alert('Fehler beim Speichern des Titels: ' + err.message);
   }
+};
+
+// ==========================================
+// ROLLEN & BERECHTIGUNGEN MANAGEMENT
+// ==========================================
+
+const DEFAULT_ROLE_PERMISSIONS = {
+  admin: {
+    can_verify_content: true,
+    can_manage_users: true,
+    can_manage_tickets: true,
+    can_manage_categories: true
+  },
+  moderator: {
+    can_verify_content: true,
+    can_manage_users: false,
+    can_manage_tickets: true,
+    can_manage_categories: true
+  },
+  user: {
+    can_verify_content: false,
+    can_manage_users: false,
+    can_manage_tickets: false,
+    can_manage_categories: false
+  }
+};
+
+const PERMISSION_DEFINITIONS = [
+  {
+    key: 'can_verify_content',
+    label: 'Fragen und Lernkarten freigeben',
+    description: 'Erlaubt das Prüfen, Freigeben und Verifizieren von Prüfungsfragen und Lernkarten.',
+    icon: 'check-circle'
+  },
+  {
+    key: 'can_manage_users',
+    label: 'Benutzer Bereich freischalten',
+    description: 'Ermöglicht den Zugriff auf die Benutzerliste und Schülerverwaltung im Webportal.',
+    icon: 'users'
+  },
+  {
+    key: 'can_manage_tickets',
+    label: 'Tickets Bereich freigeben',
+    description: 'Ermöglicht die Einsicht in Schüler-Fehlermeldungen und das Beantworten von Support-Tickets.',
+    icon: 'message-square'
+  },
+  {
+    key: 'can_manage_categories',
+    label: 'Kategorien Bereich freigeben',
+    description: 'Erlaubt das Ansehen, Anlegen und Verwalten von Fachbereichen und Kategorien.',
+    icon: 'folder'
+  }
+];
+
+let rolePermissions = JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS));
+let modalPermDraft = JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS));
+let activePermModalRole = 'moderator';
+
+window.hasPermission = function(permKey) {
+  if (!currentPortalUser) return false;
+  const role = (currentPortalUser.role || '').toLowerCase();
+  if (role === 'admin') return true; // Administrator besitzt als Hauptausbilder alle Master-Rechte
+  const targetRole = (role === 'mod' || role === 'moderator') ? 'moderator' : (rolePermissions[role] ? role : 'user');
+  const rolePerms = rolePermissions[targetRole] || DEFAULT_ROLE_PERMISSIONS[targetRole] || {};
+  return Boolean(rolePerms[permKey]);
+};
+
+window.loadRolePermissions = async function() {
+  try {
+    const local = localStorage.getItem('railtrainer_role_permissions');
+    if (local) {
+      try {
+        const parsed = JSON.parse(local);
+        if (parsed && typeof parsed === 'object') {
+          rolePermissions = { ...DEFAULT_ROLE_PERMISSIONS, ...parsed };
+        }
+      } catch (e) {}
+    }
+
+    const res = await fetch(SUPABASE_URL + '/rest/v1/chat_messages?id=eq.config_role_permissions&select=*', {
+      headers: restHeaders
+    });
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows) && rows.length > 0 && rows[0].text) {
+        const cloudPerms = JSON.parse(rows[0].text);
+        if (cloudPerms && typeof cloudPerms === 'object') {
+          rolePermissions = { ...DEFAULT_ROLE_PERMISSIONS, ...cloudPerms };
+          rolePermissions.admin = { ...DEFAULT_ROLE_PERMISSIONS.admin };
+          localStorage.setItem('railtrainer_role_permissions', JSON.stringify(rolePermissions));
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Fehler beim Laden der Rollenberechtigungen:', err);
+  }
+  window.applyRolePermissionsToUI();
+  window.renderRolePermissionsOverview();
+};
+
+window.openRolePermissionsModal = function(roleName = 'moderator') {
+  if (currentPortalUser?.role !== 'admin') {
+    showToast('Zugriff verweigert: Nur Administratoren dürfen Rollenberechtigungen anpassen.', true);
+    return;
+  }
+  modalPermDraft = JSON.parse(JSON.stringify(rolePermissions));
+  window.switchRolePermModalTab(roleName);
+  const modal = document.getElementById('rolePermissionsModal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+  if (window.lucide) lucide.createIcons();
+};
+
+window.closeRolePermissionsModal = function() {
+  const modal = document.getElementById('rolePermissionsModal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+};
+
+window.switchRolePermModalTab = function(roleName) {
+  activePermModalRole = roleName;
+  ['moderator', 'user', 'admin'].forEach(r => {
+    const btn = document.getElementById('btn-perm-role-' + r);
+    if (!btn) return;
+    if (r === roleName) {
+      btn.className = 'py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition bg-brand-600 text-white shadow';
+    } else {
+      btn.className = 'py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition text-gray-400 hover:text-white hover:bg-gray-800';
+    }
+  });
+  window.renderRolePermModalToggles();
+};
+
+window.renderRolePermModalToggles = function() {
+  const container = document.getElementById('rolePermTogglesContainer');
+  if (!container) return;
+
+  if (activePermModalRole === 'admin') {
+    container.innerHTML = `
+      <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 flex items-start gap-3 mb-2">
+        <i data-lucide="shield-alert" class="w-5 h-5 text-amber-400 shrink-0 mt-0.5"></i>
+        <div>
+          <div class="font-bold text-sm text-amber-200 mb-1">Master-Administrator (Vollzugriff)</div>
+          <p class="text-gray-300 text-xs leading-relaxed">
+            Als Hauptausbilder besitzen Administratoren stets alle 4 Berechtigungsbereiche dauerhaft. Dies verhindert unbeabsichtigte Systemblockaden.
+          </p>
+        </div>
+      </div>
+      <div class="space-y-2.5">
+        ${PERMISSION_DEFINITIONS.map(p => `
+          <div class="p-4 rounded-2xl border border-gray-800 bg-gray-950/60 opacity-80 flex items-center justify-between gap-4">
+            <div class="flex items-start gap-3.5">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+                <i data-lucide="${p.icon}" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-bold text-white">${p.label}</span>
+                  <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Dauerhaft aktiv</span>
+                </div>
+                <p class="text-xs text-gray-400 mt-0.5">${p.description}</p>
+              </div>
+            </div>
+            <span class="text-emerald-400 font-bold text-xs">✓ Aktiv</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    if (window.lucide) lucide.createIcons();
+    return;
+  }
+
+  const roleObj = modalPermDraft[activePermModalRole] || {};
+  container.innerHTML = `
+    <div class="space-y-2.5">
+      ${PERMISSION_DEFINITIONS.map(p => {
+        const isEnabled = Boolean(roleObj[p.key]);
+        return `
+          <div onclick="window.toggleRolePerm('${p.key}')" class="p-4 rounded-2xl border transition cursor-pointer select-none flex items-center justify-between gap-4 ${isEnabled ? 'bg-brand-950/30 border-brand-500/40 hover:border-brand-500/60' : 'bg-gray-950/60 border-gray-800 hover:border-gray-700'}">
+            <div class="flex items-start gap-3.5">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${isEnabled ? 'bg-brand-500/20 text-brand-400 border-brand-500/30' : 'bg-gray-800/80 text-gray-500 border-gray-700/60'}">
+                <i data-lucide="${p.icon}" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-bold text-white">${p.label}</span>
+                  ${isEnabled 
+                    ? '<span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Freigeschaltet ✓</span>' 
+                    : '<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-gray-800 text-gray-400 border border-gray-700">Gesperrt ✕</span>'}
+                </div>
+                <p class="text-xs text-gray-400 mt-0.5 leading-relaxed">${p.description}</p>
+              </div>
+            </div>
+            <div class="relative shrink-0">
+              <div class="w-12 h-6 rounded-full transition-colors flex items-center p-1 ${isEnabled ? 'bg-brand-600' : 'bg-gray-700'}">
+                <div class="w-4 h-4 rounded-full bg-white transition-transform ${isEnabled ? 'translate-x-6' : 'translate-x-0'}"></div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+  if (window.lucide) lucide.createIcons();
+};
+
+window.toggleRolePerm = function(permKey) {
+  if (activePermModalRole === 'admin') return;
+  if (!modalPermDraft[activePermModalRole]) modalPermDraft[activePermModalRole] = {};
+  modalPermDraft[activePermModalRole][permKey] = !modalPermDraft[activePermModalRole][permKey];
+  window.renderRolePermModalToggles();
+};
+
+window.resetRolePermissionsToDefault = function() {
+  if (!confirm('Möchtest du die Rollenberechtigungen auf die Standardwerte zurücksetzen?')) return;
+  modalPermDraft = JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS));
+  window.renderRolePermModalToggles();
+  showToast('Standard-Berechtigungen wiederhergestellt.');
+};
+
+window.saveRolePermissionsModal = async function() {
+  if (currentPortalUser?.role !== 'admin') {
+    alert('Zugriff verweigert: Nur Administratoren dürfen Rollenberechtigungen speichern.');
+    return;
+  }
+  const saveBtn = document.getElementById('btnSaveRolePermissions');
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<span>Wird gespeichert...</span>';
+  }
+
+  try {
+    rolePermissions = JSON.parse(JSON.stringify(modalPermDraft));
+    rolePermissions.admin = { ...DEFAULT_ROLE_PERMISSIONS.admin };
+    localStorage.setItem('railtrainer_role_permissions', JSON.stringify(rolePermissions));
+
+    // Cloud-Sync über chat_messages
+    await fetch(SUPABASE_URL + '/rest/v1/chat_messages', {
+      method: 'POST',
+      headers: { ...restHeaders, 'Prefer': 'resolution=merge-duplicates' },
+      body: JSON.stringify([{
+        id: 'config_role_permissions',
+        category: '__system_config__',
+        sender_id: currentPortalUser?.id || 'admin-default-id',
+        sender_name: currentPortalUser?.name || 'Administrator',
+        sender_role: 'admin',
+        text: JSON.stringify(rolePermissions),
+        timestamp: Date.now()
+      }])
+    });
+
+    window.applyRolePermissionsToUI();
+    window.renderRolePermissionsOverview();
+    window.closeRolePermissionsModal();
+    showToast('Rollen-Berechtigungen erfolgreich in der Cloud gespeichert! 🛡️');
+  } catch (err) {
+    console.error('Fehler beim Speichern der Berechtigungen:', err);
+    alert('Fehler beim Speichern der Berechtigungen: ' + err.message);
+  } finally {
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i><span>Berechtigungen speichern</span>';
+      if (window.lucide) lucide.createIcons();
+    }
+  }
+};
+
+window.renderRolePermissionsOverview = function() {
+  const container = document.getElementById('rolePermissionsGridSummary');
+  if (!container) return;
+
+  const isAdmin = currentPortalUser?.role === 'admin';
+
+  container.innerHTML = `
+    <!-- MODERATOREN KARTE -->
+    <div class="bg-gray-950/70 border border-gray-800 rounded-2xl p-4 flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-800/60">
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1.5">
+              <span>🛡️ Moderatoren & Dozenten</span>
+            </span>
+          </div>
+          ${isAdmin ? `<button onclick="window.openRolePermissionsModal('moderator')" class="text-xs text-indigo-400 hover:text-indigo-300 font-bold transition flex items-center gap-1"><i data-lucide="edit-2" class="w-3 h-3"></i><span>Bearbeiten</span></button>` : ''}
+        </div>
+        <div class="space-y-2 text-xs">
+          ${PERMISSION_DEFINITIONS.map(p => {
+            const active = rolePermissions.moderator?.[p.key] ?? DEFAULT_ROLE_PERMISSIONS.moderator[p.key];
+            return `
+              <div class="flex items-center justify-between py-1 border-b border-gray-900 last:border-0">
+                <span class="text-gray-300 flex items-center gap-2">
+                  <i data-lucide="${p.icon}" class="w-3.5 h-3.5 ${active ? 'text-brand-400' : 'text-gray-600'}"></i>
+                  <span>${p.label}</span>
+                </span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${active ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-gray-800 text-gray-500 border border-gray-700'}">
+                  ${active ? 'Freigegeben ✓' : 'Gesperrt ✕'}
+                </span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- SCHÜLER KARTE -->
+    <div class="bg-gray-950/70 border border-gray-800 rounded-2xl p-4 flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-800/60">
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30 flex items-center gap-1.5">
+              <span>🎓 Schüler & Teilnehmer</span>
+            </span>
+          </div>
+          ${isAdmin ? `<button onclick="window.openRolePermissionsModal('user')" class="text-xs text-indigo-400 hover:text-indigo-300 font-bold transition flex items-center gap-1"><i data-lucide="edit-2" class="w-3 h-3"></i><span>Bearbeiten</span></button>` : ''}
+        </div>
+        <div class="space-y-2 text-xs">
+          ${PERMISSION_DEFINITIONS.map(p => {
+            const active = rolePermissions.user?.[p.key] ?? DEFAULT_ROLE_PERMISSIONS.user[p.key];
+            return `
+              <div class="flex items-center justify-between py-1 border-b border-gray-900 last:border-0">
+                <span class="text-gray-300 flex items-center gap-2">
+                  <i data-lucide="${p.icon}" class="w-3.5 h-3.5 ${active ? 'text-brand-400' : 'text-gray-600'}"></i>
+                  <span>${p.label}</span>
+                </span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${active ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-gray-800 text-gray-500 border border-gray-700'}">
+                  ${active ? 'Freigegeben ✓' : 'Gesperrt ✕'}
+                </span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+
+  if (window.lucide) lucide.createIcons();
+};
+
+window.applyRolePermissionsToUI = function() {
+  const canVerify = window.hasPermission('can_verify_content');
+  const canUsers = window.hasPermission('can_manage_users');
+  const canTickets = window.hasPermission('can_manage_tickets');
+  const canCategories = window.hasPermission('can_manage_categories');
+  const isAdmin = currentPortalUser?.role === 'admin';
+
+  // 1. Sidebar Buttons Feedback
+  const btnUsers = document.getElementById('tab-btn-users');
+  if (btnUsers) {
+    if (!canUsers) {
+      btnUsers.classList.add('opacity-40');
+      btnUsers.title = 'Benutzer-Bereich (gesperrt für deine Rolle)';
+    } else {
+      btnUsers.classList.remove('opacity-40');
+      btnUsers.removeAttribute('title');
+    }
+  }
+
+  const btnTickets = document.getElementById('tab-btn-tickets');
+  if (btnTickets) {
+    if (!canTickets) {
+      btnTickets.classList.add('opacity-40');
+      btnTickets.title = 'Tickets-Bereich (gesperrt für deine Rolle)';
+    } else {
+      btnTickets.classList.remove('opacity-40');
+      btnTickets.removeAttribute('title');
+    }
+  }
+
+  const btnCategories = document.getElementById('tab-btn-categories');
+  if (btnCategories) {
+    if (!canCategories) {
+      btnCategories.classList.add('opacity-40');
+      btnCategories.title = 'Kategorien-Bereich (gesperrt für deine Rolle)';
+    } else {
+      btnCategories.classList.remove('opacity-40');
+      btnCategories.removeAttribute('title');
+    }
+  }
+
+  // 2. Modals Checkboxes
+  const qVer = document.getElementById('q_verified');
+  if (qVer) {
+    qVer.disabled = !canVerify;
+    qVer.title = canVerify ? '' : 'Nur mit Freigabe-Berechtigung veränderbar';
+  }
+
+  const fcVer = document.getElementById('fc_verified');
+  if (fcVer) {
+    fcVer.disabled = !canVerify;
+    fcVer.title = canVerify ? '' : 'Nur mit Freigabe-Berechtigung veränderbar';
+  }
+
+  const csvVer = document.getElementById('csvImportAsVerified');
+  if (csvVer) {
+    csvVer.disabled = !canVerify;
+    csvVer.title = canVerify ? '' : 'Nur mit Freigabe-Berechtigung veränderbar';
+  }
+
+  // 3. Category Buttons
+  const openCatBtn = document.getElementById('openCategoryModal');
+  if (openCatBtn) {
+    if (!canCategories) {
+      openCatBtn.classList.add('opacity-40', 'cursor-not-allowed');
+      openCatBtn.title = 'Keine Berechtigung zum Erstellen von Kategorien';
+    } else {
+      openCatBtn.classList.remove('opacity-40', 'cursor-not-allowed');
+      openCatBtn.removeAttribute('title');
+    }
+  }
+
+  // 4. Role Permissions Button in Users Tab
+  const btnOpenPerms = document.getElementById('btnOpenRolePermissions');
+  if (btnOpenPerms) {
+    btnOpenPerms.style.display = isAdmin ? 'inline-flex' : 'none';
+  }
+};
+
+window.unlockUserManagement = function() {
+  if (currentPortalUser?.role !== 'admin') {
+    showToast('Nur Hauptausbilder besitzen Administrator-Rechte.', true);
+  } else {
+    showToast('Admin-Rechte sind bereits aktiv! 🛡️');
+  }
+};
+
+// ==========================================
+// TICKETS & SUPPORT-ANFRAGEN MANAGEMENT
+// ==========================================
+
+let allTickets = [];
+let ticketStatusFilter = 'all'; // 'all' | 'open' | 'in_progress' | 'resolved'
+
+const TICKET_TYPE_MAP = {
+  question_error: { label: 'Fehler in Prüfungsfrage', icon: 'alert-triangle', color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
+  app_bug: { label: 'App-Fehler / Bug', icon: 'bug', color: 'text-red-400 bg-red-500/10 border-red-500/20' },
+  password_reset: { label: 'Passwort-Zurücksetzung', icon: 'key', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20' },
+  question_help: { label: 'Fachfrage / Verständnis', icon: 'help-circle', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
+  general_feedback: { label: 'Feedback & Vorschlag', icon: 'lightbulb', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+  other: { label: 'Sonstiges', icon: 'bookmark', color: 'text-gray-400 bg-gray-500/10 border-gray-500/20' }
+};
+
+const TICKET_PRIORITY_MAP = {
+  urgent: { label: 'Dringend', color: 'bg-red-500/20 text-red-300 border-red-500/30' },
+  high: { label: 'Hoch', color: 'bg-orange-500/20 text-orange-300 border-orange-500/30' },
+  medium: { label: 'Normal', color: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30' },
+  low: { label: 'Niedrig', color: 'bg-gray-500/20 text-gray-300 border-gray-500/30' }
+};
+
+const DEFAULT_SAMPLE_TICKETS = [
+  {
+    id: 'ticket_1001',
+    title: 'Prüfungsfrage Zs 1 - Höchstgeschwindigkeit unklar',
+    description: 'In Prüfungsfrage "Signal Zs 1 - Ersatzsignal" ist die Erläuterung zur zulässigen Geschwindigkeit im Weichenbereich missverständlich formuliert.',
+    type: 'question_error',
+    priority: 'high',
+    status: 'open',
+    created_by: 'u_qfrjq0cvh',
+    created_by_name: 'Max Mustermann',
+    created_by_email: 'max.mustermann@bahn-ausbildung.de',
+    created_at: new Date(Date.now() - 3600000 * 5).toISOString(),
+    responses: []
+  },
+  {
+    id: 'ticket_1002',
+    title: 'Quizbattle Punkte-Gutschrift nach Verbindungsunterbrechung',
+    description: 'Während der vorletzten Fragerunde im Multiplayer-Modus hat die Eingabe gehangen und es wurden Minuspunkte wegen Zeitablauf gezählt.',
+    type: 'app_bug',
+    priority: 'medium',
+    status: 'in_progress',
+    created_by: 'u_d01h9ik5x',
+    created_by_name: 'Hafsahanya',
+    created_by_email: 'hafsah@bahn.de',
+    created_at: new Date(Date.now() - 3600000 * 24).toISOString(),
+    responses: [
+      {
+        id: 'resp_1002_1',
+        responder_name: 'Dennis Köster',
+        responder_role: 'admin',
+        text: 'Vielen Dank für die Meldung! Wir haben den Submit-Button verbessert und eine Vorab-Auswahl eingebaut, damit Klicks zuverlässig gezählt werden.',
+        timestamp: Date.now() - 3600000 * 12
+      }
+    ]
+  },
+  {
+    id: 'ticket_1003',
+    title: 'Vorschlag: Neue Signallernkarten für Ks-Signale',
+    description: 'Könnten noch zusätzliche Lernkarten für Signal Ks 1 mit Zusatzlicht (Fahrt mit 40 km/h) ergänzt werden?',
+    type: 'general_feedback',
+    priority: 'low',
+    status: 'resolved',
+    created_by: 'u_6ybk5gom7',
+    created_by_name: 'Yahya Khan',
+    created_by_email: 'yahya@bahn.de',
+    created_at: new Date(Date.now() - 3600000 * 72).toISOString(),
+    responses: [
+      {
+        id: 'resp_1003_1',
+        responder_name: 'Sven R.',
+        responder_role: 'moderator',
+        text: 'Wurde im Fachbereich "Signale" ergänzt und freigegeben. Danke für deinen Vorschlag!',
+        timestamp: Date.now() - 3600000 * 48
+      }
+    ]
+  }
+];
+
+window.loadTickets = async function() {
+  try {
+    let localTickets = [];
+    const local = localStorage.getItem('railtrainer_tickets');
+    if (local) {
+      try {
+        localTickets = JSON.parse(local);
+        if (!Array.isArray(localTickets)) localTickets = [];
+      } catch (e) {}
+    }
+
+    const res = await fetch(SUPABASE_URL + '/rest/v1/chat_messages?category=eq.__ticket_record__&select=*&order=timestamp.desc', {
+      headers: restHeaders
+    });
+
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows) && rows.length > 0) {
+        const cloudTickets = [];
+        rows.forEach(r => {
+          try {
+            const t = JSON.parse(r.text);
+            if (t && t.id) cloudTickets.push(t);
+          } catch (e) {}
+        });
+        allTickets = cloudTickets;
+      } else if (localTickets.length > 0) {
+        allTickets = localTickets;
+      } else {
+        allTickets = DEFAULT_SAMPLE_TICKETS;
+        localStorage.setItem('railtrainer_tickets', JSON.stringify(allTickets));
+        for (const t of allTickets) {
+          await window.saveTicketToStorage(t, false);
+        }
+      }
+    } else if (localTickets.length > 0) {
+      allTickets = localTickets;
+    } else {
+      allTickets = DEFAULT_SAMPLE_TICKETS;
+    }
+  } catch (err) {
+    console.warn('Ladefehler bei Tickets:', err);
+    allTickets = DEFAULT_SAMPLE_TICKETS;
+  }
+
+  localStorage.setItem('railtrainer_tickets', JSON.stringify(allTickets));
+  window.updateTicketBadges();
+  window.renderTickets();
+};
+
+window.updateTicketBadges = function() {
+  const total = allTickets.length;
+  const openCount = allTickets.filter(t => t.status === 'open').length;
+  const inProgressCount = allTickets.filter(t => t.status === 'in_progress').length;
+  const resolvedCount = allTickets.filter(t => t.status === 'resolved').length;
+
+  const bTickets = document.getElementById('badge-tickets-count');
+  if (bTickets) bTickets.textContent = total;
+
+  const statText = document.getElementById('ticketsOpenStatText');
+  if (statText) statText.textContent = openCount + ' offen';
+
+  const cAll = document.getElementById('ticket-count-all');
+  if (cAll) cAll.textContent = total;
+  const cOpen = document.getElementById('ticket-count-open');
+  if (cOpen) cOpen.textContent = openCount;
+  const cProg = document.getElementById('ticket-count-in_progress');
+  if (cProg) cProg.textContent = inProgressCount;
+  const cRes = document.getElementById('ticket-count-resolved');
+  if (cRes) cRes.textContent = resolvedCount;
+};
+
+window.saveTicketToStorage = async function(ticket, updateLocalArray = true) {
+  if (updateLocalArray) {
+    const idx = allTickets.findIndex(t => t.id === ticket.id);
+    if (idx >= 0) allTickets[idx] = ticket;
+    else allTickets.unshift(ticket);
+    localStorage.setItem('railtrainer_tickets', JSON.stringify(allTickets));
+    window.updateTicketBadges();
+  }
+
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/chat_messages', {
+      method: 'POST',
+      headers: { ...restHeaders, 'Prefer': 'resolution=merge-duplicates' },
+      body: JSON.stringify([{
+        id: ticket.id,
+        category: '__ticket_record__',
+        sender_id: currentPortalUser?.id || 'admin-default-id',
+        sender_name: ticket.created_by_name || 'Schüler',
+        sender_role: 'user',
+        text: JSON.stringify(ticket),
+        timestamp: Date.now()
+      }])
+    });
+  } catch (err) {
+    console.warn('Fehler beim Synchronisieren des Tickets:', err);
+  }
+};
+
+window.setTicketStatusFilter = function(status) {
+  ticketStatusFilter = status;
+  const tabs = ['all', 'open', 'in_progress', 'resolved'];
+  tabs.forEach(st => {
+    const btn = document.getElementById('btn-ticket-filter-' + st);
+    if (!btn) return;
+    if (st === status) {
+      btn.className = 'px-3 py-1.5 rounded-xl text-xs font-bold transition border bg-brand-600 text-white border-brand-500';
+    } else {
+      btn.className = 'px-3 py-1.5 rounded-xl text-xs font-semibold transition border bg-gray-950 text-gray-400 border-gray-800 hover:text-white';
+    }
+  });
+  window.renderTickets();
+};
+
+window.filterTickets = function() {
+  window.renderTickets();
+};
+
+window.renderTickets = function() {
+  const container = document.getElementById('ticketsContainer');
+  if (!container) return;
+
+  const query = (document.getElementById('searchTicketsInput')?.value || '').trim().toLowerCase();
+  const selectedType = document.getElementById('filterTicketType')?.value || 'all';
+  const selectedPriority = document.getElementById('filterTicketPriority')?.value || 'all';
+
+  const filtered = allTickets.filter(t => {
+    if (ticketStatusFilter !== 'all' && t.status !== ticketStatusFilter) return false;
+    if (selectedType !== 'all' && t.type !== selectedType) return false;
+    if (selectedPriority !== 'all' && t.priority !== selectedPriority) return false;
+
+    if (query) {
+      const matchTitle = (t.title || '').toLowerCase().includes(query);
+      const matchDesc = (t.description || '').toLowerCase().includes(query);
+      const matchUser = (t.created_by_name || '').toLowerCase().includes(query);
+      const matchEmail = (t.created_by_email || '').toLowerCase().includes(query);
+      if (!matchTitle && !matchDesc && !matchUser && !matchEmail) return false;
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-12 text-center text-gray-500 space-y-2">
+        <i data-lucide="inbox" class="w-10 h-10 text-gray-600 mx-auto"></i>
+        <p class="font-bold text-gray-300">Keine Tickets für diese Filterkriterien gefunden</p>
+        <p class="text-xs text-gray-500">Passe deinen Status-Filter oder Suchbegriff an.</p>
+      </div>
+    `;
+    if (window.lucide) lucide.createIcons();
+    return;
+  }
+
+  container.innerHTML = filtered.map(t => {
+    const typeInfo = TICKET_TYPE_MAP[t.type] || TICKET_TYPE_MAP.other;
+    const priorityInfo = TICKET_PRIORITY_MAP[t.priority] || TICKET_PRIORITY_MAP.medium;
+
+    const dateFormatted = t.created_at 
+      ? new Date(t.created_at).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) 
+      : '-';
+
+    const statusBadgeClass = t.status === 'resolved' 
+      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' 
+      : t.status === 'in_progress' 
+      ? 'bg-blue-500/20 text-blue-300 border-blue-500/40' 
+      : 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+
+    const hasResponses = Array.isArray(t.responses) && t.responses.length > 0;
+
+    return `
+      <div class="bg-gray-900 border border-gray-800 hover:border-gray-700 rounded-2xl p-5 shadow-lg transition space-y-4">
+        <!-- HEADER ROW -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-800">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border ${typeInfo.color}">
+              <i data-lucide="${typeInfo.icon}" class="w-3.5 h-3.5"></i>
+              <span>${typeInfo.label}</span>
+            </span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-[11px] font-bold border ${priorityInfo.color}">
+              <span>${priorityInfo.label}</span>
+            </span>
+            <span class="text-xs text-gray-500 flex items-center gap-1">
+              <i data-lucide="clock" class="w-3 h-3"></i>
+              <span>${dateFormatted}</span>
+            </span>
+          </div>
+
+          <!-- STATUS SELECTOR -->
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-gray-400 font-semibold">Status:</span>
+            <select onchange="window.updateTicketStatus('${t.id}', this.value)" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-gray-950 border ${statusBadgeClass} focus:outline-none cursor-pointer">
+              <option value="open" ${t.status === 'open' ? 'selected' : ''}>⏳ Offen</option>
+              <option value="in_progress" ${t.status === 'in_progress' ? 'selected' : ''}>🔄 In Bearbeitung</option>
+              <option value="resolved" ${t.status === 'resolved' ? 'selected' : ''}>✓ Gelöst</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- TITLE & DESCRIPTION -->
+        <div>
+          <h3 class="text-base font-bold text-white mb-1.5">${escapeHtml(t.title || 'Support-Ticket')}</h3>
+          <p class="text-xs text-gray-300 leading-relaxed whitespace-pre-line">${escapeHtml(t.description || '')}</p>
+        </div>
+
+        <!-- CREATOR META -->
+        <div class="flex items-center gap-2 text-xs text-gray-400 pt-1">
+          <div class="w-5 h-5 rounded-full bg-brand-600/30 text-brand-300 flex items-center justify-center font-bold text-[10px]">
+            ${escapeHtml((t.created_by_name || 'U').slice(0, 1).toUpperCase())}
+          </div>
+          <span class="font-semibold text-gray-300">${escapeHtml(t.created_by_name || 'Schüler')}</span>
+          ${t.created_by_email ? `<span class="text-gray-500">&lt;${escapeHtml(t.created_by_email)}&gt;</span>` : ''}
+        </div>
+
+        <!-- RESPONSES THREAD -->
+        ${hasResponses ? `
+          <div class="bg-gray-950/70 border border-gray-800/80 rounded-xl p-3.5 space-y-2.5">
+            <div class="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+              <i data-lucide="corner-down-right" class="w-3.5 h-3.5 text-brand-400"></i>
+              <span>Rückmeldungen & Antworten (${t.responses.length})</span>
+            </div>
+            ${t.responses.map(r => `
+              <div class="p-2.5 rounded-lg bg-gray-900 border border-gray-800 text-xs space-y-1">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-brand-300 flex items-center gap-1.5">
+                    <span>${r.responder_role === 'admin' ? '👑' : '🛡️'}</span>
+                    <span>${escapeHtml(r.responder_name || 'Ausbilder')}</span>
+                    <span class="text-[10px] text-gray-500">(${r.responder_role === 'admin' ? 'Ausbilder' : 'Dozent'})</span>
+                  </span>
+                  <span class="text-[10px] text-gray-500">${new Date(r.timestamp).toLocaleString('de-DE')}</span>
+                </div>
+                <p class="text-gray-200 leading-relaxed whitespace-pre-line">${escapeHtml(r.text)}</p>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+
+        <!-- ACTIONS ROW -->
+        <div class="flex items-center justify-between pt-2 border-t border-gray-800/60">
+          <button onclick="window.openTicketResponseModal('${t.id}')" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-sm transition">
+            <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+            <span>Antworten</span>
+          </button>
+          <button onclick="window.deleteTicket('${t.id}')" class="p-1.5 text-gray-500 hover:text-red-400 hover:bg-gray-800 rounded-lg transition" title="Ticket löschen">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  if (window.lucide) lucide.createIcons();
+};
+
+window.openTicketResponseModal = function(ticketId) {
+  const ticket = allTickets.find(t => t.id === ticketId);
+  if (!ticket) return;
+
+  const idInput = document.getElementById('ticketResponseId');
+  if (idInput) idInput.value = ticket.id;
+
+  const titleEl = document.getElementById('ticketResponseHeaderTitle');
+  if (titleEl) titleEl.textContent = ticket.title;
+
+  const descEl = document.getElementById('ticketResponseHeaderDesc');
+  if (descEl) descEl.textContent = ticket.description;
+
+  const typeEl = document.getElementById('ticketResponseHeaderType');
+  if (typeEl) {
+    const tInfo = TICKET_TYPE_MAP[ticket.type] || TICKET_TYPE_MAP.other;
+    typeEl.textContent = tInfo.label;
+  }
+
+  const authorEl = document.getElementById('ticketResponseHeaderAuthor');
+  if (authorEl) authorEl.textContent = (ticket.created_by_name || 'Schüler') + (ticket.created_by_email ? ' (' + ticket.created_by_email + ')' : '');
+
+  const textInput = document.getElementById('ticketResponseText');
+  if (textInput) {
+    textInput.value = '';
+  }
+
+  const resolveCheck = document.getElementById('ticketResponseMarkResolved');
+  if (resolveCheck) resolveCheck.checked = true;
+
+  const modal = document.getElementById('ticketResponseModal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+  if (textInput) setTimeout(() => textInput.focus(), 50);
+  if (window.lucide) lucide.createIcons();
+};
+
+window.closeTicketResponseModal = function() {
+  const modal = document.getElementById('ticketResponseModal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+};
+
+window.handleSaveTicketResponse = async function(e) {
+  if (e) e.preventDefault();
+  const ticketId = document.getElementById('ticketResponseId')?.value;
+  const ticket = allTickets.find(t => t.id === ticketId);
+  if (!ticket) return;
+
+  const responseText = (document.getElementById('ticketResponseText')?.value || '').trim();
+  if (!responseText) {
+    alert('Bitte gib eine Antwort ein.');
+    return;
+  }
+
+  const markResolved = document.getElementById('ticketResponseMarkResolved')?.checked;
+
+  if (!Array.isArray(ticket.responses)) ticket.responses = [];
+  ticket.responses.push({
+    id: 'resp_' + Date.now(),
+    responder_name: currentPortalUser?.name || 'Ausbilder',
+    responder_role: currentPortalUser?.role || 'admin',
+    text: responseText,
+    timestamp: Date.now()
+  });
+
+  if (markResolved) {
+    ticket.status = 'resolved';
+  }
+
+  await window.saveTicketToStorage(ticket);
+  window.closeTicketResponseModal();
+  window.renderTickets();
+  showToast('Antwort erfolgreich gespeichert und übermittelt! 💬');
+};
+
+window.openCreateTicketModal = function() {
+  const form = document.getElementById('ticketCreateForm');
+  if (form) form.reset();
+
+  const nameInput = document.getElementById('new_ticket_username');
+  if (nameInput && currentPortalUser) nameInput.value = currentPortalUser.name || '';
+
+  const emailInput = document.getElementById('new_ticket_useremail');
+  if (emailInput && currentPortalUser) emailInput.value = currentPortalUser.email || '';
+
+  const modal = document.getElementById('ticketCreateModal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+  if (window.lucide) lucide.createIcons();
+};
+
+window.closeCreateTicketModal = function() {
+  const modal = document.getElementById('ticketCreateModal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+};
+
+window.handleSaveNewTicket = async function(e) {
+  if (e) e.preventDefault();
+  const title = (document.getElementById('new_ticket_title')?.value || '').trim();
+  const type = document.getElementById('new_ticket_type')?.value || 'other';
+  const priority = document.getElementById('new_ticket_priority')?.value || 'medium';
+  const userName = (document.getElementById('new_ticket_username')?.value || '').trim() || (currentPortalUser?.name || 'Ausbilder');
+  const userEmail = (document.getElementById('new_ticket_useremail')?.value || '').trim() || (currentPortalUser?.email || '');
+  const description = (document.getElementById('new_ticket_desc')?.value || '').trim();
+
+  if (!title || !description) {
+    alert('Bitte Betreff und Beschreibung ausfüllen.');
+    return;
+  }
+
+  const newTicket = {
+    id: 'ticket_' + Date.now(),
+    title,
+    type,
+    priority,
+    status: 'open',
+    created_by: currentPortalUser?.id || 'admin-default-id',
+    created_by_name: userName,
+    created_by_email: userEmail,
+    created_at: new Date().toISOString(),
+    description,
+    responses: []
+  };
+
+  await window.saveTicketToStorage(newTicket);
+  window.closeCreateTicketModal();
+  window.renderTickets();
+  showToast('Ticket erfolgreich erstellt! 📝');
+};
+
+window.updateTicketStatus = async function(ticketId, newStatus) {
+  const ticket = allTickets.find(t => t.id === ticketId);
+  if (!ticket) return;
+
+  ticket.status = newStatus;
+  await window.saveTicketToStorage(ticket);
+  window.renderTickets();
+  const statusLabel = newStatus === 'resolved' ? 'Gelöst ✓' : newStatus === 'in_progress' ? 'In Bearbeitung 🔄' : 'Offen ⏳';
+  showToast('Ticket-Status aktualisiert: ' + statusLabel);
+};
+
+window.deleteTicket = async function(ticketId) {
+  if (!confirm('Möchtest du dieses Ticket wirklich dauerhaft löschen?')) return;
+  allTickets = allTickets.filter(t => t.id !== ticketId);
+  localStorage.setItem('railtrainer_tickets', JSON.stringify(allTickets));
+  window.updateTicketBadges();
+  window.renderTickets();
+
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/chat_messages?id=eq.' + encodeURIComponent(ticketId), {
+      method: 'DELETE',
+      headers: restHeaders
+    });
+  } catch (err) {
+    console.warn('Fehler beim Löschen des Tickets in Supabase:', err);
+  }
+
+  showToast('Ticket gelöscht! 🗑️');
 };
 
 window.renderStats = function() {
