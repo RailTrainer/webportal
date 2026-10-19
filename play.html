@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>RailTrainer Live-Battle | Mitspielen</title>
+  <title>Tf-Trainer Live-Battle | Mitspielen</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
@@ -66,11 +66,11 @@
   <header class="relative z-10 flex items-center justify-between py-2.5 border-b border-gray-800/80">
     <div class="flex items-center gap-2.5">
       <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center font-black text-white text-sm shadow-md shadow-emerald-500/25 ring-1 ring-emerald-400/30">
-        RT
+        TF
       </div>
       <div>
         <div class="font-extrabold text-sm tracking-tight text-white flex items-center gap-1.5">
-          <span>RailTrainer</span>
+          <span>Tf-Trainer</span>
           <span class="px-1.5 py-0.2 text-[9px] rounded-full bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30 shadow-sm shadow-emerald-500/10">BATTLE</span>
         </div>
         <div class="text-[10px] text-gray-400" id="headerGameInfo">Live-Quiz</div>
@@ -186,20 +186,26 @@
         <h3 class="text-xs sm:text-sm font-bold text-white leading-snug break-words" id="questionTextMobile">Frage auf dem Beamer beachten!</h3>
       </div>
 
-      <!-- MEHRFACHAUSWAHL HINWEIS -->
-      <div id="battleMultipleAlert" class="hidden p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-purple-700 via-indigo-700 to-purple-800 border-2 border-purple-300 ring-4 ring-purple-500/30 text-white shadow-2xl mb-2.5 shrink-0 items-center gap-3 animate-pulse">
-        <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center text-xl shrink-0 font-black shadow">
-          ☑️
-        </div>
-        <div class="flex-1 leading-snug">
-          <div class="text-xs uppercase tracking-wider text-purple-200 font-black flex items-center gap-1">
-            <span>⚡ ACHTUNG: MEHRFACHAUSWAHL</span>
+      <!-- MEHRFACHAUSWAHL POPUP MODAL (ERSCHEINT EINMALIG) -->
+      <div id="multipleChoiceModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="bg-gradient-to-b from-gray-900 via-gray-900 to-purple-950 border-2 border-purple-400/60 rounded-3xl p-5 max-w-sm w-full text-center space-y-4 shadow-2xl shadow-purple-950/60 animate-in fade-in zoom-in-95 duration-200">
+          <div class="w-14 h-14 mx-auto rounded-2xl bg-purple-500/20 border border-purple-400/50 flex items-center justify-center text-3xl shadow-inner">
+            ⚡
           </div>
-          <div class="text-xs sm:text-sm font-extrabold text-white mt-0.5">
-            Mehrere Antworten sind richtig! Wähle alle zutreffenden aus und tippe anschließend auf <strong>'Bestätigen'</strong>.
+          <div>
+            <h3 class="text-lg font-black text-white">Achtung: Mehrfachauswahl!</h3>
+            <p class="text-xs text-gray-300 mt-2 leading-relaxed">
+              Bei dieser Frage können <strong>mehrere Antworten richtig</strong> sein. Wähle alle passenden Optionen aus und tippe anschließend auf <strong>'Bestätigen'</strong>.
+            </p>
           </div>
+          <button type="button" onclick="window.dismissMultipleChoiceModal()" class="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-sm shadow-xl shadow-purple-600/30 transition active:scale-95">
+            Verstanden & Los!
+          </button>
         </div>
       </div>
+
+      <!-- MEHRFACHAUSWAHL BANNER (Deaktiviert, Popup ersetzt diesen) -->
+      <div id="battleMultipleAlert" class="hidden"></div>
 
       <div id="battleOptionsContainer" class="grid gap-2.5 flex-1 min-h-0 overflow-y-auto custom-scrollbar p-0.5 pb-2">
         <button onclick="handleSelectOption(0)" id="btn_opt_0" class="touch-btn p-3.5 rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 active:from-red-700 active:to-rose-700 text-white font-black flex items-center shadow-xl shadow-red-600/25 border border-red-400/30">
@@ -378,31 +384,36 @@
       </div>
     </section>
 
-    <!-- 7. SPECTATOR SCREEN (HANGMAN ELIMINATED) -->
-    <section id="screen-spectator" class="hidden flex-col items-center justify-between flex-1 max-w-sm mx-auto w-full text-center space-y-4">
-      <div class="bg-gradient-to-b from-gray-900 to-gray-950 border-2 border-red-500/50 rounded-3xl p-6 shadow-2xl space-y-4 w-full">
-        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-red-500/20 text-red-300 border border-red-500/40">
-          <span>☠️ AUSGESCHIEDEN</span>
+    <!-- 7. SPECTATOR SCREEN (HANGMAN ELIMINATED / ZUSCHAUER) -->
+    <section id="screen-spectator" class="hidden flex-col items-center justify-between flex-1 max-w-sm mx-auto w-full text-center space-y-3">
+      <div class="bg-gradient-to-b from-gray-900 to-gray-950 border border-gray-800 rounded-3xl p-5 shadow-2xl space-y-3 w-full">
+        <div class="flex items-center justify-between px-1">
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-purple-500/20 text-purple-300 border border-purple-500/40">
+            <span>👁️ ZUSCHAUER-MODUS</span>
+          </div>
+          <div class="inline-flex items-center gap-1 text-[11px] font-bold text-gray-400">
+            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+            <span>Live dabei</span>
+          </div>
         </div>
-        <div id="spectatorHangmanContainer" class="flex justify-center my-1"></div>
-        <h2 class="text-2xl font-black text-red-400">Am Galgen gelandet!</h2>
-        <p class="text-xs text-gray-300 leading-relaxed">
-          Dein Galgenmännchen hat die maximalen <strong>6 Striche</strong> erreicht. Du scheidest aus und nimmst nun als <strong>Zuschauer</strong> teil.
-        </p>
-        <div class="p-3 bg-gray-950 border border-gray-800 rounded-2xl text-left space-y-1 text-xs">
-          <div class="text-[10px] text-gray-400 uppercase font-bold">Aktuelle Frage auf dem Beamer:</div>
-          <div id="spectatorCurrentQuestionText" class="text-gray-200 font-semibold leading-snug">Frage beachten...</div>
+
+        <div class="p-3 bg-gray-950/80 border border-gray-800/80 rounded-2xl text-left space-y-1.5">
+          <div class="text-[10px] text-emerald-400 uppercase font-black tracking-wide">Aktuelle Frage auf dem Beamer:</div>
+          <div id="spectatorCurrentQuestionText" class="text-gray-100 font-bold text-xs sm:text-sm leading-snug">Frage auf dem Beamer beachten...</div>
         </div>
-      </div>
-      <div class="p-3 text-gray-400 text-xs">
-        👀 Verfolge das Quiz Battle live auf dem Beamer!
+
+        <div id="spectatorHangmanContainer" class="flex justify-center py-1 opacity-70"></div>
+
+        <div class="text-[11px] text-gray-400 leading-snug">
+          Du nimmst als Zuschauer teil und kannst alle Fragen und Lösungen auf dem Beamer entspannt mitverfolgen.
+        </div>
       </div>
     </section>
 
   </main>
 
   <footer class="relative z-10 text-center py-2 text-[10px] text-gray-500 border-t border-gray-800/60 flex items-center justify-between">
-    <span>RailTrainer Live-Multiplayer</span>
+    <span>Tf-Trainer Live-Multiplayer</span>
     <span class="flex items-center gap-1 font-semibold text-gray-400">
       <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
       Online
@@ -478,6 +489,16 @@
     let selectedSingleIndex = null;
     let lastSubmittedAnswer = null;
     let questionTimerInterval = null;
+    let hasSeenMultiplePopup = false;
+    let questionDisplayedAt = null;
+
+    window.dismissMultipleChoiceModal = function() {
+      const modal = document.getElementById('multipleChoiceModal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    };
 
     function extractPlayQuestionMetadata(q) {
       if (!q) return {};
@@ -1074,14 +1095,19 @@
       if (container) container.classList.remove('hidden');
       if (toggleBtn) toggleBtn.classList.remove('hidden');
 
-      // Mehrfachauswahl Banner steuern
+      questionDisplayedAt = Date.now();
+
+      // Mehrfachauswahl Banner deaktiviert -> Einmaliges Popup Modal auf den Smartphones
       if (multiAlert) {
-        if (isMultiple) {
-          multiAlert.classList.remove('hidden');
-          multiAlert.classList.add('flex');
-        } else {
-          multiAlert.classList.add('hidden');
-          multiAlert.classList.remove('flex');
+        multiAlert.classList.add('hidden');
+        multiAlert.classList.remove('flex');
+      }
+      if (isMultiple && !hasSeenMultiplePopup) {
+        hasSeenMultiplePopup = true;
+        const modal = document.getElementById('multipleChoiceModal');
+        if (modal) {
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
         }
       }
 
@@ -1541,13 +1567,14 @@
       const isCorrect = (correctIndices.length === 1 && correctIndices.includes(Number(idx)));
       const isDanger = dangerIndices.includes(Number(idx));
 
+      const qStart = currentSession.question_start_time || questionDisplayedAt || (answerTime - 300);
       const timeLimitSecs = currentSession.time_limit || 20;
-      const elapsedSecs = currentSession.first_answer_time ? Math.max(0, (answerTime - currentSession.first_answer_time) / 1000) : 0;
+      const elapsedSecs = Math.max(0.1, (answerTime - qStart) / 1000);
       const remainingSecs = Math.max(0, timeLimitSecs - elapsedSecs);
       let earnedPoints = 0;
 
       if (isCorrect) {
-        const speedBonus = Math.round((remainingSecs / timeLimitSecs) * 500);
+        const speedBonus = Math.floor(Math.max(0, Math.min(1, remainingSecs / timeLimitSecs)) * 500);
         earnedPoints = 500 + speedBonus;
       }
 
@@ -1595,13 +1622,14 @@
       const isCorrect = (chosenIndices.length === correctIndices.length && chosenIndices.every(idx => correctIndices.includes(idx)));
       const isDanger = chosenIndices.some(idx => dangerIndices.includes(idx));
 
+      const qStart = currentSession.question_start_time || questionDisplayedAt || (answerTime - 300);
       const timeLimitSecs = currentSession.time_limit || 20;
-      const elapsedSecs = currentSession.first_answer_time ? Math.max(0, (answerTime - currentSession.first_answer_time) / 1000) : 0;
+      const elapsedSecs = Math.max(0.1, (answerTime - qStart) / 1000);
       const remainingSecs = Math.max(0, timeLimitSecs - elapsedSecs);
       let earnedPoints = 0;
 
       if (isCorrect) {
-        const speedBonus = Math.round((remainingSecs / timeLimitSecs) * 500);
+        const speedBonus = Math.floor(Math.max(0, Math.min(1, remainingSecs / timeLimitSecs)) * 500);
         earnedPoints = 500 + speedBonus;
       }
 
@@ -1643,13 +1671,14 @@
       // Die korrekte Reihenfolge verlangt, dass die Indizes 0, 1, ..., N-1 in exakt aufsteigender Folge sortiert wurden
       const isCorrect = (currentOrderPermutation.length === options.length && currentOrderPermutation.every((val, i) => val === i));
 
+      const qStart = currentSession.question_start_time || questionDisplayedAt || (answerTime - 300);
       const timeLimitSecs = currentSession.time_limit || 20;
-      const elapsedSecs = currentSession.first_answer_time ? Math.max(0, (answerTime - currentSession.first_answer_time) / 1000) : 0;
+      const elapsedSecs = Math.max(0.1, (answerTime - qStart) / 1000);
       const remainingSecs = Math.max(0, timeLimitSecs - elapsedSecs);
       let earnedPoints = 0;
 
       if (isCorrect) {
-        const speedBonus = Math.round((remainingSecs / timeLimitSecs) * 500);
+        const speedBonus = Math.floor(Math.max(0, Math.min(1, remainingSecs / timeLimitSecs)) * 500);
         earnedPoints = 500 + speedBonus;
       }
 
@@ -1747,8 +1776,15 @@
           }
 
           if (isEliminated) {
-            hangAlert.className = 'p-3 rounded-2xl border-2 border-red-500 bg-red-950/40 text-xs font-bold space-y-1.5 transition-all text-center shadow-lg shadow-red-500/20';
-            if (descEl) descEl.innerHTML = '<span class="text-red-400 font-black">☠️ 6 Striche voll – DU BIST AUSGESCHIEDEN!</span><br><span class="text-gray-300 text-[10px]">Du nimmst ab jetzt als Zuschauer teil.</span>';
+            const justEliminated = gotStrike && strikes >= 6;
+            if (justEliminated) {
+              hangAlert.className = 'p-3 rounded-2xl border-2 border-red-500 bg-red-950/40 text-xs font-bold space-y-1.5 transition-all text-center shadow-lg shadow-red-500/20';
+              if (descEl) descEl.innerHTML = '<span class="text-red-400 font-black">☠️ 6 Striche voll – DU BIST AUSGESCHIEDEN!</span><br><span class="text-gray-300 text-[10px]">Du nimmst ab jetzt als Zuschauer teil.</span>';
+            } else {
+              // Bereits zuvor ausgeschieden: Kein penetranter Alarm bei jeder weiteren Runde
+              hangAlert.className = 'p-2 rounded-xl border border-gray-800 bg-gray-950/60 text-xs text-gray-400 text-center space-y-0.5';
+              if (descEl) descEl.innerHTML = '<span class="text-purple-300 font-bold text-xs">👁️ Zuschauer-Modus</span><br><span class="text-gray-400 text-[10px]">Lösung wird auf dem Beamer aufgelöst</span>';
+            }
           } else if (gotStrike) {
             hangAlert.className = 'p-3 rounded-2xl border-2 border-red-500/80 bg-red-950/40 text-xs font-bold space-y-1.5 transition-all text-center shadow-lg shadow-red-950/30';
             let reasonText = '+1 Strich erhalten!';

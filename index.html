@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RailTrainer • Ausbilder & Dozenten Portal</title>
+  <title>Tf-Trainer • Ausbilder & Dozenten Portal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -277,20 +277,20 @@
 </head>
 <body class="bg-gray-950 text-gray-100 min-h-screen flex flex-col transition-colors duration-200 relative overflow-x-hidden">
 
-  <!-- SUBTILER RAILTRAINER LOGO-HINTERGRUND (WATERMARK) -->
+  <!-- SUBTILER TF-TRAINER LOGO-HINTERGRUND (WATERMARK) -->
   <div class="fixed inset-0 pointer-events-none z-0 flex items-center justify-center overflow-hidden opacity-[0.06] select-none">
-    <img src="logo.png" alt="RailTrainer Hintergrund" class="w-[1250px] md:w-[1450px] lg:w-[1650px] max-w-none transform -rotate-12 filter grayscale contrast-125">
+    <img src="logo.png" alt="Tf-Trainer Hintergrund" class="w-[1250px] md:w-[1450px] lg:w-[1650px] max-w-none transform -rotate-12 filter grayscale contrast-125">
   </div>
 
   <!-- HEADER -->
   <header class="bg-gray-900/90 backdrop-blur-md border-b border-gray-800 sticky top-0 z-40 px-6 py-3.5 flex items-center justify-between shadow-lg">
     <div class="flex items-center gap-3.5">
       <div class="w-11 h-11 rounded-2xl overflow-hidden shadow-lg shadow-brand-600/30 border border-brand-500/40 flex items-center justify-center bg-gray-900 shrink-0">
-        <img src="logo.png" alt="RailTrainer Logo" class="w-full h-full object-cover">
+        <img src="logo.png" alt="Tf-Trainer Logo" class="w-full h-full object-cover">
       </div>
       <div>
         <div class="flex items-center gap-2">
-          <h1 class="font-extrabold text-lg tracking-tight text-white">RailTrainer</h1>
+          <h1 class="font-extrabold text-lg tracking-tight text-white">Tf-Trainer</h1>
           <span class="text-xs font-semibold px-2 py-0.5 bg-brand-500/20 text-brand-400 border border-brand-500/30 rounded-full">Ausbilder-Portal</span>
         </div>
         <p class="text-xs text-gray-400">Interaktive Prüfungsfragen- & Lernkarten-Zentrale</p>
@@ -358,9 +358,9 @@
 
       <div class="text-center mb-6 relative z-10">
         <div class="w-20 h-20 rounded-2xl overflow-hidden shadow-2xl shadow-brand-600/30 border border-brand-500/40 mx-auto mb-4 bg-gray-900">
-          <img src="logo.png" alt="RailTrainer Logo" class="w-full h-full object-cover">
+          <img src="logo.png" alt="Tf-Trainer Logo" class="w-full h-full object-cover">
         </div>
-        <h2 class="text-2xl font-extrabold text-white tracking-tight">RailTrainer Portal</h2>
+        <h2 class="text-2xl font-extrabold text-white tracking-tight">Tf-Trainer Portal</h2>
         <p class="text-xs text-gray-400 mt-1">Ausbilder & Dozenten Login</p>
       </div>
 
@@ -1568,10 +1568,11 @@
             <!-- Countdown -->
             <div class="flex items-center gap-2.5 shrink-0">
               <div class="flex flex-col items-end">
-                <div class="flex items-center gap-1.5 text-xs font-black text-white bg-gray-950/80 px-2.5 py-1 rounded-xl border border-gray-800 shadow-inner">
+                <button type="button" onclick="window.openParticipantsOverviewModal()" class="flex items-center gap-1.5 text-xs font-black text-white bg-gray-950/80 hover:bg-gray-800 px-2.5 py-1 rounded-xl border border-gray-800 hover:border-emerald-500/50 shadow-inner transition cursor-pointer" title="Klicken um Teilnehmer & Antworten zu sehen">
                   <i data-lucide="users" class="w-3.5 h-3.5 text-emerald-400"></i>
                   <span id="battleAnsweredStats" class="text-emerald-400 font-mono font-black">0 / 0 geantwortet</span>
-                </div>
+                  <i data-lucide="eye" class="w-3 h-3 text-gray-400 ml-0.5"></i>
+                </button>
                 <span id="battleTimerSubtext" class="text-[9px] font-bold text-emerald-400/80 uppercase tracking-wider mt-0.5 hidden sm:inline">Wartet auf Antwort</span>
               </div>
               <div class="w-10 h-10 md:w-11 md:h-11 rounded-full border-4 border-emerald-400 bg-gray-950 flex items-center justify-center text-lg md:text-xl font-black text-emerald-400 shadow-xl shadow-emerald-400/30 animate-pulse shrink-0" id="battleTimerBox">
@@ -1886,6 +1887,39 @@
 
       <div id="classroomJumpGridButtons" class="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
         <!-- Dynamische Buttons 1..N -->
+      </div>
+    </div>
+  </div>
+
+  <!-- TEILNEHMER-ANTWORTEN MODAL (AUSBILDERSTATION) -->
+  <div id="participantAnswersModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4" onclick="closeParticipantAnswersModal()">
+    <div class="bg-gray-900 border-2 border-emerald-500/40 rounded-3xl p-5 md:p-6 max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl relative" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between pb-3 border-b border-gray-800 shrink-0 mb-3">
+        <div class="flex items-center gap-3">
+          <div id="participantAnswersAvatar" class="w-11 h-11 rounded-2xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center text-2xl shadow">
+            👨‍✈️
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 id="participantAnswersName" class="text-base md:text-lg font-black text-white">Spieler</h3>
+              <span id="participantAnswersBadge" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">0 Pkt</span>
+            </div>
+            <p id="participantAnswersSub" class="text-xs text-gray-400 mt-0.5">Antworten des Teilnehmers in diesem Quiz-Battle</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeParticipantAnswersModal()" class="p-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Quick Switcher Bar across all players -->
+      <div id="participantAnswersSwitcher" class="flex gap-1.5 overflow-x-auto custom-scrollbar pb-2 mb-2 border-b border-gray-800/60 shrink-0">
+        <!-- Dynamische Teilnehmer-Tabs -->
+      </div>
+
+      <!-- Content Scroll -->
+      <div id="participantAnswersList" class="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-1">
+        <!-- Dynamischer Inhalt -->
       </div>
     </div>
   </div>
@@ -3301,7 +3335,7 @@ function processHangmanRound(session, qIdx) {
   if (!session || !Array.isArray(session.players)) return;
   
   // Nur aktive, noch nicht ausgeschiedene Spieler bewerten
-  const activePlayers = session.players.filter(p => !p.is_eliminated);
+  const activePlayers = session.players.filter(p => !p.is_eliminated && (p.hangman_strikes || 0) < 6);
   if (activePlayers.length === 0) return;
 
   const q = (battleQuestions && battleQuestions[qIdx]) ? battleQuestions[qIdx] : session.current_question_data;
@@ -3309,32 +3343,12 @@ function processHangmanRound(session, qIdx) {
   const correctIndices = q ? extractQuestionCorrectIndices(q) : [];
   const dangerIndices = q ? extractQuestionDangerIndices(q) : [];
 
-  // Welche aktiven Spieler haben in dieser Runde geantwortet?
-  const answered = activePlayers.filter(p => 
-    p.last_answered_q_index === qIdx && 
-    p.last_answer !== null && 
-    p.last_answer !== undefined
-  );
-
-  // Den langsamsten Spieler ermitteln (wer als Letzter geantwortet hat)
-  let slowestPlayerId = null;
-  if (answered.length > 0) {
-    const sortedByTimeDesc = [...answered].sort((a, b) => (b.last_answer_time || 0) - (a.last_answer_time || 0));
-    slowestPlayerId = sortedByTimeDesc[0]?.id;
-  }
-
-  session.players.forEach(p => {
-    // Bereits vor dieser Runde ausgeschiedene Spieler überspringen
-    if (p.is_eliminated) {
-      p.got_strike_this_round = false;
-      p.last_round_strike_reason = null;
-      return;
-    }
-
+  // Vorab-Auswertung aller aktiven Spieler
+  activePlayers.forEach(p => {
     p.hangman_strikes = p.hangman_strikes || 0;
     const hasAnswered = (p.last_answered_q_index === qIdx && p.last_answer !== null && p.last_answer !== undefined);
+    p._roundHasAnswered = hasAnswered;
 
-    // Unabhängige, verlässliche Überprüfung der Richtigkeit auf dem Server:
     if (q && hasAnswered) {
       if (qType === 'order') {
         const optCount = Array.isArray(q.options) ? q.options.length : 0;
@@ -3343,7 +3357,6 @@ function processHangmanRound(session, qIdx) {
         p.is_danger = false;
       } else if (qType === 'multiple') {
         const ans = Array.isArray(p.last_answer) ? p.last_answer.map(Number) : [Number(p.last_answer)];
-        // Streng: ALLE richtigen Antworten müssen gegeben sein und KEINE falschen!
         const hasAllCorrect = correctIndices.length > 0 && correctIndices.every(idx => ans.includes(idx));
         const hasNoWrong = ans.every(idx => correctIndices.includes(idx));
         p.is_correct = (hasAllCorrect && hasNoWrong);
@@ -3353,28 +3366,49 @@ function processHangmanRound(session, qIdx) {
         p.is_correct = (correctIndices.length === 1 && correctIndices.includes(chosen));
         p.is_danger = dangerIndices.includes(chosen);
       }
+    } else {
+      p.is_correct = false;
+      p.is_danger = false;
+    }
+  });
+
+  // Ermittlung des ALLERLETZTEN Spielers:
+  // Nur derjenige, der wirklich als Letzter antwortet (oder gar nicht), erhält den Strich für "Langsam"!
+  // Wer richtig geantwortet hat und nicht Letzter war, erhält KEINEN Strich für zu langsam!
+  let slowestPlayerId = null;
+  if (activePlayers.length > 1) {
+    const sorted = [...activePlayers].sort((a, b) => {
+      const aTime = a._roundHasAnswered ? (Number(a.last_answer_time) || 0) : 9999999999999;
+      const bTime = b._roundHasAnswered ? (Number(b.last_answer_time) || 0) : 9999999999999;
+      return bTime - aTime;
+    });
+    slowestPlayerId = sorted[0]?.id;
+  }
+
+  session.players.forEach(p => {
+    if (p.is_eliminated || (p.hangman_strikes || 0) >= 6) {
+      p.got_strike_this_round = false;
+      p.last_round_strike_reason = null;
+      return;
     }
 
     let gotStrike = false;
     let strikeReason = null;
 
-    if (!hasAnswered) {
-      // 1. Nicht geantwortet / Zeit abgelaufen
-      gotStrike = true;
-      strikeReason = 'timeout';
-    } else if (p.is_danger) {
-      // 2. Betriebsgefährdende Antwort (BG)
+    if (p.is_danger) {
+      // 1. Betriebsgefährdende Antwort (BG)
       gotStrike = true;
       strikeReason = 'danger';
-    } else if (!p.is_correct) {
-      // 3. Falsche Antwort oder nicht alle richtigen Antworten gegeben!
+    } else if (p._roundHasAnswered && !p.is_correct) {
+      // 2. Falsche Antwort
       gotStrike = true;
       strikeReason = 'wrong';
-    } else if (p.id === slowestPlayerId && answered.length > 1) {
-      // 4. Als Letzter geantwortet (selbst wenn richtig!)
+    } else if (p.id === slowestPlayerId) {
+      // 3. Nur und ausschließlich derjenige der als Letzter geantwortet hat (oder gar nicht)!
       gotStrike = true;
       strikeReason = 'slowest';
     }
+    // Alle anderen aktiven Spieler, die richtig geantwortet haben, erhalten keinen Strich!
 
     if (gotStrike) {
       p.hangman_strikes = Math.min(6, (p.hangman_strikes || 0) + 1);
@@ -4090,6 +4124,15 @@ async function syncRemoteAnswersFromIndividualRecords() {
               if (data.isCorrect) player.streak = (player.streak || 0) + 1;
               else player.streak = 0;
             }
+            if (!player.answersHistory) player.answersHistory = {};
+            player.answersHistory[data.qIndex] = {
+              qIndex: data.qIndex,
+              answer: data.answer,
+              answerTime: data.answerTime,
+              isCorrect: data.isCorrect,
+              isDanger: data.isDanger,
+              earnedPoints: data.earnedPoints
+            };
           } catch (e) {}
         });
       }
@@ -4164,7 +4207,7 @@ function updateHostUIFromState() {
       listEl.innerHTML = '<div class="text-xs text-gray-500 italic py-8 text-center w-full">Warte auf Teilnehmer... Scanne den QR-Code!</div>';
     } else {
       listEl.innerHTML = players.map(p => 
-        '<div class="flex items-center gap-2.5 bg-gradient-to-r from-gray-950 to-emerald-950/40 border border-emerald-500/30 hover:border-emerald-400/60 px-4 py-2 rounded-2xl shadow-lg shadow-black/40 transition-all hover:scale-105">' +
+        '<div onclick="window.showParticipantAnswersModal(\'' + p.id + '\')" class="cursor-pointer flex items-center gap-2.5 bg-gradient-to-r from-gray-950 to-emerald-950/40 border border-emerald-500/30 hover:border-emerald-400 hover:ring-2 hover:ring-emerald-400/40 px-4 py-2 rounded-2xl shadow-lg shadow-black/40 transition-all hover:scale-105" title="Klicken um Details & Antworten zu sehen">' +
           '<span class="text-xl filter drop-shadow">' + (p.avatar || '👨‍✈️') + '</span>' +
           '<span class="text-sm font-bold text-white tracking-wide">' + escapeHtml(p.name || 'Spieler') + '</span>' +
           '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>' +
@@ -4549,8 +4592,8 @@ window.revealBattleRoundResults = async function() {
     }
   } catch {}
 
-  // 350ms Kulanzzeit & vollständiger Abgleich aller Schüler-Antworten (verhindert fälschliche Timeouts / Minuspunkte)
-  await new Promise(r => setTimeout(r, 350));
+  // 750ms Kulanzzeit & vollständiger Abgleich aller Schüler-Antworten (verhindert fälschliche Timeouts / Minuspunkte)
+  await new Promise(r => setTimeout(r, 750));
   await syncRemoteAnswersFromIndividualRecords();
 
   // Hangman Runden-Auswertung falls Hangman Modus
@@ -4851,7 +4894,7 @@ window.revealBattleRoundResults = async function() {
             ? 'bg-red-950/30 border-2 border-red-500/80 shadow-md shadow-red-950/40' 
             : 'bg-gradient-to-r from-red-950/20 via-gray-950 to-amber-950/20 border border-red-500/40 shadow';
 
-          return '<div class="flex items-center justify-between py-1.5 px-2.5 rounded-xl ' + cardBorder + ' shadow transition">' +
+          return '<div onclick="window.showParticipantAnswersModal(\'' + p.id + '\')" class="cursor-pointer hover:ring-2 hover:ring-red-400/50 hover:scale-[1.01] flex items-center justify-between py-1.5 px-2.5 rounded-xl ' + cardBorder + ' shadow transition" title="Klicken um Teilnehmer-Antworten zu sehen">' +
             '<div class="flex items-center gap-2.5 min-w-0 flex-1">' +
               '<div class="w-9 h-9 flex items-center justify-center shrink-0 bg-gray-900 rounded-lg border border-gray-800 p-0.5 shadow-inner">' +
                 window.renderHangmanSvg(strikes, 32, isDead) +
@@ -4860,6 +4903,7 @@ window.revealBattleRoundResults = async function() {
                 '<div class="flex items-center gap-1.5">' +
                   '<span class="text-base leading-none">' + (p.avatar || '👨‍✈️') + '</span>' +
                   '<span class="font-bold text-xs text-white truncate max-w-[130px]">' + escapeHtml(p.name || 'Spieler') + '</span>' +
+                  '<i data-lucide="eye" class="w-3 h-3 text-gray-500"></i>' +
                 '</div>' +
                 '<div class="flex items-center gap-1 mt-0.5 flex-wrap">' +
                   statusBadge +
@@ -4889,11 +4933,12 @@ window.revealBattleRoundResults = async function() {
           const gain = p.last_earned_points ? ('+' + p.last_earned_points + ' Pkt') : '';
           const streakBadge = (p.streak && p.streak > 1) ? ('<span class="px-1.5 py-0.5 rounded-full text-[9px] bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">🔥 ' + p.streak + 'x</span>') : '';
 
-          return '<div class="flex items-center justify-between py-1.5 px-2.5 rounded-xl ' + (idx === 0 ? 'bg-gradient-to-r from-emerald-950/40 to-gray-950 border border-emerald-500/40 shadow-emerald-950/30' : 'bg-gray-950 border border-gray-800') + ' shadow">' +
+          return '<div onclick="window.showParticipantAnswersModal(\'' + p.id + '\')" class="cursor-pointer hover:ring-2 hover:ring-emerald-400/50 hover:scale-[1.01] flex items-center justify-between py-1.5 px-2.5 rounded-xl ' + (idx === 0 ? 'bg-gradient-to-r from-emerald-950/40 to-gray-950 border border-emerald-500/40 shadow-emerald-950/30' : 'bg-gray-950 border border-gray-800') + ' shadow transition" title="Klicken um Teilnehmer-Antworten zu sehen">' +
             '<div class="flex items-center gap-2 min-w-0">' +
               '<span class="font-black text-xs w-5 text-center ' + (idx === 0 ? 'text-emerald-400' : 'text-gray-400') + '">' + medal + '</span>' +
               '<span class="text-base leading-none">' + (p.avatar || '👨‍✈️') + '</span>' +
               '<span class="font-bold text-xs text-white truncate max-w-[110px]">' + escapeHtml(p.name || 'Spieler') + '</span>' +
+              '<i data-lucide="eye" class="w-3 h-3 text-gray-500"></i>' +
               streakBadge +
             '</div>' +
             '<div class="text-right shrink-0">' +
@@ -5040,12 +5085,13 @@ window.renderBattlePodium = function() {
         ? (dead ? '<span class="font-bold text-xs text-red-400">☠️ Ausgeschieden (6/6)</span>' : '<span class="font-black text-xs text-emerald-400">👑 Überlebt (' + (p.hangman_strikes || 0) + '/6 Striche)</span>')
         : ('<div class="font-black text-sm ' + (idx === 0 ? 'text-emerald-400' : 'text-emerald-300/80') + '">' + (p.score || 0) + ' Punkte</div>');
 
-      return '<div class="flex items-center justify-between p-3 rounded-2xl ' + (idx === 0 ? 'bg-gradient-to-r from-emerald-950/40 to-gray-950 border border-emerald-500/40 shadow-lg shadow-emerald-950/20' : 'bg-gray-950 border border-gray-800') + ' shadow">' +
+      return '<div onclick="window.showParticipantAnswersModal(\'' + p.id + '\')" class="cursor-pointer hover:ring-2 hover:ring-emerald-400/50 hover:scale-[1.01] flex items-center justify-between p-3 rounded-2xl ' + (idx === 0 ? 'bg-gradient-to-r from-emerald-950/40 to-gray-950 border border-emerald-500/40 shadow-lg shadow-emerald-950/20' : 'bg-gray-950 border border-gray-800') + ' shadow transition" title="Klicken um Teilnehmer-Antworten zu sehen">' +
         '<div class="flex items-center gap-3">' +
           '<span class="font-extrabold text-xs w-20 ' + (idx === 0 ? 'text-emerald-400 font-black' : idx === 1 ? 'text-gray-300' : idx === 2 ? 'text-amber-600' : 'text-gray-500') + '">' + medal + '</span>' +
           (isHangman ? ('<div class="w-8 h-8 flex items-center justify-center shrink-0">' + window.renderHangmanSvg(p.hangman_strikes, 32, dead) + '</div>') : '') +
           '<span class="text-xl filter drop-shadow">' + (p.avatar || '👨‍✈️') + '</span>' +
           '<span class="font-bold text-sm text-white">' + escapeHtml(p.name || 'Spieler') + '</span>' +
+          '<i data-lucide="eye" class="w-3.5 h-3.5 text-gray-500 ml-1"></i>' +
         '</div>' +
         rightCol +
       '</div>';
@@ -5062,6 +5108,141 @@ window.renderBattlePodium = function() {
   }
 
   if (window.lucide) lucide.createIcons();
+};
+
+window.showParticipantAnswersModal = function(playerId) {
+  if (!battleSession || !Array.isArray(battleSession.players)) return;
+  const player = battleSession.players.find(p => p.id === playerId);
+  if (!player) return;
+
+  const modal = document.getElementById('participantAnswersModal');
+  const avatarEl = document.getElementById('participantAnswersAvatar');
+  const nameEl = document.getElementById('participantAnswersName');
+  const badgeEl = document.getElementById('participantAnswersBadge');
+  const switcherEl = document.getElementById('participantAnswersSwitcher');
+  const listEl = document.getElementById('participantAnswersList');
+  if (!modal || !listEl) return;
+
+  if (avatarEl) avatarEl.textContent = player.avatar || '👨‍✈️';
+  if (nameEl) nameEl.textContent = player.name || 'Spieler';
+
+  const isHangman = battleSession.game_mode === 'hangman';
+  if (badgeEl) {
+    if (isHangman) {
+      const strikes = player.hangman_strikes || 0;
+      badgeEl.textContent = strikes + ' / 6 Striche' + (player.is_eliminated ? ' (Ausgeschieden)' : '');
+      badgeEl.className = 'px-2 py-0.5 rounded-full text-[10px] font-black ' + (player.is_eliminated ? 'bg-red-500/20 text-red-300 border border-red-500/40' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30');
+    } else {
+      badgeEl.textContent = (player.score || 0) + ' Punkte';
+      badgeEl.className = 'px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+    }
+  }
+
+  // Switcher Tabs oben für schnelles Umschalten zwischen allen Teilnehmern
+  if (switcherEl) {
+    switcherEl.innerHTML = battleSession.players.map(p => {
+      const isActive = p.id === playerId;
+      return '<button type="button" onclick="window.showParticipantAnswersModal(\'' + p.id + '\')" class="px-2.5 py-1 rounded-xl text-xs font-bold shrink-0 transition flex items-center gap-1.5 ' + (isActive ? 'bg-emerald-500 text-gray-950 shadow-md font-black' : 'bg-gray-800 text-gray-300 hover:bg-gray-700') + '">' +
+        '<span>' + (p.avatar || '👨‍✈️') + '</span>' +
+        '<span class="truncate max-w-[90px]">' + escapeHtml(p.name || 'Spieler') + '</span>' +
+      '</button>';
+    }).join('');
+  }
+
+  // Bisher gespielte Fragen und Antworten
+  const currentIdx = typeof battleCurrentQIdx === 'number' ? battleCurrentQIdx : 0;
+  let html = '';
+
+  for (let qIdx = currentIdx; qIdx >= 0; qIdx--) {
+    const q = (battleQuestions && battleQuestions[qIdx]) ? battleQuestions[qIdx] : (qIdx === currentIdx ? battleSession.current_question_data : null);
+    if (!q) continue;
+
+    let ansRecord = null;
+    if (player.answersHistory && player.answersHistory[qIdx]) {
+      ansRecord = player.answersHistory[qIdx];
+    } else if (player.last_answered_q_index === qIdx) {
+      ansRecord = {
+        answer: player.last_answer,
+        isCorrect: player.is_correct,
+        isDanger: player.is_danger,
+        earnedPoints: player.last_earned_points,
+        answerTime: player.last_answer_time
+      };
+    }
+
+    const qText = q.text || q.question || ('Frage ' + (qIdx + 1));
+    const qType = extractQuestionType(q);
+    const optLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+    const options = Array.isArray(q.options) ? q.options : [];
+
+    let statusBadge = '<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-gray-800 text-gray-400">Keine Antwort / Ausstehend</span>';
+    let chosenTextHtml = '<span class="text-gray-500 italic text-xs">Noch keine Antwort abgegeben</span>';
+
+    if (ansRecord && ansRecord.answer !== null && ansRecord.answer !== undefined) {
+      if (ansRecord.isDanger) {
+        statusBadge = '<span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-red-500/20 text-red-400 border border-red-500/40">⚠️ Betriebsgefahr (-1)</span>';
+      } else if (ansRecord.isCorrect) {
+        statusBadge = '<span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">✅ Richtig (+' + (ansRecord.earnedPoints || 0) + ' Pkt)</span>';
+      } else {
+        statusBadge = '<span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-red-500/20 text-red-400 border border-red-500/40">❌ Falsch</span>';
+      }
+
+      if (qType === 'order') {
+        const orderArr = Array.isArray(ansRecord.answer) ? ansRecord.answer : [];
+        chosenTextHtml = '<div class="space-y-1 mt-1.5">' + orderArr.map((optIdx, step) => {
+          const stepText = options[optIdx] || ('Schritt ' + (optIdx + 1));
+          return '<div class="flex items-center gap-2 text-xs text-gray-200"><span class="w-5 h-5 rounded bg-cyan-600/40 text-cyan-300 font-bold text-[10px] flex items-center justify-center shrink-0">' + (step + 1) + '</span><span class="break-words">' + escapeHtml(stepText) + '</span></div>';
+        }).join('') + '</div>';
+      } else if (qType === 'multiple') {
+        const mulArr = Array.isArray(ansRecord.answer) ? ansRecord.answer : [ansRecord.answer];
+        chosenTextHtml = '<div class="space-y-1 mt-1.5">' + mulArr.map(idx => {
+          const optText = options[idx] || ('Option ' + (optLetters[idx] || (idx + 1)));
+          return '<div class="flex items-center gap-2 text-xs text-gray-200"><span class="px-1.5 py-0.5 rounded bg-purple-600/40 text-purple-300 font-bold text-[10px] shrink-0">' + (optLetters[idx] || (idx + 1)) + '</span><span class="break-words">' + escapeHtml(optText) + '</span></div>';
+        }).join('') + '</div>';
+      } else {
+        const chosenIdx = Number(ansRecord.answer);
+        const optText = options[chosenIdx] || ('Option ' + (optLetters[chosenIdx] || (chosenIdx + 1)));
+        chosenTextHtml = '<div class="flex items-start gap-2 text-xs text-gray-200 mt-1.5"><span class="px-2 py-0.5 rounded bg-gray-800 text-emerald-400 font-bold text-[11px] shrink-0">' + (optLetters[chosenIdx] || (chosenIdx + 1)) + '</span><span class="break-words font-medium">' + escapeHtml(optText) + '</span></div>';
+      }
+    }
+
+    html += '<div class="p-3.5 rounded-2xl bg-gray-950/80 border border-gray-800/80 space-y-2">' +
+      '<div class="flex items-center justify-between gap-2">' +
+        '<span class="text-[11px] font-extrabold text-emerald-400">Frage ' + (qIdx + 1) + (qIdx === currentIdx ? ' (Aktuelle Runde)' : '') + '</span>' +
+        statusBadge +
+      '</div>' +
+      '<div class="text-xs font-bold text-gray-200 leading-snug">' + escapeHtml(qText) + '</div>' +
+      '<div class="pt-1.5 border-t border-gray-800/50">' +
+        '<div class="text-[10px] uppercase font-bold text-gray-400">Gewählte Antwort:</div>' +
+        chosenTextHtml +
+      '</div>' +
+    '</div>';
+  }
+
+  if (!html) {
+    html = '<div class="text-center py-8 text-gray-500 text-xs">Noch keine Fragen gespielt.</div>';
+  }
+
+  listEl.innerHTML = html;
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+  if (window.lucide) lucide.createIcons();
+};
+
+window.closeParticipantAnswersModal = function() {
+  const modal = document.getElementById('participantAnswersModal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+};
+
+window.openParticipantsOverviewModal = function() {
+  if (battleSession?.players && battleSession.players.length > 0) {
+    window.showParticipantAnswersModal(battleSession.players[0].id);
+  } else {
+    alert('Noch keine Teilnehmer in dieser Session.');
+  }
 };
 
 window.resetLiveBattleToSetup = function() {
