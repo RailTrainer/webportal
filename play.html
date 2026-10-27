@@ -403,6 +403,8 @@
         </div>
 
         <div id="spectatorHangmanContainer" class="flex justify-center py-1 opacity-70"></div>
+        <!-- LISTE DER NOCH AKTIVEN SPIELER IM HANGMAN -->
+        <div id="spectatorSurvivorsList" class="p-2.5 rounded-2xl bg-gray-950/90 border border-purple-500/30 text-center space-y-1.5 hidden"></div>
 
         <div class="text-[11px] text-gray-400 leading-snug">
           Du nimmst als Zuschauer teil und kannst alle Fragen und Lösungen auf dem Beamer entspannt mitverfolgen.
@@ -706,6 +708,7 @@
     };
 
     function showScreen(screenId) {
+      if (screenId !== 'screen-question') window.dismissMultipleChoiceModal();
       const screens = ['screen-join', 'screen-waiting', 'screen-question', 'screen-submitted', 'screen-round-result', 'screen-game-over', 'screen-spectator'];
       screens.forEach(s => {
         const el = document.getElementById(s);
@@ -750,6 +753,24 @@
       if (hangmanFig && window.renderHangmanSvg) {
         const strikes = me ? (me.hangman_strikes || 6) : 6;
         hangmanFig.innerHTML = window.renderHangmanSvg(strikes, 110, true);
+      }
+      const players = session?.players || [];
+      const survivors = players.filter(p => !p.is_eliminated && (p.hangman_strikes || 0) < 6);
+      const survEl = document.getElementById('spectatorSurvivorsList');
+      if (survEl) {
+        if (survivors.length > 0) {
+          survEl.classList.remove('hidden');
+          survEl.innerHTML = '<div class="text-[11px] font-black text-purple-300 flex items-center justify-center gap-1.5">' +
+            '<span>👑 Noch im Spiel (' + survivors.length + '/' + players.length + '):</span>' +
+          '</div>' +
+          '<div class="flex flex-wrap gap-1.5 justify-center max-h-24 overflow-y-auto custom-scrollbar">' +
+            survivors.map(p => '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-[10px] text-emerald-200 font-bold">' +
+              (p.avatar || "👨‍✈️") + " " + escapeHtml(p.name || "Spieler") + " (" + (p.hangman_strikes || 0) + "/6)" +
+            '</span>').join('') +
+          '</div>';
+        } else {
+          survEl.classList.add('hidden');
+        }
       }
     }
 
@@ -1102,12 +1123,17 @@
         multiAlert.classList.add('hidden');
         multiAlert.classList.remove('flex');
       }
-      if (isMultiple && !hasSeenMultiplePopup) {
-        hasSeenMultiplePopup = true;
+      if (isMultiple) {
         const modal = document.getElementById('multipleChoiceModal');
         if (modal) {
           modal.classList.remove('hidden');
           modal.classList.add('flex');
+        }
+      } else {
+        const modal = document.getElementById('multipleChoiceModal');
+        if (modal) {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
         }
       }
 
