@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tf-Trainer • Ausbilder & Dozenten Portal</title>
+  <title>RaiLTrainer • Ausbilder & Dozenten Portal</title>
+  <link rel="icon" type="image/png" href="logo.png">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -277,20 +278,20 @@
 </head>
 <body class="bg-gray-950 text-gray-100 min-h-screen flex flex-col transition-colors duration-200 relative overflow-x-hidden">
 
-  <!-- SUBTILER TF-TRAINER LOGO-HINTERGRUND (WATERMARK) -->
+  <!-- SUBTILER RAILTRAINER LOGO-HINTERGRUND (WATERMARK) -->
   <div class="fixed inset-0 pointer-events-none z-0 flex items-center justify-center overflow-hidden opacity-[0.06] select-none">
-    <img src="logo.png" alt="Tf-Trainer Hintergrund" class="w-[1250px] md:w-[1450px] lg:w-[1650px] max-w-none transform -rotate-12 filter grayscale contrast-125">
+    <img src="logo.png" alt="RaiLTrainer Hintergrund" class="w-[1250px] md:w-[1450px] lg:w-[1650px] max-w-none transform -rotate-12 filter grayscale contrast-125">
   </div>
 
   <!-- HEADER -->
   <header class="bg-gray-900/90 backdrop-blur-md border-b border-gray-800 sticky top-0 z-40 px-6 py-3.5 flex items-center justify-between shadow-lg">
     <div class="flex items-center gap-3.5">
       <div class="w-11 h-11 rounded-2xl overflow-hidden shadow-lg shadow-brand-600/30 border border-brand-500/40 flex items-center justify-center bg-gray-900 shrink-0">
-        <img src="logo.png" alt="Tf-Trainer Logo" class="w-full h-full object-cover">
+        <img src="logo.png" alt="RaiLTrainer Logo" class="w-full h-full object-cover">
       </div>
       <div>
         <div class="flex items-center gap-2">
-          <h1 class="font-extrabold text-lg tracking-tight text-white">Tf-Trainer</h1>
+          <h1 class="font-extrabold text-lg tracking-tight text-white">RaiLTrainer</h1>
           <span class="text-xs font-semibold px-2 py-0.5 bg-brand-500/20 text-brand-400 border border-brand-500/30 rounded-full">Ausbilder-Portal</span>
         </div>
         <p class="text-xs text-gray-400">Interaktive Prüfungsfragen- & Lernkarten-Zentrale</p>
@@ -358,9 +359,9 @@
 
       <div class="text-center mb-6 relative z-10">
         <div class="w-20 h-20 rounded-2xl overflow-hidden shadow-2xl shadow-brand-600/30 border border-brand-500/40 mx-auto mb-4 bg-gray-900">
-          <img src="logo.png" alt="Tf-Trainer Logo" class="w-full h-full object-cover">
+          <img src="logo.png" alt="RailTrainer Logo" class="w-full h-full object-cover">
         </div>
-        <h2 class="text-2xl font-extrabold text-white tracking-tight">Tf-Trainer Portal</h2>
+        <h2 class="text-2xl font-extrabold text-white tracking-tight">RaiLTrainer Portal</h2>
         <p class="text-xs text-gray-400 mt-1">Ausbilder & Dozenten Login</p>
       </div>
 
@@ -446,7 +447,7 @@
           <i data-lucide="shield-check" class="w-3.5 h-3.5 text-brand-500"></i>
           <span class="font-medium text-gray-400">DSGVO Konform</span>
         </div>
-        <div>Tf-Trainer Cloud v2.0.0</div>
+        <div>RaiLTrainer Cloud v2.0.0</div>
       </div>
     </aside>
 
@@ -871,17 +872,55 @@
           </div>
         </div>
 
+        <!-- SUCHE & FILTER FÜR BENUTZER -->
+        <div class="space-y-3 mb-6 bg-gray-900 p-4 rounded-2xl border border-gray-800">
+          <div class="flex flex-col sm:flex-row gap-3 items-center justify-between">
+            <div class="w-full relative">
+              <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-3 text-gray-400"></i>
+              <input type="text" id="searchUsersInput" oninput="window.renderUsers()" placeholder="Benutzer nach Name oder E-Mail suchen..." class="w-full pl-10 pr-10 py-2 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-brand-500 transition">
+              <button id="clearSearchUsersBtn" type="button" onclick="window.clearUserSearch()" class="hidden absolute right-3 top-2.5 text-gray-400 hover:text-white transition cursor-pointer" title="Suche leeren">
+                <i data-lucide="x" class="w-4 h-4"></i>
+              </button>
+            </div>
+            <div class="flex items-center gap-2 shrink-0 self-end sm:self-auto text-xs">
+              <span id="usersFilterStatusBadge" class="px-2.5 py-1 bg-brand-500/10 text-brand-400 font-bold border border-brand-500/20 rounded-lg whitespace-nowrap">
+                0 Benutzer
+              </span>
+            </div>
+          </div>
+        </div>
+
         <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-lg">
           <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
-              <thead class="bg-gray-950 text-xs uppercase text-gray-400 border-b border-gray-800">
+              <thead class="bg-gray-950 text-xs uppercase text-gray-400 border-b border-gray-800 select-none">
                 <tr>
-                  <th class="px-5 py-3.5">Name</th>
-                  <th class="px-5 py-3.5">E-Mail</th>
+                  <th class="px-5 py-3.5 cursor-pointer hover:text-white transition" onclick="window.sortUsersBy('name')" title="Klicken zum Sortieren nach Name">
+                    <div class="flex items-center gap-1.5">
+                      <span id="th-label-name">Name</span>
+                      <span id="sort-icon-name" class="text-gray-600 text-xs font-mono">↕</span>
+                    </div>
+                  </th>
+                  <th class="px-5 py-3.5 cursor-pointer hover:text-white transition" onclick="window.sortUsersBy('email')" title="Klicken zum Sortieren nach E-Mail">
+                    <div class="flex items-center gap-1.5">
+                      <span id="th-label-email">E-Mail</span>
+                      <span id="sort-icon-email" class="text-gray-600 text-xs font-mono">↕</span>
+                    </div>
+                  </th>
                   <th class="px-5 py-3.5">Rolle</th>
                   <th class="px-5 py-3.5">Dozenten-Titel</th>
-                  <th class="px-5 py-3.5">Registriert am</th>
-                  <th class="px-5 py-3.5">Zuletzt online am</th>
+                  <th class="px-5 py-3.5 cursor-pointer hover:text-white transition" onclick="window.sortUsersBy('created_at')" title="Klicken zum Sortieren nach Registrierungsdatum (auf- / absteigend)">
+                    <div class="flex items-center gap-1.5">
+                      <span id="th-label-created_at">Registriert am</span>
+                      <span id="sort-icon-created_at" class="text-gray-600 text-xs font-mono">↕</span>
+                    </div>
+                  </th>
+                  <th class="px-5 py-3.5 cursor-pointer hover:text-white transition" onclick="window.sortUsersBy('last_online')" title="Klicken zum Sortieren nach zuletzt online (auf- / absteigend)">
+                    <div class="flex items-center gap-1.5">
+                      <span id="th-label-last_online">Zuletzt online am</span>
+                      <span id="sort-icon-last_online" class="text-brand-400 text-xs font-mono">▼</span>
+                    </div>
+                  </th>
                   <th class="px-5 py-3.5 text-right w-16">Löschen</th>
                 </tr>
               </thead>
@@ -9490,6 +9529,91 @@ window.handlePortalLogout = function() {
   if (typeof window.applyRolePermissionsToUI === 'function') window.applyRolePermissionsToUI();
 };
 
+let userSortField = 'last_online';
+let userSortOrder = 'desc';
+
+function getUserRegisteredTimestamp(u) {
+  if (!u) return 0;
+  const d = u.created_at ? new Date(u.created_at).getTime() : (u.timestamp ? new Date(u.timestamp).getTime() : 0);
+  return (!d || isNaN(d)) ? 0 : d;
+}
+
+function getUserLastOnlineTimestamp(u) {
+  if (!u) return 0;
+  let lastOnlineTime = 0;
+  if (u.last_login) {
+    const t = new Date(u.last_login).getTime();
+    if (t && !isNaN(t)) lastOnlineTime = t;
+  }
+  if (!lastOnlineTime && u.last_active) {
+    const t = new Date(u.last_active).getTime();
+    if (t && !isNaN(t)) lastOnlineTime = t;
+  }
+  if (!lastOnlineTime && u.last_seen) {
+    const t = new Date(u.last_seen).getTime();
+    if (t && !isNaN(t)) lastOnlineTime = t;
+  }
+  if (!lastOnlineTime && u.updated_at) {
+    const t = new Date(u.updated_at).getTime();
+    if (t && !isNaN(t)) lastOnlineTime = t;
+  }
+
+  // Auch Prüfungsversuche berücksichtigen
+  if (Array.isArray(allAttempts)) {
+    const userAttempts = allAttempts.filter(a => a.user_id === u.id);
+    for (let i = 0; i < userAttempts.length; i++) {
+      const a = userAttempts[i];
+      const t = a.timestamp ? Number(a.timestamp) : (a.created_at ? new Date(a.created_at).getTime() : 0);
+      if (t && (!lastOnlineTime || t > lastOnlineTime)) {
+        lastOnlineTime = t;
+      }
+    }
+  }
+
+  // Fallback auf Registrierungsdatum, falls nie online
+  if (!lastOnlineTime) {
+    lastOnlineTime = getUserRegisteredTimestamp(u);
+  }
+  return (!lastOnlineTime || isNaN(lastOnlineTime)) ? 0 : lastOnlineTime;
+}
+
+window.sortUsersBy = function(field) {
+  if (userSortField === field) {
+    userSortOrder = (userSortOrder === 'desc') ? 'asc' : 'desc';
+  } else {
+    userSortField = field;
+    userSortOrder = (field === 'created_at' || field === 'last_online') ? 'desc' : 'asc';
+  }
+  window.renderUsers();
+};
+
+window.clearUserSearch = function() {
+  const input = document.getElementById('searchUsersInput');
+  if (input) {
+    input.value = '';
+    window.renderUsers();
+    input.focus();
+  }
+};
+
+function updateUserSortHeadersUI() {
+  const fields = ['name', 'email', 'created_at', 'last_online'];
+  fields.forEach(field => {
+    const icon = document.getElementById('sort-icon-' + field);
+    const label = document.getElementById('th-label-' + field);
+    if (!icon) return;
+    if (userSortField === field) {
+      icon.className = 'text-brand-400 font-bold text-xs font-mono';
+      icon.textContent = userSortOrder === 'asc' ? '▲' : '▼';
+      if (label) label.className = 'text-brand-400 font-bold';
+    } else {
+      icon.className = 'text-gray-600 text-xs font-mono';
+      icon.textContent = '↕';
+      if (label) label.className = 'text-gray-400';
+    }
+  });
+}
+
 window.renderUsers = function() {
   const tbody = document.getElementById('usersTableBody');
   if (!tbody) return;
@@ -9506,10 +9630,77 @@ window.renderUsers = function() {
     }
   }
 
-  tbody.innerHTML = allUsers.map(u => {
-    const roleBadge = u.role === 'admin' 
+  const searchInput = document.getElementById('searchUsersInput');
+  const clearBtn = document.getElementById('clearSearchUsersBtn');
+  const query = (searchInput?.value || '').trim().toLowerCase();
+
+  if (clearBtn) {
+    if (query) clearBtn.classList.remove('hidden');
+    else clearBtn.classList.add('hidden');
+  }
+
+  // 1. Suche nach Name oder E-Mail oder Dozenten-Titel
+  let filtered = allUsers;
+  if (query) {
+    filtered = allUsers.filter(u => {
+      const name = (u.name || '').toLowerCase();
+      const email = (u.email || '').toLowerCase();
+      const title = (u.title || '').toLowerCase();
+      return name.includes(query) || email.includes(query) || title.includes(query);
+    });
+  }
+
+  // 2. Sortierung anwenden
+  filtered = [...filtered].sort((a, b) => {
+    let valA, valB;
+    if (userSortField === 'last_online') {
+      valA = getUserLastOnlineTimestamp(a);
+      valB = getUserLastOnlineTimestamp(b);
+    } else if (userSortField === 'created_at') {
+      valA = getUserRegisteredTimestamp(a);
+      valB = getUserRegisteredTimestamp(b);
+    } else if (userSortField === 'name') {
+      valA = (a.name || '').toLowerCase();
+      valB = (b.name || '').toLowerCase();
+    } else if (userSortField === 'email') {
+      valA = (a.email || '').toLowerCase();
+      valB = (b.email || '').toLowerCase();
+    } else {
+      valA = getUserLastOnlineTimestamp(a);
+      valB = getUserLastOnlineTimestamp(b);
+    }
+
+    if (valA < valB) return userSortOrder === 'asc' ? -1 : 1;
+    if (valA > valB) return userSortOrder === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  // Badge aktualisieren
+  const badge = document.getElementById('usersFilterStatusBadge');
+  if (badge) {
+    if (query) {
+      badge.textContent = `${filtered.length} von ${allUsers.length} Benutzer`;
+    } else {
+      badge.textContent = `${allUsers.length} Benutzer`;
+    }
+  }
+
+  updateUserSortHeadersUI();
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="px-5 py-12 text-center text-gray-500">' +
+      '<i data-lucide="user-x" class="w-8 h-8 text-gray-600 mx-auto mb-2"></i>' +
+      '<p class="font-bold text-gray-300">Keine Benutzer gefunden</p>' +
+      (query ? '<p class="text-xs text-gray-500 mt-1">Kein Treffer für "' + escapeHtml(query) + '".</p>' : '') +
+      '</td></tr>';
+    if (window.lucide) lucide.createIcons();
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(u => {
+    const roleBadge = u.role === 'admin'
       ? '<span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-red-500/20 text-red-400 border border-red-500/30">Ausbilder</span>'
-      : u.role === 'moderator' 
+      : u.role === 'moderator'
         ? '<span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">Mod</span>'
         : '<span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">Schüler</span>';
 
@@ -9528,7 +9719,7 @@ window.renderUsers = function() {
 
     // Registriert am
     const regDate = u.created_at ? new Date(u.created_at) : (u.timestamp ? new Date(u.timestamp) : null);
-    const regStr = regDate && !isNaN(regDate.getTime()) 
+    const regStr = regDate && !isNaN(regDate.getTime())
       ? regDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
       : '-';
 
@@ -9595,7 +9786,6 @@ window.renderUsers = function() {
   }).join('');
   if (window.lucide) lucide.createIcons();
 };
-
 window.deletePortalUser = async function(userId, userName) {
   if (currentPortalUser?.role !== 'admin') {
     alert('Zugriff verweigert: Nur Administratoren dürfen Benutzerkonten löschen.');
