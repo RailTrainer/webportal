@@ -9414,10 +9414,16 @@ window.handlePortalLogin = async function(e) {
       throw new Error('E-Mail / Benutzername oder Passwort ungültig.');
     }
 
-    // Rollenprüfung: Admins, Moderatoren und Dozenten zulassen
+    // Rollenprüfung: Admins, Moderatoren, Dozenten und Dennis Köster zulassen
+    const userEmail = (user.email || '').toLowerCase().trim();
+    const isDennisMaster = userEmail === 'dennis.koester@aixrail.de' || 
+      userEmail === 'dschmitz112@web.de' || 
+      userEmail === 'dennis.schmitz112@gmail.com' ||
+      userEmail === 'dennis.schmitz@aixrail.de';
     const role = (user.role || '').toLowerCase();
     const title = (user.title || '').toLowerCase();
-    const isAllowed = role === 'admin' || 
+    const isAllowed = isDennisMaster ||
+      role === 'admin' || 
       role === 'moderator' || 
       role === 'mod' ||
       title.includes('ausbilder') || 
@@ -9433,7 +9439,7 @@ window.handlePortalLogin = async function(e) {
       id: user.id,
       name: user.name,
       email: user.email,
-      role: (role === 'mod' ? 'moderator' : user.role) || 'moderator',
+      role: (isDennisMaster ? 'admin' : (role === 'mod' ? 'moderator' : user.role)) || 'admin',
       title: user.title || ''
     };
     localStorage.setItem('railtrainer_portal_user', JSON.stringify(currentPortalUser));
