@@ -364,7 +364,7 @@
         <p class="text-xs text-gray-400 mt-1">Ausbilder & Dozenten Login</p>
       </div>
 
-      <form id="portalLoginForm" onsubmit="handlePortalLogin(event)" class="space-y-4 relative z-10">
+      <form id="portalLoginForm" onsubmit="handlePortalLogin(event); return false;" class="space-y-4 relative z-10">
         <div id="loginErrorBox" class="hidden p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-400 font-semibold text-center"></div>
 
         <div>
@@ -5519,8 +5519,9 @@ window.renderClassroomQuestion = function() {
         if (badgeEl) {
           badgeEl.className = 'w-7 h-7 rounded-xl bg-gray-900 text-gray-500 font-bold text-sm flex items-center justify-center shrink-0 border border-gray-800';
           badgeEl.textContent = optLetters[i];
-    }
-  } else {
+        }
+      }
+    } else {
       // NOCH NICHT BEANTWORTET: Neutraler klickbarer Zustand
       optDiv.className = 'p-4 rounded-2xl border-2 border-gray-800 bg-gray-950/80 hover:border-brand-500/60 hover:bg-gray-900 text-gray-100 transition cursor-pointer flex items-start gap-3.5 shadow hover:scale-[1.01]';
       if (badgeEl) {
