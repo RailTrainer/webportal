@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RaiLTrainer • Ausbilder & Dozenten Portal</title>
+  <title>RailTrainer • Ausbilder & Dozenten Portal</title>
   <link rel="icon" type="image/png" href="logo.png">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -280,18 +280,18 @@
 
   <!-- SUBTILER RAILTRAINER LOGO-HINTERGRUND (WATERMARK) -->
   <div class="fixed inset-0 pointer-events-none z-0 flex items-center justify-center overflow-hidden opacity-[0.06] select-none">
-    <img src="logo.png" alt="RaiLTrainer Hintergrund" class="w-[1250px] md:w-[1450px] lg:w-[1650px] max-w-none transform -rotate-12 filter grayscale contrast-125">
+    <img src="logo.png" alt="RailTrainer Hintergrund" class="w-[1250px] md:w-[1450px] lg:w-[1650px] max-w-none transform -rotate-12 filter grayscale contrast-125">
   </div>
 
   <!-- HEADER -->
   <header class="bg-gray-900/90 backdrop-blur-md border-b border-gray-800 sticky top-0 z-40 px-6 py-3.5 flex items-center justify-between shadow-lg">
     <div class="flex items-center gap-3.5">
       <div class="w-11 h-11 rounded-2xl overflow-hidden shadow-lg shadow-brand-600/30 border border-brand-500/40 flex items-center justify-center bg-gray-900 shrink-0">
-        <img src="logo.png" alt="RaiLTrainer Logo" class="w-full h-full object-cover">
+        <img src="logo.png" alt="RailTrainer Logo" class="w-full h-full object-cover">
       </div>
       <div>
         <div class="flex items-center gap-2">
-          <h1 class="font-extrabold text-lg tracking-tight text-white">RaiLTrainer</h1>
+          <h1 class="font-extrabold text-lg tracking-tight text-white">RailTrainer</h1>
           <span class="text-xs font-semibold px-2 py-0.5 bg-brand-500/20 text-brand-400 border border-brand-500/30 rounded-full">Ausbilder-Portal</span>
         </div>
         <p class="text-xs text-gray-400">Interaktive Prüfungsfragen- & Lernkarten-Zentrale</p>
@@ -361,7 +361,7 @@
         <div class="w-20 h-20 rounded-2xl overflow-hidden shadow-2xl shadow-brand-600/30 border border-brand-500/40 mx-auto mb-4 bg-gray-900">
           <img src="logo.png" alt="RailTrainer Logo" class="w-full h-full object-cover">
         </div>
-        <h2 class="text-2xl font-extrabold text-white tracking-tight">RaiLTrainer Portal</h2>
+        <h2 class="text-2xl font-extrabold text-white tracking-tight">RailTrainer Portal</h2>
         <p class="text-xs text-gray-400 mt-1">Ausbilder & Dozenten Login</p>
       </div>
 
@@ -447,7 +447,7 @@
           <i data-lucide="shield-check" class="w-3.5 h-3.5 text-brand-500"></i>
           <span class="font-medium text-gray-400">DSGVO Konform</span>
         </div>
-        <div>RaiLTrainer Cloud v2.0.0</div>
+        <div>RailTrainer Cloud v2.0.0</div>
       </div>
     </aside>
 
@@ -838,6 +838,10 @@
             <p class="text-sm text-gray-400">Übersicht aller registrierten Benutzer, Schüler, Prüfer und Ausbilder mit Rollenberechtigungen.</p>
           </div>
           <div id="userLockControls" class="flex items-center gap-2 flex-wrap">
+            <button id="btnRefreshUsers" onclick="window.loadUsers(true)" class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white text-xs font-semibold border border-gray-700 transition" title="Benutzerliste jetzt neu laden">
+              <i data-lucide="refresh-cw" class="w-4 h-4 text-brand-400"></i>
+              <span>Aktualisieren</span>
+            </button>
             <button id="btnOpenRolePermissions" onclick="openRolePermissionsModal()" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-bold shadow-md shadow-brand-600/30 transition">
               <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
               <span>Rollen & Berechtigungen bearbeiten</span>
@@ -7601,6 +7605,7 @@ window.loadAllData = async function() {
     }
     if (!Array.isArray(allAttempts)) allAttempts = [];
     renderStats();
+    renderUsers();
 
     // Rollenberechtigungen und Tickets laden
     if (typeof window.loadRolePermissions === 'function') await window.loadRolePermissions();
@@ -7657,8 +7662,10 @@ window.switchTab = function(tabId) {
   if (tabId === 'tickets' && typeof window.renderTickets === 'function') {
     window.renderTickets();
   }
-  if (tabId === 'users' && typeof window.renderRolePermissionsOverview === 'function') {
-    window.renderRolePermissionsOverview();
+  if (tabId === 'users') {
+    if (typeof window.renderUsers === 'function') window.renderUsers();
+    if (typeof window.renderRolePermissionsOverview === 'function') window.renderRolePermissionsOverview();
+    if (typeof window.loadUsers === 'function') window.loadUsers(false);
   }
 
   if (window.lucide) lucide.createIcons();
@@ -9531,6 +9538,7 @@ window.handlePortalLogout = function() {
 
 let userSortField = 'last_online';
 let userSortOrder = 'desc';
+let isUsersLoading = false;
 
 function getUserRegisteredTimestamp(u) {
   if (!u) return 0;
@@ -9540,42 +9548,90 @@ function getUserRegisteredTimestamp(u) {
 
 function getUserLastOnlineTimestamp(u) {
   if (!u) return 0;
-  let lastOnlineTime = 0;
-  if (u.last_login) {
-    const t = new Date(u.last_login).getTime();
-    if (t && !isNaN(t)) lastOnlineTime = t;
-  }
-  if (!lastOnlineTime && u.last_active) {
-    const t = new Date(u.last_active).getTime();
-    if (t && !isNaN(t)) lastOnlineTime = t;
-  }
-  if (!lastOnlineTime && u.last_seen) {
-    const t = new Date(u.last_seen).getTime();
-    if (t && !isNaN(t)) lastOnlineTime = t;
-  }
-  if (!lastOnlineTime && u.updated_at) {
-    const t = new Date(u.updated_at).getTime();
-    if (t && !isNaN(t)) lastOnlineTime = t;
+  let maxTime = 0;
+
+  function check(val) {
+    if (!val) return;
+    const t = typeof val === 'number' ? val : new Date(val).getTime();
+    if (t && !isNaN(t) && t > maxTime) {
+      maxTime = t;
+    }
   }
 
-  // Auch Prüfungsversuche berücksichtigen
+  check(u.last_login);
+  check(u.last_active);
+  check(u.last_seen);
+  check(u.updated_at);
+
   if (Array.isArray(allAttempts)) {
-    const userAttempts = allAttempts.filter(a => a.user_id === u.id);
-    for (let i = 0; i < userAttempts.length; i++) {
-      const a = userAttempts[i];
-      const t = a.timestamp ? Number(a.timestamp) : (a.created_at ? new Date(a.created_at).getTime() : 0);
-      if (t && (!lastOnlineTime || t > lastOnlineTime)) {
-        lastOnlineTime = t;
+    for (let i = 0; i < allAttempts.length; i++) {
+      const a = allAttempts[i];
+      if (a.user_id === u.id) {
+        check(a.timestamp);
+        check(a.created_at);
       }
     }
   }
 
-  // Fallback auf Registrierungsdatum, falls nie online
-  if (!lastOnlineTime) {
-    lastOnlineTime = getUserRegisteredTimestamp(u);
-  }
-  return (!lastOnlineTime || isNaN(lastOnlineTime)) ? 0 : lastOnlineTime;
+  return maxTime;
 }
+
+window.loadUsers = async function(showLoading = false) {
+  if (isUsersLoading) return;
+  isUsersLoading = true;
+  const refreshBtn = document.getElementById('btnRefreshUsers');
+  if (refreshBtn && showLoading) {
+    const icon = refreshBtn.querySelector('i');
+    if (icon) icon.classList.add('animate-spin');
+  }
+  try {
+    const cb = Date.now();
+    const uRes = await fetch(SUPABASE_URL + '/rest/v1/users?select=*&order=created_at.desc&_cb=' + cb, {
+      headers: { ...restHeaders, 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+    });
+    if (uRes.ok) {
+      const data = await uRes.json();
+      if (Array.isArray(data)) {
+        allUsers = data;
+        const bu = document.getElementById('badge-users-count');
+        if (bu) bu.textContent = allUsers.length;
+      }
+    }
+    try {
+      const attRes = await fetch(SUPABASE_URL + '/rest/v1/quiz_attempts?select=id,user_id,timestamp,created_at&order=timestamp.desc&limit=500&_cb=' + cb, {
+        headers: { ...restHeaders, 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+      });
+      if (attRes.ok) {
+        const attData = await attRes.json();
+        if (Array.isArray(attData) && attData.length > 0) {
+          allAttempts = attData;
+        }
+      }
+    } catch (attErr) {}
+
+    window.renderUsers();
+    if (typeof window.renderRolePermissionsOverview === 'function') {
+      window.renderRolePermissionsOverview();
+    }
+    if (showLoading) showToast('Benutzerliste erfolgreich aktualisiert! 🔄');
+  } catch (err) {
+    console.error('Fehler beim Laden der Benutzer:', err);
+  } finally {
+    isUsersLoading = false;
+    if (refreshBtn && showLoading) {
+      const icon = refreshBtn.querySelector('i');
+      if (icon) setTimeout(() => icon.classList.remove('animate-spin'), 400);
+    }
+  }
+};
+
+// Auto-Refresh für Benutzerliste alle 30 Sekunden wenn Tab aktiv ist
+setInterval(() => {
+  const usersTab = document.getElementById('tab-users');
+  if (usersTab && !usersTab.classList.contains('hidden') && currentPortalUser) {
+    if (typeof window.loadUsers === 'function') window.loadUsers(false);
+  }
+}, 30000);
 
 window.sortUsersBy = function(field) {
   if (userSortField === field) {
@@ -9639,7 +9695,13 @@ window.renderUsers = function() {
     else clearBtn.classList.add('hidden');
   }
 
-  // 1. Suche nach Name oder E-Mail oder Dozenten-Titel
+  // 1. Timestamps für akkurates & performantes Sortieren vorab berechnen
+  allUsers.forEach(u => {
+    u._lastOnline = getUserLastOnlineTimestamp(u);
+    u._registered = getUserRegisteredTimestamp(u);
+  });
+
+  // 2. Suche nach Name oder E-Mail oder Dozenten-Titel
   let filtered = allUsers;
   if (query) {
     filtered = allUsers.filter(u => {
@@ -9650,15 +9712,15 @@ window.renderUsers = function() {
     });
   }
 
-  // 2. Sortierung anwenden
+  // 3. Sortierung anwenden
   filtered = [...filtered].sort((a, b) => {
     let valA, valB;
     if (userSortField === 'last_online') {
-      valA = getUserLastOnlineTimestamp(a);
-      valB = getUserLastOnlineTimestamp(b);
+      valA = a._lastOnline;
+      valB = b._lastOnline;
     } else if (userSortField === 'created_at') {
-      valA = getUserRegisteredTimestamp(a);
-      valB = getUserRegisteredTimestamp(b);
+      valA = a._registered;
+      valB = b._registered;
     } else if (userSortField === 'name') {
       valA = (a.name || '').toLowerCase();
       valB = (b.name || '').toLowerCase();
@@ -9666,8 +9728,8 @@ window.renderUsers = function() {
       valA = (a.email || '').toLowerCase();
       valB = (b.email || '').toLowerCase();
     } else {
-      valA = getUserLastOnlineTimestamp(a);
-      valB = getUserLastOnlineTimestamp(b);
+      valA = a._lastOnline;
+      valB = b._lastOnline;
     }
 
     if (valA < valB) return userSortOrder === 'asc' ? -1 : 1;
@@ -9724,25 +9786,10 @@ window.renderUsers = function() {
       : '-';
 
     // Zuletzt online am mit Uhrzeit
-    let lastOnlineTime = null;
-    if (u.last_login) lastOnlineTime = new Date(u.last_login).getTime();
-    else if (u.last_active) lastOnlineTime = new Date(u.last_active).getTime();
-    else if (u.last_seen) lastOnlineTime = new Date(u.last_seen).getTime();
-    else if (u.updated_at) lastOnlineTime = new Date(u.updated_at).getTime();
+    const lastOnlineTime = u._lastOnline || 0;
+    let lastOnlineHtml = '<span class="text-xs text-gray-500 italic">Noch nie online</span>';
 
-    // Auch Prüfungsversuche berücksichtigen
-    if (Array.isArray(allAttempts)) {
-      const userAttempts = allAttempts.filter(a => a.user_id === u.id);
-      userAttempts.forEach(a => {
-        const t = a.timestamp ? Number(a.timestamp) : (a.created_at ? new Date(a.created_at).getTime() : 0);
-        if (t && (!lastOnlineTime || t > lastOnlineTime)) {
-          lastOnlineTime = t;
-        }
-      });
-    }
-
-    let lastOnlineHtml = '<span class="text-xs text-gray-500">-</span>';
-    if (lastOnlineTime && !isNaN(lastOnlineTime)) {
+    if (lastOnlineTime > 0) {
       const d = new Date(lastOnlineTime);
       const datePart = d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
       const timePart = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
@@ -9760,11 +9807,6 @@ window.renderUsers = function() {
           '<span>' + datePart + ', ' + timePart + ' Uhr</span>' +
         '</div>';
       }
-    } else if (regDate && !isNaN(regDate.getTime())) {
-      const timePart = regDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-      lastOnlineHtml = '<div class="text-xs text-gray-400 flex items-center gap-1.5">' +
-        '<span>' + regStr + (timePart !== '00:00' ? ', ' + timePart + ' Uhr' : '') + '</span>' +
-      '</div>';
     }
 
     const deleteBtn = '<button type="button" onclick="window.deletePortalUser(\'' + u.id + '\', \'' + escapeHtml(u.name || u.email).replace(/'/g, "\\'") + '\')" class="w-7 h-7 rounded-full bg-red-500/20 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/40 flex items-center justify-center transition shadow-sm ml-auto cursor-pointer" title="Benutzer löschen">' +
