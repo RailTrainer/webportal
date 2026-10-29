@@ -554,6 +554,21 @@
             </div>
             <div id="questionCategoryPills" class="flex flex-wrap gap-2"></div>
           </div>
+
+          <!-- DYNAMISCHE UNTERKATEGORIEN FILTER-CHIPS -->
+          <div id="questionSubcategoryFilterSection" class="pt-3 border-t border-gray-800/80">
+            <div class="flex items-center justify-between mb-2">
+              <div class="text-[11px] font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+                <i data-lucide="layers" class="w-3.5 h-3.5 text-cyan-400"></i>
+                <span>Unterkategorien-Filter:</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span id="questionSubcatFilterStatusBadge" class="text-[11px] text-gray-400 font-medium">Alle Unterkategorien</span>
+                <button type="button" onclick="window.resetQuestionSubcatFilter()" class="text-[11px] text-brand-400 hover:text-brand-300 font-semibold underline">Alle anzeigen</button>
+              </div>
+            </div>
+            <div id="questionSubcategoryPills" class="flex flex-wrap gap-2"></div>
+          </div>
         </div>
 
         <div id="questionsContainer" class="space-y-4"></div>
@@ -668,16 +683,55 @@
       <section id="tab-categories" class="tab-content hidden">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h2 class="text-2xl font-bold text-white tracking-tight">Kategorien & Themenbereiche</h2>
-            <p class="text-sm text-gray-400">Erstelle neue Fachbereiche für Quiz, Lernkarten und Fach-Chats.</p>
+            <h2 class="text-2xl font-bold text-white tracking-tight">Kategorien & Unterkategorien</h2>
+            <p class="text-sm text-gray-400">Verwalte Fachbereiche, Signal-Gruppen und Themenbereiche für gezielte Fragen-Zuordnung.</p>
           </div>
-          <button onclick="openCategoryModal()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold shadow-lg shadow-brand-600/30 transition">
-            <i data-lucide="plus-circle" class="w-4 h-4"></i>
-            <span>Neue Kategorie</span>
+          <div class="flex items-center gap-2.5 flex-wrap">
+            <button onclick="openCategoryModal()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 font-semibold text-xs sm:text-sm transition">
+              <i data-lucide="folder-plus" class="w-4 h-4 text-emerald-400"></i>
+              <span>+ Hauptkategorie</span>
+            </button>
+            <button onclick="openSubcategoryModal()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs sm:text-sm shadow-lg shadow-brand-600/30 transition">
+              <i data-lucide="layers" class="w-4 h-4"></i>
+              <span>+ Neue Unterkategorie</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- UNTERTEILUNG: HAUPT- VS. UNTERKATEGORIEN TABS -->
+        <div class="flex items-center gap-2 mb-6 bg-gray-900 p-1.5 rounded-2xl border border-gray-800 w-fit">
+          <button type="button" id="btn_cat_view_subcategories" onclick="window.switchCategoryView('subcategories')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-brand-600 text-white shadow">
+            <i data-lucide="layers" class="w-4 h-4"></i>
+            <span>Unterkategorien & Themen</span>
+            <span id="badge-subcat-count" class="px-1.5 py-0.5 rounded-full text-[10px] bg-white/20 text-white font-mono">0</span>
+          </button>
+          <button type="button" id="btn_cat_view_main" onclick="window.switchCategoryView('main')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-transparent text-gray-400 hover:text-white">
+            <i data-lucide="folder" class="w-4 h-4"></i>
+            <span>Hauptkategorien</span>
+            <span id="badge-maincat-count" class="px-1.5 py-0.5 rounded-full text-[10px] bg-gray-800 text-gray-300 font-mono">0</span>
           </button>
         </div>
 
-        <div id="categoriesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        <!-- 1. UNTERKATEGORIEN-ANSICHT -->
+        <div id="subcategoriesViewSection" class="space-y-4">
+          <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 w-full sm:w-auto">
+              <label for="filterSubcatParentCat" class="text-xs font-bold text-gray-400 uppercase tracking-wider shrink-0">Filter nach Fachbereich:</label>
+              <select id="filterSubcatParentCat" onchange="window.renderSubcategories()" class="px-3 py-1.5 bg-gray-950 border border-gray-800 rounded-xl text-xs font-semibold text-gray-200 focus:outline-none focus:border-brand-500">
+                <option value="all">Alle Fachbereiche</option>
+              </select>
+            </div>
+            <div class="text-xs text-gray-400">
+              Klicke auf eine Unterkategorie, um alle zugeordneten Fragen anzuzeigen.
+            </div>
+          </div>
+          <div id="subcategoriesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+
+        <!-- 2. HAUPTKATEGORIEN-ANSICHT -->
+        <div id="mainCategoriesViewSection" class="hidden">
+          <div id="categoriesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
       </section>
 
       <!-- TAB: TICKETS -->
@@ -1221,6 +1275,7 @@
                 <i data-lucide="maximize-2" class="w-4 h-4 text-brand-400"></i>
                 <span>Vollbild-Signal</span>
               </button>
+              <div id="c_q_thumbnails_strip" class="hidden flex flex-wrap sm:flex-col gap-2 items-center justify-center"></div>
             </div>
           </div>
 
@@ -2084,9 +2139,30 @@
           </div>
         </div>
 
-        <div>
-          <label class="block text-xs font-bold text-gray-300 uppercase mb-1.5">Kategorie / Fachbereich *</label>
-          <select id="q_category" required class="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 focus:outline-none focus:border-brand-500"></select>
+        <!-- KATEGORIE & UNTERKATEGORIE AUSWAHL -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-gray-300 uppercase mb-1.5">Kategorie / Fachbereich *</label>
+            <select id="q_category" required onchange="window.updateQuestionSubcategoryOptions(this.value)" class="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 focus:outline-none focus:border-brand-500"></select>
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-xs font-bold text-cyan-300 uppercase flex items-center gap-1.5">
+                <i data-lucide="layers" class="w-3.5 h-3.5 text-cyan-400"></i>
+                <span>Unterkategorie</span>
+              </label>
+              <button type="button" onclick="window.toggleCustomSubcategoryInput('q')" id="btn_q_custom_subcat" class="text-[11px] text-brand-400 hover:text-brand-300 font-semibold">+ Eigene eingeben</button>
+            </div>
+            <select id="q_subcategory" onchange="window.handleSubcategorySelectChange('q')" class="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 focus:outline-none focus:border-cyan-500">
+              <option value="">-- Keine Unterkategorie --</option>
+            </select>
+            <input type="text" id="q_subcategory_custom" placeholder="Name der neuen Unterkategorie eingeben..." class="hidden w-full mt-2 px-3.5 py-2 bg-gray-950 border border-brand-500/60 rounded-xl text-xs text-gray-100 placeholder-gray-500 focus:outline-none focus:border-brand-500">
+            <!-- Automatische Signal-Erkennung Hinweis -->
+            <div id="q_subcat_detect_hint" class="hidden mt-1.5 text-[11px] text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1.5 rounded-lg flex items-center justify-between gap-1">
+              <span id="q_subcat_detect_text">💡 Vorschlag: Zusatzsignale</span>
+              <button type="button" onclick="window.applyDetectedSubcategory('q')" class="font-bold underline text-amber-400 hover:text-amber-200 shrink-0">Zuordnen ✓</button>
+            </div>
+          </div>
         </div>
 
         <div>
@@ -2228,12 +2304,13 @@
           <textarea id="q_explanation" rows="2" oninput="window.autoResizeTextarea(this, 64)" placeholder="Erklärung nach der Beantwortung..." class="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-brand-500 leading-relaxed overflow-hidden resize-none transition-colors duration-150"></textarea>
         </div>
 
-        <!-- BILD HINZUFÜGEN (FESTPLATTE ODER LINK) -->
+        <!-- BILDER HINZUFÜGEN (MEHRERE BILDER: FESTPLATTE, DRAG & DROP ODER WEB-LINK) -->
         <div class="bg-gray-950/70 border border-gray-800 rounded-2xl p-4 space-y-3">
           <div class="flex items-center justify-between">
             <label class="block text-xs font-bold text-gray-300 uppercase flex items-center gap-1.5">
-              <i data-lucide="image" class="w-4 h-4 text-brand-500"></i>
-              <span>Bild / Signalabbildung (Optional)</span>
+              <i data-lucide="images" class="w-4 h-4 text-brand-500"></i>
+              <span>Bilder / Signalabbildungen</span>
+              <span id="q_images_count_badge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-500/20 text-brand-400 border border-brand-500/30">0 Bilder</span>
             </label>
             <div class="flex items-center gap-1 bg-gray-900 p-0.5 rounded-lg border border-gray-800 text-xs">
               <button type="button" onclick="switchImageTab('q', 'file')" id="q-img-tab-file" class="px-2.5 py-1 rounded-md font-semibold bg-brand-600 text-white transition flex items-center gap-1">
@@ -2247,21 +2324,21 @@
             </div>
           </div>
 
-          <!-- Hidden Input für finalen URL / Base64 Wert -->
+          <!-- Hidden Input für Rückwärtskompatibilität & Mehrfachbilder -->
           <input type="hidden" id="q_image">
 
-          <!-- TAB 1: FESTPLATTE / DATEI UPLOAD & DRAG & DROP -->
+          <!-- TAB 1: FESTPLATTE / DATEI UPLOAD & DRAG & DROP (MEHRFACHAUSWAHL) -->
           <div id="q-image-file-section" class="space-y-2">
-            <input type="file" id="q_file_input" accept="image/*" class="hidden" onchange="handleImageFileSelect(event, 'q')">
+            <input type="file" id="q_file_input" accept="image/*" multiple class="hidden" onchange="handleImageFileSelect(event, 'q')">
             <div id="q-dropzone" onclick="document.getElementById('q_file_input').click()" class="border-2 border-dashed border-gray-800 hover:border-brand-500/70 bg-gray-900/50 hover:bg-gray-900 rounded-xl p-4 text-center cursor-pointer transition flex flex-col items-center justify-center gap-1.5 group">
               <div class="w-10 h-10 rounded-full bg-gray-800 group-hover:bg-brand-500/20 text-gray-400 group-hover:text-brand-400 flex items-center justify-center transition">
                 <i data-lucide="upload-cloud" class="w-5 h-5"></i>
               </div>
               <div class="text-xs font-semibold text-gray-200">
-                Klicken zum Auswählen oder Bild hierher ziehen
+                Klicken zum Auswählen (auch mehrere Bilder gleichzeitig) oder hierher ziehen
               </div>
               <div class="text-[11px] text-gray-500">
-                PNG, JPG, JPEG, WebP, SVG • Strg+V zum Einfügen • Für Mobile App optimiert
+                PNG, JPG, JPEG, WebP, SVG • Mehrere Dateien auswählbar • Strg+V zum Einfügen
               </div>
             </div>
           </div>
@@ -2271,36 +2348,25 @@
             <div class="flex items-center gap-2">
               <div class="relative flex-1">
                 <i data-lucide="link" class="w-4 h-4 absolute left-3.5 top-3 text-gray-500"></i>
-                <input type="url" id="q_image_url_input" oninput="handleImageUrlInput('q', this.value)" placeholder="https://beispiel.de/signalbild.png" class="w-full pl-10 pr-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-brand-500">
+                <input type="url" id="q_image_url_input" placeholder="https://beispiel.de/signalbild.png" class="w-full pl-10 pr-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-brand-500">
               </div>
-              <button type="button" onclick="handleImageUrlInput('q', document.getElementById('q_image_url_input').value)" class="px-3.5 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-bold rounded-xl border border-gray-700 transition shrink-0">
-                Laden
+              <button type="button" onclick="handleAddImageUrl('q')" class="px-4 py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl transition flex items-center gap-1 shrink-0">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                <span>Bild hinzufügen</span>
               </button>
             </div>
           </div>
 
-          <!-- BILD-VORSCHAU BOX (WENN GELADEN) -->
-          <div id="q-image-preview-box" class="hidden bg-gray-900 border border-gray-800 rounded-xl p-3 items-center justify-between gap-3">
-            <div class="flex items-center gap-3 min-w-0">
-              <div class="w-16 h-16 rounded-lg bg-gray-950 border border-gray-800 overflow-hidden flex items-center justify-center shrink-0 cursor-pointer" onclick="openImageLightbox(document.getElementById('q_image').value)">
-                <img id="q-image-preview-img" src="" alt="Vorschau" class="w-full h-full object-contain">
-              </div>
-              <div class="min-w-0">
-                <div class="text-xs font-bold text-gray-200 truncate" id="q-image-preview-info">Bild geladen</div>
-                <div class="text-[11px] text-brand-400 font-medium flex items-center gap-1 mt-0.5">
-                  <i data-lucide="check-circle" class="w-3 h-3"></i>
-                  <span>Bereit für Speichern</span>
-                </div>
-              </div>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <button type="button" onclick="openImageLightbox(document.getElementById('q_image').value)" class="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 transition" title="Großansicht">
-                <i data-lucide="maximize-2" class="w-4 h-4"></i>
-              </button>
-              <button type="button" onclick="clearImage('q')" class="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 transition" title="Bild entfernen">
-                <i data-lucide="trash-2" class="w-4 h-4"></i>
+          <!-- BILDER-GALERIE VORSCHAU (MULTIPLE IMAGES GRID) -->
+          <div id="q-images-gallery" class="hidden space-y-2 pt-1">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-gray-300">Angehängte Bilder dieser Frage:</span>
+              <button type="button" onclick="clearImage('q')" class="text-[11px] text-red-400 hover:text-red-300 font-semibold flex items-center gap-1">
+                <i data-lucide="trash-2" class="w-3 h-3"></i>
+                <span>Alle entfernen</span>
               </button>
             </div>
+            <div id="q-images-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5"></div>
           </div>
         </div>
 
@@ -2732,20 +2798,126 @@
     <span id="toastMessage">Erfolgreich gespeichert!</span>
   </div>
 
-  <!-- IMAGE LIGHTBOX MODAL -->
+  <!-- IMAGE LIGHTBOX MODAL (MEHRERE BILDER NAVIGIERBAR) -->
   <div id="imageLightboxModal" class="fixed inset-0 z-50 bg-black/95 backdrop-blur-md hidden items-center justify-center p-3 md:p-6 cursor-zoom-out" onclick="closeImageLightbox()">
     <div class="relative max-w-6xl w-full max-h-[92vh] flex flex-col items-center justify-center cursor-default" onclick="event.stopPropagation()">
       <div class="w-full flex items-center justify-between pb-2">
-        <div id="lightboxBattleTimerBadge" class="hidden px-3.5 py-1.5 rounded-full bg-gray-900/90 border border-emerald-500/50 text-emerald-400 font-mono font-black text-sm md:text-base flex items-center gap-2 shadow-lg">
-          <i data-lucide="clock" class="w-4 h-4 text-emerald-400 animate-pulse"></i>
-          <span id="lightboxBattleTimerText">20s</span>
+        <div class="flex items-center gap-2">
+          <span id="lightboxImageCounter" class="hidden px-3 py-1 rounded-full bg-gray-900 border border-gray-700 text-cyan-300 text-xs font-bold"></span>
+          <div id="lightboxBattleTimerBadge" class="hidden px-3.5 py-1.5 rounded-full bg-gray-900/90 border border-emerald-500/50 text-emerald-400 font-mono font-black text-sm md:text-base flex items-center gap-2 shadow-lg">
+            <i data-lucide="clock" class="w-4 h-4 text-emerald-400 animate-pulse"></i>
+            <span id="lightboxBattleTimerText">20s</span>
+          </div>
         </div>
-        <button onclick="closeImageLightbox()" class="ml-auto p-2 rounded-full bg-gray-800 hover:bg-gray-700 text-white transition flex items-center gap-1.5 text-xs font-semibold px-3 shadow">
-          <i data-lucide="x" class="w-4 h-4"></i>
-          <span>Schließen (ESC)</span>
+        <div class="flex items-center gap-2">
+          <div id="lightboxNavBtns" class="hidden items-center gap-1.5 mr-2">
+            <button type="button" onclick="window.lightboxPrev()" class="p-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-white transition flex items-center gap-1 text-xs font-bold px-3 shadow" title="Vorheriges Bild (Pfeiltaste links)">
+              <i data-lucide="chevron-left" class="w-4 h-4"></i>
+              <span>Zurück</span>
+            </button>
+            <button type="button" onclick="window.lightboxNext()" class="p-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white transition flex items-center gap-1 text-xs font-bold px-3 shadow" title="Nächstes Bild (Pfeiltaste rechts)">
+              <span>Weiter</span>
+              <i data-lucide="chevron-right" class="w-4 h-4"></i>
+            </button>
+          </div>
+          <button onclick="closeImageLightbox()" class="p-2 rounded-full bg-gray-800 hover:bg-gray-700 text-white transition flex items-center gap-1.5 text-xs font-semibold px-3 shadow">
+            <i data-lucide="x" class="w-4 h-4"></i>
+            <span>Schließen (ESC)</span>
+          </button>
+        </div>
+      </div>
+      <div class="relative w-full flex items-center justify-center">
+        <button type="button" id="lightboxFloatPrev" onclick="window.lightboxPrev()" class="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/70 hover:bg-black/90 text-white border border-white/20 items-center justify-center shadow-2xl transition hover:scale-110 z-10" title="Vorheriges Bild">
+          <i data-lucide="chevron-left" class="w-6 h-6"></i>
+        </button>
+        <img id="lightboxImage" src="" alt="Großansicht" class="max-w-full max-h-[82vh] object-contain rounded-2xl shadow-2xl border-2 border-emerald-500/40 bg-gray-950">
+        <button type="button" id="lightboxFloatNext" onclick="window.lightboxNext()" class="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/70 hover:bg-black/90 text-white border border-white/20 items-center justify-center shadow-2xl transition hover:scale-110 z-10" title="Nächstes Bild">
+          <i data-lucide="chevron-right" class="w-6 h-6"></i>
         </button>
       </div>
-      <img id="lightboxImage" src="" alt="Großansicht" class="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl border-2 border-emerald-500/40 bg-gray-950">
+    </div>
+  </div>
+
+  <!-- SCHNELL-ZUORDNUNG MODAL (UNTERKATEGORIE MIT 1 KLICK ZUORDNEN) -->
+  <div id="quickAssignModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-lg shadow-2xl p-6 space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-gray-800">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center border border-cyan-500/30">
+            <i data-lucide="layers" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white">Unterkategorie schnell zuordnen</h3>
+            <p class="text-[11px] text-gray-400">1-Klick-Zuweisung für optimale Fachbereichs-Struktur</p>
+          </div>
+        </div>
+        <button onclick="window.closeQuickAssignModal()" class="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <input type="hidden" id="quickAssignQuestionId">
+
+      <div class="bg-gray-950/80 p-3 rounded-xl border border-gray-800 space-y-1">
+        <div class="text-[10px] text-brand-400 uppercase font-bold tracking-wider" id="quickAssignCategoryBadge">Fachbereich: Signale</div>
+        <div class="text-xs font-semibold text-gray-200 line-clamp-2" id="quickAssignQuestionSnippet">Fragentext...</div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-gray-300 uppercase mb-2">Verfügbare Unterkategorien (Klicken zum Zuordnen):</label>
+        <div id="quickAssignButtonsList" class="flex flex-wrap gap-2 max-h-56 overflow-y-auto custom-scrollbar p-1"></div>
+      </div>
+
+      <div class="pt-2 border-t border-gray-800 flex items-center gap-2">
+        <input type="text" id="quickAssignCustomInput" placeholder="Neue Unterkategorie eintippen..." class="flex-1 px-3 py-2 bg-gray-950 border border-gray-800 rounded-xl text-xs text-gray-100 placeholder-gray-500 focus:outline-none focus:border-cyan-500">
+        <button type="button" onclick="window.saveQuickAssignCustom()" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-xl transition flex items-center gap-1 shrink-0">
+          <i data-lucide="check" class="w-3.5 h-3.5"></i>
+          <span>Zuweisen</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUB-CATEGORY MODAL (NEUE UNTERKATEGORIE ANLEGEN ODER BEARBEITEN) -->
+  <div id="subcategoryModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-md shadow-2xl p-6">
+      <div class="flex items-center justify-between pb-4 border-b border-gray-800 mb-5">
+        <h3 id="subcategoryModalTitle" class="text-lg font-bold text-white flex items-center gap-2">
+          <i data-lucide="layers" class="w-5 h-5 text-cyan-400"></i>
+          <span>Neue Unterkategorie anlegen</span>
+        </h3>
+        <button onclick="window.closeSubcategoryModal()" class="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <form id="subcategoryForm" onsubmit="window.handleSaveSubcategory(event)" class="space-y-4">
+        <input type="hidden" id="subcat_id">
+        <input type="hidden" id="subcat_old_name">
+
+        <div>
+          <label class="block text-xs font-bold text-gray-300 uppercase mb-1.5">Zugeordnete Hauptkategorie *</label>
+          <select id="subcat_parent" required class="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 focus:outline-none focus:border-brand-500"></select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-300 uppercase mb-1.5">Name der Unterkategorie *</label>
+          <input type="text" id="subcat_name" required placeholder="z.B. Hauptsignale oder Bremsberechnungen" class="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 focus:outline-none focus:border-brand-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-300 uppercase mb-1.5">Beschreibung</label>
+          <input type="text" id="subcat_desc" placeholder="z.B. Hp-, Ks-, Hl- und Sv-Signale zur Regelung von Zugfahrten" class="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 focus:outline-none focus:border-brand-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-300 uppercase mb-1.5">Farbe</label>
+          <input type="color" id="subcat_color" value="#06b6d4" class="w-full h-10 bg-gray-950 border border-gray-800 rounded-xl p-1 cursor-pointer">
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-800">
+          <button type="button" onclick="window.closeSubcategoryModal()" class="px-4 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-semibold transition">Abbrechen</button>
+          <button type="submit" class="px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-sm font-bold shadow-lg shadow-brand-600/30 transition">Unterkategorie speichern</button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -2772,6 +2944,8 @@ function packQuestionMetadata(q) {
   if (q.verifiedBy) meta.vb = q.verifiedBy;
   if (q.verifiedByName) meta.vbn = q.verifiedByName;
   if (q.duplicateReviewed) meta.dr = true;
+  if (q.subcategory) meta.sub = q.subcategory;
+  if (Array.isArray(q.imageUrls) && q.imageUrls.length > 0) meta.imgs = q.imageUrls;
 
   const clean = (q.explanation || '').replace(/\s*<!--RT_META:.*?-->/gs, '').trim();
   if (Object.keys(meta).length === 0) return clean;
@@ -2799,6 +2973,8 @@ function packFactMetadata(f) {
   if (f.verifiedBy) meta.vb = f.verifiedBy;
   if (f.verifiedByName) meta.vbn = f.verifiedByName;
   if (f.duplicateReviewed) meta.dr = true;
+  if (f.subcategory) meta.sub = f.subcategory;
+  if (Array.isArray(f.imageUrls) && f.imageUrls.length > 0) meta.imgs = f.imageUrls;
 
   const clean = (f.reference || '').replace(/\s*<!--RT_META:.*?-->/gs, '').trim();
   if (Object.keys(meta).length === 0) return clean;
@@ -2948,8 +3124,297 @@ window.formatRichContent = function(raw) {
 };
 
 // ==========================================
-// BILDVERWALTUNG (FESTPLATTE & LINK)
+// UNTERKATEGORIEN & THEMENBEREICHE LOGIK
 // ==========================================
+const INITIAL_SIGNAL_SUBCATEGORIES = [
+  { id: 'sub_hauptsignale', name: 'Hauptsignale', category: 'Signale', desc: 'Hp-, Ks-, Hl- und Sv-Signale zur Regelung von Zugfahrten', color: '#ef4444', icon: 'TrafficCone' },
+  { id: 'sub_vorsignale', name: 'Vorsignale', category: 'Signale', desc: 'Signale zur Ankündigung des Signalbilds am folgenden Hauptsignal', color: '#f59e0b', icon: 'Eye' },
+  { id: 'sub_zusatzsignale', name: 'Zusatzsignale', category: 'Signale', desc: 'Zs-Signale: Ersatzsignal, Geschwindigkeitsanzeiger, Gegengleis etc.', color: '#3b82f6', icon: 'PlusCircle' },
+  { id: 'sub_sperrsignale', name: 'Sperr- & Schutzsignale', category: 'Signale', desc: 'Sh- und Ra-Signale für Fahrverbote und Rangierfahrten', color: '#8b5cf6', icon: 'ShieldAlert' },
+  { id: 'sub_mastschilder', name: 'Mastschilder', category: 'Signale', desc: 'Bedeutung und Verhalten an Mastschildern', color: '#10b981', icon: 'Shield' },
+  { id: 'sub_zugpersonalsignale', name: 'Zugpersonal Signale', category: 'Signale', desc: 'Zp-Signale: Bremsproben, Abfahrsignale und Notsignale', color: '#f97316', icon: 'Users' },
+  { id: 'sub_tssignale', name: 'Ts-Signale', category: 'Signale', desc: 'Signale für das Schieben von Zügen', color: '#8b5cf6', icon: 'Sliders' },
+  { id: 'sub_langsamfahrsignale', name: 'Langsamfahrsignale', category: 'Signale', desc: 'Lf-Signale: Geschwindigkeitsbeschränkungen', color: '#ec4899', icon: 'AlertTriangle' },
+  { id: 'sub_bahnuebergangssignale', name: 'Bahnübergangssignale', category: 'Signale', desc: 'Bü-Signale: Überwachung und Sicherung von BÜs', color: '#06b6d4', icon: 'Bell' },
+  { id: 'sub_rangiersignale', name: 'Rangiersignale', category: 'Signale', desc: 'Sh- und Ra-Signale für Rangierfahrten', color: '#eab308', icon: 'CornerUpRight' },
+  { id: 'sub_weichensignale', name: 'Weichensignale', category: 'Signale', desc: 'Wn-Signale für einfache Weichen, DKWs und Gleissperren', color: '#10b981', icon: 'GitFork' },
+  { id: 'sub_nebensignale', name: 'Nebensignale', category: 'Signale', desc: 'Ne-Signale: Trapeztafel, Vorsignaltafeln, H-Tafeln, ETCS', color: '#6366f1', icon: 'Bookmark' },
+  { id: 'sub_sonstige', name: 'Sonstige Signale', category: 'Signale', desc: 'So-, Bü- und bahnbetriebliche Hinweisschilder', color: '#64748b', icon: 'Info' },
+];
+
+let allSubcategories = [];
+let selectedQuestionSubcategory = 'all'; // 'all' | '__none__' | string
+let categoryCurrentSubView = 'subcategories'; // 'subcategories' | 'main'
+let detectedSubcategoryTemp = { q: '', fc: '' };
+
+window.detectSignalSubcategory = function(text) {
+  if (!text) return '';
+  const t = text.toLowerCase();
+  if (/\b(ne\s*\d+[a-z]?|nebensignal|trapeztafel|kreuztafel|vorsignaltafel|h-tafel)\b/i.test(t)) return 'Nebensignale';
+  if (/\b(wn\s*\d+[a-z]?|weichensignal)\b/i.test(t)) return 'Weichensignale';
+  if (/\b(zs\s*\d+[a-z]?|zusatzsignal|ersatzsignal|vorsichtsignal|gegenträger)\b/i.test(t)) return 'Zusatzsignale';
+  if (/\b(sh\s*\d+[a-z]?|ra\s*\d+[a-z]?|sperrsignal|schutzsignal|rangiersignal|haltetafel)\b/i.test(t)) return 'Sperr- & Schutzsignale';
+  if (/\b(hp\s*\d+[a-z]?|ks\s*\d+[a-z]?|hl\s*\d+[a-z]?|sv\s*\d+[a-z]?|hauptsignal)\b/i.test(t)) return 'Hauptsignale';
+  if (/\b(vr\s*\d+[a-z]?|vorsignal|vorsignaltabelle)\b/i.test(t)) return 'Vorsignale';
+  if (/\b(bü\s*\d+[a-z]?|bue\s*\d+[a-z]?|bahnübergang)\b/i.test(t)) return 'Bahnübergangssignale';
+  if (/\b(lf\s*\d+[a-z]?|langsamfahr)\b/i.test(t)) return 'Langsamfahrsignale';
+  if (/\b(zp\s*\d+[a-z]?|bremsprobensignal|zugpersonalsignal)\b/i.test(t)) return 'Zugpersonal Signale';
+  if (/\b(mastschild|weiß-rot-weiß|gelbes dreieck)\b/i.test(t)) return 'Mastschilder';
+  if (/\b(ts\s*\d+[a-z]?)\b/i.test(t)) return 'Ts-Signale';
+  return '';
+};
+
+window.getSubcategoriesForCategory = function(catName) {
+  if (!catName) return [];
+  const cleanCat = catName.trim().toLowerCase();
+  const list = [];
+  const seen = new Set();
+
+  allSubcategories.forEach(s => {
+    const parent = (s.category || 'Signale').trim().toLowerCase();
+    if ((parent === cleanCat || (cleanCat === 'signale' && !s.category)) && !seen.has(s.name.toLowerCase())) {
+      seen.add(s.name.toLowerCase());
+      list.push(s);
+    }
+  });
+
+  // Auch alle Unterkategorien ergänzen, die in Fragen oder Lernkarten bereits vorkommen
+  allQuestions.forEach(q => {
+    if (q.category && q.category.trim().toLowerCase() === cleanCat && q.subcategory && q.subcategory.trim()) {
+      const name = q.subcategory.trim();
+      if (!seen.has(name.toLowerCase())) {
+        seen.add(name.toLowerCase());
+        list.push({ id: 'sub_' + Math.random().toString(36).substr(2, 7), name: name, category: q.category, color: '#06b6d4' });
+      }
+    }
+  });
+  allFlashcards.forEach(fc => {
+    if (fc.category && fc.category.trim().toLowerCase() === cleanCat && fc.subcategory && fc.subcategory.trim()) {
+      const name = fc.subcategory.trim();
+      if (!seen.has(name.toLowerCase())) {
+        seen.add(name.toLowerCase());
+        list.push({ id: 'sub_' + Math.random().toString(36).substr(2, 7), name: name, category: fc.category, color: '#06b6d4' });
+      }
+    }
+  });
+
+  return list;
+};
+
+window.updateQuestionSubcategoryOptions = function(categoryName, selectedSubcat = '') {
+  const select = document.getElementById('q_subcategory');
+  const customInput = document.getElementById('q_subcategory_custom');
+  const hintEl = document.getElementById('q_subcat_detect_hint');
+  if (hintEl) hintEl.classList.add('hidden');
+  if (!select) return;
+
+  const subcats = window.getSubcategoriesForCategory(categoryName);
+  let html = '<option value="">-- Keine Unterkategorie --</option>';
+  subcats.forEach(s => {
+    const isSel = (selectedSubcat && s.name.toLowerCase() === selectedSubcat.trim().toLowerCase()) ? 'selected' : '';
+    html += '<option value="' + escapeHtml(s.name) + '" ' + isSel + '>' + escapeHtml(s.name) + '</option>';
+  });
+  html += '<option value="__custom__">+ Neue Unterkategorie anlegen...</option>';
+  select.innerHTML = html;
+
+  // Wenn gewählte Unterkategorie nicht in Standardliste war
+  if (selectedSubcat && !subcats.some(s => s.name.toLowerCase() === selectedSubcat.trim().toLowerCase())) {
+    select.value = '__custom__';
+    if (customInput) {
+      customInput.value = selectedSubcat;
+      customInput.classList.remove('hidden');
+    }
+  } else {
+    if (customInput) {
+      customInput.value = '';
+      customInput.classList.add('hidden');
+    }
+  }
+
+  // Live Auto-Erkennung prüfen
+  const qText = document.getElementById('q_text')?.value || '';
+  if (categoryName === 'Signale' && !select.value && qText) {
+    const detected = window.detectSignalSubcategory(qText);
+    if (detected) {
+      detectedSubcategoryTemp.q = detected;
+      const detectText = document.getElementById('q_subcat_detect_text');
+      if (detectText) detectText.textContent = '💡 Erkannt als: ' + detected;
+      if (hintEl) hintEl.classList.remove('hidden');
+    }
+  }
+};
+
+window.handleSubcategorySelectChange = function(prefix) {
+  const select = document.getElementById(prefix + '_subcategory');
+  const customInput = document.getElementById(prefix + '_subcategory_custom');
+  if (!select || !customInput) return;
+  if (select.value === '__custom__') {
+    customInput.classList.remove('hidden');
+    customInput.focus();
+  } else {
+    customInput.classList.add('hidden');
+    customInput.value = '';
+  }
+};
+
+window.toggleCustomSubcategoryInput = function(prefix) {
+  const select = document.getElementById(prefix + '_subcategory');
+  const customInput = document.getElementById(prefix + '_subcategory_custom');
+  if (!select || !customInput) return;
+  if (customInput.classList.contains('hidden')) {
+    select.value = '__custom__';
+    customInput.classList.remove('hidden');
+    customInput.focus();
+  } else {
+    select.value = '';
+    customInput.classList.add('hidden');
+    customInput.value = '';
+  }
+};
+
+window.applyDetectedSubcategory = function(prefix) {
+  const detected = detectedSubcategoryTemp[prefix];
+  if (!detected) return;
+  const select = document.getElementById(prefix + '_subcategory');
+  if (select) {
+    let opt = Array.from(select.options).find(o => o.value.toLowerCase() === detected.toLowerCase());
+    if (opt) {
+      select.value = opt.value;
+    } else {
+      select.value = '__custom__';
+      const customInput = document.getElementById(prefix + '_subcategory_custom');
+      if (customInput) {
+        customInput.value = detected;
+        customInput.classList.remove('hidden');
+      }
+    }
+  }
+  document.getElementById(prefix + '_subcat_detect_hint')?.classList.add('hidden');
+};
+
+// Schnell-Zuordnung Modal
+let quickAssignTargetQuestionId = null;
+
+window.openQuickAssignModal = function(qId, event) {
+  if (event) event.stopPropagation();
+  const q = allQuestions.find(item => item.id === qId);
+  if (!q) return;
+  quickAssignTargetQuestionId = qId;
+
+  const modal = document.getElementById('quickAssignModal');
+  const idEl = document.getElementById('quickAssignQuestionId');
+  const catBadge = document.getElementById('quickAssignCategoryBadge');
+  const snippet = document.getElementById('quickAssignQuestionSnippet');
+  const list = document.getElementById('quickAssignButtonsList');
+  const customInput = document.getElementById('quickAssignCustomInput');
+
+  if (idEl) idEl.value = qId;
+  if (catBadge) catBadge.textContent = 'Fachbereich: #' + (q.category || 'Allgemein');
+  if (snippet) snippet.textContent = q.text || '';
+  if (customInput) customInput.value = '';
+
+  const subcats = window.getSubcategoriesForCategory(q.category);
+  const detected = (!q.subcategory && q.category === 'Signale') ? window.detectSignalSubcategory(q.text) : '';
+
+  let html = '';
+  if (detected) {
+    html += '<button type="button" onclick="window.saveQuickAssign(\'' + escapeHtml(detected).replace(/'/g, "\\'") + '\')" class="px-3 py-2 rounded-xl text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/50 hover:bg-amber-500/30 transition flex items-center gap-1.5 shadow-sm">' +
+      '<i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>' +
+      '<span>💡 ' + escapeHtml(detected) + ' (Empfohlen)</span>' +
+    '</button>';
+  }
+
+  subcats.forEach(s => {
+    const isCurrent = (q.subcategory && q.subcategory.toLowerCase() === s.name.toLowerCase());
+    html += '<button type="button" onclick="window.saveQuickAssign(\'' + escapeHtml(s.name).replace(/'/g, "\\'") + '\')" class="px-3 py-1.5 rounded-xl text-xs font-semibold border transition flex items-center gap-1.5 ' +
+      (isCurrent ? 'bg-cyan-600 text-white border-cyan-400 shadow' : 'bg-gray-950 text-gray-200 border-gray-800 hover:border-cyan-500/50 hover:bg-gray-800') + '">' +
+      '<span class="w-2 h-2 rounded-full" style="background-color: ' + (s.color || '#06b6d4') + '"></span>' +
+      '<span>' + escapeHtml(s.name) + '</span>' +
+      (isCurrent ? '<i data-lucide="check" class="w-3 h-3 text-white"></i>' : '') +
+    '</button>';
+  });
+
+  html += '<button type="button" onclick="window.saveQuickAssign(\'\')" class="px-3 py-1.5 rounded-xl text-xs font-medium text-gray-400 bg-gray-950 border border-dashed border-gray-800 hover:border-red-500/50 hover:text-red-400 transition">Keine Unterkategorie</button>';
+
+  if (list) list.innerHTML = html;
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+  if (window.lucide) lucide.createIcons();
+};
+
+window.closeQuickAssignModal = function() {
+  const modal = document.getElementById('quickAssignModal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+  quickAssignTargetQuestionId = null;
+};
+
+window.saveQuickAssign = async function(subcatName) {
+  if (!quickAssignTargetQuestionId) return;
+  const qId = quickAssignTargetQuestionId;
+  const q = allQuestions.find(item => item.id === qId);
+  if (!q) return;
+
+  q.subcategory = subcatName ? subcatName.trim() : null;
+  q.autoSubcategory = null;
+
+  // Speichern in Supabase & Metadata
+  const cleanExp = (q.explanation || '').replace(/\s*<!--RT_META:.*?-->/gs, '').trim();
+  const metaExp = packQuestionMetadata(q);
+
+  try {
+    const patchBody = {
+      explanation: metaExp,
+      subcategory: q.subcategory
+    };
+    await fetch(SUPABASE_URL + '/rest/v1/quiz_questions?id=eq.' + qId, {
+      method: 'PATCH',
+      headers: { ...restHeaders, 'Prefer': 'return=minimal' },
+      body: JSON.stringify(patchBody)
+    }).catch(async (e) => {
+      // Fallback ohne subcategory Spalte
+      await fetch(SUPABASE_URL + '/rest/v1/quiz_questions?id=eq.' + qId, {
+        method: 'PATCH',
+        headers: { ...restHeaders, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ explanation: metaExp })
+      });
+    });
+    showToast(subcatName ? ('Unterkategorie "' + subcatName + '" zugewiesen! ✨') : 'Unterkategorie entfernt.');
+  } catch(e) {
+    console.error('Fehler bei Schnell-Zuordnung:', e);
+  }
+
+  window.closeQuickAssignModal();
+  renderQuestionSubcategoryPills();
+  filterQuestions();
+  renderSubcategories();
+};
+
+window.saveQuickAssignCustom = function() {
+  const val = (document.getElementById('quickAssignCustomInput')?.value || '').trim();
+  if (!val) return alert('Bitte gib einen Namen für die Unterkategorie ein.');
+  window.saveQuickAssign(val);
+};
+
+window.quickAssignSubcategory = function(qId, subcatName, event) {
+  if (event) event.stopPropagation();
+  if (subcatName) {
+    quickAssignTargetQuestionId = qId;
+    window.saveQuickAssign(subcatName);
+  } else {
+    window.openQuickAssignModal(qId, event);
+  }
+};
+
+// ==========================================
+// BILDVERWALTUNG & MEHRERE BILDER (MULTIPLE)
+// ==========================================
+window.modalImages = { q: [], fc: [] };
+
 window.switchImageTab = function(prefix, mode) {
   const fileTab = document.getElementById(prefix + '-img-tab-file');
   const urlTab = document.getElementById(prefix + '-img-tab-url');
@@ -2975,9 +3440,100 @@ window.switchImageTab = function(prefix, mode) {
   if (window.lucide) lucide.createIcons();
 };
 
+window.setModalImages = function(prefix, imgs) {
+  const list = Array.isArray(imgs) ? imgs.filter(u => typeof u === 'string' && u.trim().length > 0) : [];
+  window.modalImages[prefix] = list;
+  window.renderModalImageGallery(prefix);
+};
+
+window.renderModalImageGallery = function(prefix) {
+  const images = window.modalImages[prefix] || [];
+  const gallery = document.getElementById(prefix + '-images-gallery');
+  const grid = document.getElementById(prefix + '-images-grid');
+  const countBadge = document.getElementById(prefix + '_images_count_badge');
+  const hiddenInput = document.getElementById(prefix + '_image');
+
+  if (hiddenInput) hiddenInput.value = images[0] || '';
+
+  if (countBadge) {
+    if (images.length > 0) {
+      countBadge.textContent = images.length + (images.length === 1 ? ' Bild' : ' Bilder');
+      countBadge.classList.remove('hidden');
+    } else {
+      countBadge.classList.add('hidden');
+    }
+  }
+
+  if (!gallery || !grid) return;
+
+  if (images.length === 0) {
+    gallery.classList.add('hidden');
+    grid.innerHTML = '';
+    return;
+  }
+
+  gallery.classList.remove('hidden');
+  grid.innerHTML = images.map((imgSrc, idx) => {
+    const isPrimary = (idx === 0);
+    return '<div class="relative bg-gray-900 border ' + (isPrimary ? 'border-brand-500/60 ring-1 ring-brand-500/40' : 'border-gray-800') + ' rounded-xl p-2 flex flex-col gap-1.5 shadow group">' +
+      '<div class="relative h-24 bg-gray-950 rounded-lg overflow-hidden flex items-center justify-center cursor-pointer border border-gray-800/80" onclick="window.openImageLightbox(\'' + escapeHtml(imgSrc) + '\', window.modalImages[\'' + prefix + '\'], ' + idx + ')">' +
+        '<img src="' + imgSrc + '" alt="Bild ' + (idx + 1) + '" class="w-full h-full object-contain group-hover:scale-105 transition">' +
+        '<span class="absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-bold ' + (isPrimary ? 'bg-brand-600 text-white shadow' : 'bg-gray-800/90 text-gray-300') + '">' +
+          (isPrimary ? '★ 1. Hauptbild' : ('Bild ' + (idx + 1))) +
+        '</span>' +
+      '</div>' +
+      '<div class="flex items-center justify-between gap-1 pt-1">' +
+        (!isPrimary ? '<button type="button" onclick="window.setPrimaryModalImage(\'' + prefix + '\', ' + idx + ')" class="text-[10px] text-brand-400 hover:text-brand-300 font-bold px-1.5 py-0.5 rounded hover:bg-brand-500/10 transition" title="Als Hauptbild (Bild 1) setzen">Als Hauptbild</button>' : '<span class="text-[10px] text-gray-500 font-medium">Titel-Ansicht</span>') +
+        '<div class="flex items-center gap-1 ml-auto">' +
+          '<button type="button" onclick="window.openImageLightbox(\'' + escapeHtml(imgSrc) + '\', window.modalImages[\'' + prefix + '\'], ' + idx + ')" class="p-1 rounded text-gray-400 hover:text-white hover:bg-gray-800 transition" title="Vergrößern"><i data-lucide="maximize-2" class="w-3.5 h-3.5"></i></button>' +
+          '<button type="button" onclick="window.removeModalImage(\'' + prefix + '\', ' + idx + ')" class="p-1 rounded text-red-400 hover:text-red-300 hover:bg-red-500/10 transition" title="Bild entfernen"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  if (window.lucide) lucide.createIcons();
+};
+
+window.addImageToPrefix = function(prefix, value, infoText) {
+  if (!value || typeof value !== 'string') return;
+  if (!window.modalImages[prefix]) window.modalImages[prefix] = [];
+  if (!window.modalImages[prefix].includes(value)) {
+    window.modalImages[prefix].push(value);
+  }
+  window.renderModalImageGallery(prefix);
+  showToast('Bild hinzugefügt (' + window.modalImages[prefix].length + ' Bilder aktiv)');
+};
+
+window.removeModalImage = function(prefix, index) {
+  if (!window.modalImages[prefix]) return;
+  window.modalImages[prefix].splice(index, 1);
+  window.renderModalImageGallery(prefix);
+};
+
+window.setPrimaryModalImage = function(prefix, index) {
+  if (!window.modalImages[prefix] || index <= 0 || index >= window.modalImages[prefix].length) return;
+  const item = window.modalImages[prefix].splice(index, 1)[0];
+  window.modalImages[prefix].unshift(item);
+  window.renderModalImageGallery(prefix);
+  showToast('Als Hauptbild gesetzt! ★');
+};
+
+window.handleAddImageUrl = function(prefix) {
+  const input = document.getElementById(prefix + '_image_url_input');
+  const url = (input?.value || '').trim();
+  if (!url) return alert('Bitte gib eine gültige Bild-URL ein.');
+  window.addImageToPrefix(prefix, url, 'Web-Bild');
+  if (input) input.value = '';
+};
+
 window.handleImageFileSelect = function(e, prefix) {
-  const file = e.target.files && e.target.files[0];
-  if (file) window.processImageFile(file, prefix);
+  const files = e.target.files;
+  if (!files || files.length === 0) return;
+  Array.from(files).forEach(file => {
+    window.processImageFile(file, prefix);
+  });
+  e.target.value = '';
 };
 
 window.processImageFile = function(file, prefix) {
@@ -2989,10 +3545,9 @@ window.processImageFile = function(file, prefix) {
   reader.onload = (e) => {
     const rawBase64 = e.target.result;
     if (file.type === 'image/svg+xml' || file.size < 350 * 1024) {
-      window.applyImageToPrefix(prefix, rawBase64, file.name + ' (' + Math.round(file.size / 1024) + ' KB)');
+      window.addImageToPrefix(prefix, rawBase64, file.name);
       return;
     }
-    // Canvas-Komprimierung für optimierte Bildgröße in Mobile App & Web
     const img = new Image();
     img.onload = () => {
       const canvas = document.createElement('canvas');
@@ -3013,59 +3568,26 @@ window.processImageFile = function(file, prefix) {
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, width, height);
       const compressed = canvas.toDataURL('image/jpeg', 0.82);
-      window.applyImageToPrefix(prefix, compressed, file.name + ' (komprimiert)');
+      window.addImageToPrefix(prefix, compressed, file.name);
     };
     img.src = rawBase64;
   };
   reader.readAsDataURL(file);
 };
 
-window.handleImageUrlInput = function(prefix, url) {
-  const trimmed = (url || '').trim();
-  if (!trimmed) {
-    window.clearImage(prefix);
-    return;
-  }
-  window.applyImageToPrefix(prefix, trimmed, trimmed.length > 35 ? trimmed.slice(0, 32) + '...' : trimmed);
-};
-
 window.applyImageToPrefix = function(prefix, value, infoText) {
-  const hiddenInput = document.getElementById(prefix + '_image');
-  if (hiddenInput) hiddenInput.value = value;
-
-  const urlInput = document.getElementById(prefix + '_image_url_input');
-  if (urlInput && value.startsWith('http')) urlInput.value = value;
-
-  const previewBox = document.getElementById(prefix + '-image-preview-box');
-  const previewImg = document.getElementById(prefix + '-image-preview-img');
-  const previewInfo = document.getElementById(prefix + '-image-preview-info');
-
-  if (previewImg) previewImg.src = value;
-  if (previewInfo) previewInfo.textContent = infoText || 'Bild geladen';
-  if (previewBox) {
-    previewBox.classList.remove('hidden');
-    previewBox.classList.add('flex');
-  }
-  if (window.lucide) lucide.createIcons();
+  window.setModalImages(prefix, value ? [value] : []);
 };
 
 window.clearImage = function(prefix) {
+  window.modalImages[prefix] = [];
   const hiddenInput = document.getElementById(prefix + '_image');
   if (hiddenInput) hiddenInput.value = '';
-
   const fileInput = document.getElementById(prefix + '_file_input');
   if (fileInput) fileInput.value = '';
-
   const urlInput = document.getElementById(prefix + '_image_url_input');
   if (urlInput) urlInput.value = '';
-
-  const previewBox = document.getElementById(prefix + '-image-preview-box');
-  const previewImg = document.getElementById(prefix + '-image-preview-img');
-  if (previewImg) previewImg.src = '';
-  if (previewBox) {
-    previewBox.classList.add('hidden');
-    previewBox.classList.remove('flex');
-  }
+  window.renderModalImageGallery(prefix);
 };
 
 window.setupImageDropzones = function() {
@@ -3083,19 +3605,54 @@ window.setupImageDropzones = function() {
       e.preventDefault();
       dropzone.classList.remove('border-brand-500', 'bg-brand-500/10');
       if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-        window.processImageFile(e.dataTransfer.files[0], prefix);
+        Array.from(e.dataTransfer.files).forEach(f => window.processImageFile(f, prefix));
       }
     };
   });
 };
 
-window.openImageLightbox = function(src) {
-  if (!src) return;
+// ==========================================
+// LIGHTBOX MIT MEHRFACH-BILDERN & NAVIGATION
+// ==========================================
+let currentLightboxGallery = [];
+let currentLightboxIndex = 0;
+
+window.openImageLightbox = function(src, galleryArray = null, initialIndex = 0) {
+  if (!src && (!galleryArray || galleryArray.length === 0)) return;
   const modal = document.getElementById('imageLightboxModal');
   const img = document.getElementById('lightboxImage');
+  const counterEl = document.getElementById('lightboxImageCounter');
+  const navBtns = document.getElementById('lightboxNavBtns');
+  const floatPrev = document.getElementById('lightboxFloatPrev');
+  const floatNext = document.getElementById('lightboxFloatNext');
   const timerBadge = document.getElementById('lightboxBattleTimerBadge');
   const timerText = document.getElementById('lightboxBattleTimerText');
-  if (img) img.src = src;
+
+  if (Array.isArray(galleryArray) && galleryArray.length > 1) {
+    currentLightboxGallery = galleryArray;
+    currentLightboxIndex = (initialIndex >= 0 && initialIndex < galleryArray.length) ? initialIndex : 0;
+  } else {
+    currentLightboxGallery = [src || (galleryArray ? galleryArray[0] : '')];
+    currentLightboxIndex = 0;
+  }
+
+  const activeSrc = currentLightboxGallery[currentLightboxIndex] || src;
+  if (img) img.src = activeSrc;
+
+  const hasMultiple = (currentLightboxGallery.length > 1);
+  if (counterEl) {
+    if (hasMultiple) {
+      counterEl.textContent = 'Bild ' + (currentLightboxIndex + 1) + ' von ' + currentLightboxGallery.length;
+      counterEl.classList.remove('hidden');
+    } else {
+      counterEl.classList.add('hidden');
+    }
+  }
+
+  if (navBtns) navBtns.className = hasMultiple ? 'flex items-center gap-1.5 mr-2' : 'hidden';
+  if (floatPrev) floatPrev.className = hasMultiple ? 'hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/70 hover:bg-black/90 text-white border border-white/20 items-center justify-center shadow-2xl transition hover:scale-110 z-10' : 'hidden';
+  if (floatNext) floatNext.className = hasMultiple ? 'hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/70 hover:bg-black/90 text-white border border-white/20 items-center justify-center shadow-2xl transition hover:scale-110 z-10' : 'hidden';
+
   if (modal) {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
@@ -3113,12 +3670,42 @@ window.openImageLightbox = function(src) {
   if (window.lucide) lucide.createIcons();
 };
 
+window.lightboxPrev = function() {
+  if (currentLightboxGallery.length <= 1) return;
+  currentLightboxIndex = (currentLightboxIndex - 1 + currentLightboxGallery.length) % currentLightboxGallery.length;
+  const img = document.getElementById('lightboxImage');
+  if (img) img.src = currentLightboxGallery[currentLightboxIndex];
+  const counterEl = document.getElementById('lightboxImageCounter');
+  if (counterEl) counterEl.textContent = 'Bild ' + (currentLightboxIndex + 1) + ' von ' + currentLightboxGallery.length;
+};
+
+window.lightboxNext = function() {
+  if (currentLightboxGallery.length <= 1) return;
+  currentLightboxIndex = (currentLightboxIndex + 1) % currentLightboxGallery.length;
+  const img = document.getElementById('lightboxImage');
+  if (img) img.src = currentLightboxGallery[currentLightboxIndex];
+  const counterEl = document.getElementById('lightboxImageCounter');
+  if (counterEl) counterEl.textContent = 'Bild ' + (currentLightboxIndex + 1) + ' von ' + currentLightboxGallery.length;
+};
+
+window.openQuestionImagesLightbox = function(qId, initialIndex = 0) {
+  const q = allQuestions.find(item => item.id === qId);
+  if (!q) return;
+  const images = (Array.isArray(q.imageUrls) && q.imageUrls.length > 0)
+    ? q.imageUrls
+    : (q.image_url ? [q.image_url] : []);
+  if (images.length === 0) return;
+  window.openImageLightbox(images[initialIndex] || images[0], images, initialIndex);
+};
+
 window.closeImageLightbox = function() {
   const modal = document.getElementById('imageLightboxModal');
   if (modal) {
     modal.classList.add('hidden');
     modal.classList.remove('flex');
   }
+  currentLightboxGallery = [];
+  currentLightboxIndex = 0;
 };
 
 // =======================================================
@@ -5498,12 +6085,30 @@ window.renderClassroomQuestion = function() {
     }
   }
 
-  // Signalbild
-  if (q.image_url) {
-    if (imgEl) imgEl.src = q.image_url;
+  // Signalbild(er)
+  const qImgs = (Array.isArray(q.imageUrls) && q.imageUrls.length > 0)
+    ? q.imageUrls
+    : (q.image_url ? [q.image_url] : []);
+
+  if (qImgs.length > 0) {
+    if (imgEl) imgEl.src = qImgs[0];
     if (imgCont) {
       imgCont.classList.remove('hidden');
       imgCont.classList.add('flex');
+    }
+    const strip = document.getElementById('c_q_thumbnails_strip');
+    if (strip) {
+      if (qImgs.length > 1) {
+        strip.classList.remove('hidden');
+        strip.innerHTML = qImgs.map((url, idx) => {
+          return '<button type="button" onclick="window.switchClassroomImage(' + idx + ')" id="c_q_thumb_' + idx + '" class="w-12 h-12 rounded-lg bg-gray-900 border ' + (idx === 0 ? 'border-brand-500 ring-2 ring-brand-500/50' : 'border-gray-800') + ' overflow-hidden flex items-center justify-center p-0.5 hover:border-brand-400 transition" title="Signalbild ' + (idx + 1) + '">' +
+            '<img src="' + url + '" class="w-full h-full object-contain pointer-events-none">' +
+          '</button>';
+        }).join('');
+      } else {
+        strip.classList.add('hidden');
+        strip.innerHTML = '';
+      }
     }
   } else {
     if (imgCont) {
@@ -6154,13 +6759,41 @@ window.resetClassroomTimer = function() {
   if (btn) btn.textContent = 'Start';
 };
 
+window.switchClassroomImage = function(index) {
+  const q = classroomFilteredQuestions[classroomCurrentQIndex];
+  if (!q) return;
+  const qImgs = (Array.isArray(q.imageUrls) && q.imageUrls.length > 0) ? q.imageUrls : (q.image_url ? [q.image_url] : []);
+  if (!qImgs[index]) return;
+  const imgEl = document.getElementById('c_q_image');
+  if (imgEl) imgEl.src = qImgs[index];
+  qImgs.forEach((_, idx) => {
+    const btn = document.getElementById('c_q_thumb_' + idx);
+    if (!btn) return;
+    if (idx === index) {
+      btn.className = 'w-12 h-12 rounded-lg bg-gray-900 border border-brand-500 ring-2 ring-brand-500/50 overflow-hidden flex items-center justify-center p-0.5 transition';
+    } else {
+      btn.className = 'w-12 h-12 rounded-lg bg-gray-900 border border-gray-800 overflow-hidden flex items-center justify-center p-0.5 hover:border-brand-400 transition';
+    }
+  });
+};
+
 window.openClassroomImageLightbox = function() {
   if (classroomSubTab === 'quiz') {
     const q = classroomFilteredQuestions[classroomCurrentQIndex];
-    if (q && q.image_url) window.openImageLightbox(q.image_url);
+    if (q) {
+      const qImgs = (Array.isArray(q.imageUrls) && q.imageUrls.length > 0) ? q.imageUrls : (q.image_url ? [q.image_url] : []);
+      if (qImgs.length > 0) {
+        const curSrc = document.getElementById('c_q_image')?.src;
+        const curIdx = qImgs.findIndex(u => u === curSrc);
+        window.openImageLightbox(curSrc || qImgs[0], qImgs, curIdx >= 0 ? curIdx : 0);
+      }
+    }
   } else {
     const fc = classroomFilteredCards[classroomCurrentCardIndex];
-    if (fc && fc.image_url) window.openImageLightbox(fc.image_url);
+    if (fc) {
+      const fcImgs = (Array.isArray(fc.imageUrls) && fc.imageUrls.length > 0) ? fc.imageUrls : (fc.image_url ? [fc.image_url] : []);
+      if (fcImgs.length > 0) window.openImageLightbox(fcImgs[0], fcImgs, 0);
+    }
   }
 };
 
@@ -6383,9 +7016,113 @@ function getFilteredQuestionsList() {
                           (questionReviewFilter === 'verified' && isVerified) || 
                           (questionReviewFilter === 'unverified' && !isVerified) ||
                           (questionReviewFilter === 'duplicate' && isDuplicate);
-    return matchesCat && matchesSearch && matchesReview;
+
+    let matchesSubcat = true;
+    if (selectedQuestionSubcategory && selectedQuestionSubcategory !== 'all') {
+      const qSub = (q.subcategory || '').trim().toLowerCase();
+      if (selectedQuestionSubcategory === '__none__') {
+        matchesSubcat = !qSub;
+      } else {
+        matchesSubcat = (qSub === selectedQuestionSubcategory.trim().toLowerCase()) ||
+          (!qSub && (q.autoSubcategory || '').trim().toLowerCase() === selectedQuestionSubcategory.trim().toLowerCase());
+      }
+    }
+
+    return matchesCat && matchesSearch && matchesReview && matchesSubcat;
   });
 }
+
+window.selectQuestionSubcategory = function(subcatName) {
+  selectedQuestionSubcategory = subcatName;
+  window.renderQuestionSubcategoryPills();
+  filterQuestions();
+};
+
+window.resetQuestionSubcatFilter = function() {
+  window.selectQuestionSubcategory('all');
+};
+
+window.renderQuestionSubcategoryPills = function() {
+  const pillsEl = document.getElementById('questionSubcategoryPills');
+  const statusBadge = document.getElementById('questionSubcatFilterStatusBadge');
+  if (!pillsEl) return;
+
+  const subcatCounts = new Map();
+  let unassignedCount = 0;
+
+  allQuestions.forEach(q => {
+    if (selectedQuestionCategories.size > 0 && !selectedQuestionCategories.has(q.category)) return;
+    const sc = (q.subcategory || q.autoSubcategory || '').trim();
+    if (sc) {
+      subcatCounts.set(sc, (subcatCounts.get(sc) || 0) + 1);
+    } else {
+      unassignedCount++;
+    }
+  });
+
+  allSubcategories.forEach(s => {
+    const parent = s.category || 'Signale';
+    if (selectedQuestionCategories.size === 0 || selectedQuestionCategories.has(parent)) {
+      if (!subcatCounts.has(s.name)) {
+        subcatCounts.set(s.name, 0);
+      }
+    }
+  });
+
+  const totalQuestionsInCats = allQuestions.filter(q => selectedQuestionCategories.size === 0 || selectedQuestionCategories.has(q.category)).length;
+
+  let html = '<button type="button" onclick="window.selectQuestionSubcategory(\'all\')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition cursor-pointer ' +
+    (selectedQuestionSubcategory === 'all'
+      ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 shadow-sm shadow-cyan-500/10'
+      : 'bg-gray-950/80 text-gray-400 border-gray-800 hover:text-gray-200 hover:border-gray-700') + '">' +
+    '<span>Alle Unterkategorien</span>' +
+    '<span class="text-[10px] px-1.5 py-0.5 rounded-full font-bold ' +
+      (selectedQuestionSubcategory === 'all' ? 'bg-cyan-500/30 text-cyan-200' : 'bg-gray-800 text-gray-400') + '">' + totalQuestionsInCats + '</span>' +
+  '</button>';
+
+  const sorted = Array.from(subcatCounts.keys()).sort((a, b) => {
+    const ca = subcatCounts.get(a) || 0;
+    const cb = subcatCounts.get(b) || 0;
+    if (cb !== ca) return cb - ca;
+    return a.localeCompare(b);
+  });
+
+  sorted.forEach(name => {
+    const isSel = (selectedQuestionSubcategory && selectedQuestionSubcategory.toLowerCase() === name.toLowerCase());
+    const count = subcatCounts.get(name) || 0;
+    html += '<button type="button" onclick="window.selectQuestionSubcategory(\'' + escapeHtml(name).replace(/'/g, "\\'") + '\')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition cursor-pointer ' +
+      (isSel
+        ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 shadow-sm shadow-cyan-500/10'
+        : 'bg-gray-950/80 text-gray-400 border-gray-800 hover:text-cyan-300 hover:border-cyan-800/80') + '">' +
+      '<span class="w-2 h-2 rounded-full ' + (isSel ? 'bg-cyan-400' : 'bg-gray-600') + '"></span>' +
+      '<span>' + escapeHtml(name) + '</span>' +
+      '<span class="text-[10px] px-1.5 py-0.5 rounded-full font-bold ' +
+        (isSel ? 'bg-cyan-500/30 text-cyan-200' : 'bg-gray-800 text-gray-400') + '">' + count + '</span>' +
+    '</button>';
+  });
+
+  const isNoneSel = (selectedQuestionSubcategory === '__none__');
+  html += '<button type="button" onclick="window.selectQuestionSubcategory(\'__none__\')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition cursor-pointer ' +
+    (isNoneSel
+      ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-sm'
+      : 'bg-gray-950/80 text-gray-500 border-dashed border-gray-800 hover:text-amber-400 hover:border-amber-500/40') + '">' +
+    '<span>Ohne Unterkategorie</span>' +
+    '<span class="text-[10px] px-1.5 py-0.5 rounded-full font-bold ' +
+      (isNoneSel ? 'bg-amber-500/30 text-amber-200' : 'bg-gray-800 text-gray-400') + '">' + unassignedCount + '</span>' +
+  '</button>';
+
+  pillsEl.innerHTML = html;
+
+  if (statusBadge) {
+    if (selectedQuestionSubcategory === 'all') {
+      statusBadge.textContent = 'Alle Unterkategorien';
+    } else if (selectedQuestionSubcategory === '__none__') {
+      statusBadge.textContent = 'Filter: Ohne Unterkategorie (' + unassignedCount + ')';
+    } else {
+      statusBadge.textContent = 'Filter: ' + selectedQuestionSubcategory + ' (' + (subcatCounts.get(selectedQuestionSubcategory) || 0) + ')';
+    }
+  }
+};
 
 window.renderQuestionReviewStats = function() {
   const total = allQuestions.length;
@@ -7479,8 +8216,33 @@ window.loadAllData = async function() {
   console.log('Lade Daten über native REST API...');
   try {
     const catRes = await fetch(SUPABASE_URL + '/rest/v1/categories?select=*&order=name.asc', { headers: restHeaders });
-    allCategories = await catRes.json();
-    if (!Array.isArray(allCategories)) allCategories = [];
+    const rawCategories = await catRes.json();
+    let loadedSignalSubs = [];
+    let loadedGenSubs = [];
+    if (Array.isArray(rawCategories)) {
+      const sigRow = rawCategories.find(c => c.name === '__signal_subcategories__');
+      if (sigRow && sigRow.description) {
+        try { loadedSignalSubs = JSON.parse(sigRow.description); } catch(e){}
+      }
+      const genRow = rawCategories.find(c => c.name === '__subcategories__');
+      if (genRow && genRow.description) {
+        try { loadedGenSubs = JSON.parse(genRow.description); } catch(e){}
+      }
+      allCategories = rawCategories.filter(c => c.name && !c.name.startsWith('__'));
+    } else {
+      allCategories = [];
+    }
+
+    // Subkategorien zusammenführen
+    let localSubStore = [];
+    try { localSubStore = JSON.parse(localStorage.getItem('railtrainer_subcategories') || '[]'); } catch(e){}
+    const subMap = new Map();
+    INITIAL_SIGNAL_SUBCATEGORIES.forEach(s => subMap.set(s.name.toLowerCase(), { ...s }));
+    if (Array.isArray(loadedSignalSubs)) loadedSignalSubs.forEach(s => subMap.set(s.name.toLowerCase(), { ...s, category: s.category || 'Signale' }));
+    if (Array.isArray(loadedGenSubs)) loadedGenSubs.forEach(s => subMap.set(s.name.toLowerCase(), { ...s }));
+    if (Array.isArray(localSubStore)) localSubStore.forEach(s => subMap.set(s.name.toLowerCase(), { ...s }));
+    allSubcategories = Array.from(subMap.values());
+
     renderCategorySelects();
     renderCategories();
 
@@ -7511,6 +8273,25 @@ window.loadAllData = async function() {
         if (meta.vb && !q.verified_by) q.verified_by = meta.vb;
         if (meta.vbn && !q.verified_by_name) q.verified_by_name = meta.vbn;
         if (meta.dr) q.duplicateReviewed = true;
+        if (meta.sub && !q.subcategory) q.subcategory = meta.sub;
+        if (Array.isArray(meta.imgs) && meta.imgs.length > 0 && (!q.imageUrls || q.imageUrls.length === 0)) {
+          q.imageUrls = meta.imgs;
+        }
+      }
+
+      // Mehrere Bilder extrahieren
+      const rawImgs = [];
+      if (Array.isArray(q.image_urls) && q.image_urls.length > 0) rawImgs.push(...q.image_urls);
+      else if (Array.isArray(q.imageUrls) && q.imageUrls.length > 0) rawImgs.push(...q.imageUrls);
+      else if (Array.isArray(meta?.imgs) && meta.imgs.length > 0) rawImgs.push(...meta.imgs);
+      if (q.image_url && !rawImgs.includes(q.image_url)) rawImgs.unshift(q.image_url);
+      q.imageUrls = rawImgs.filter(u => typeof u === 'string' && u.trim().length > 0);
+      if (!q.image_url && q.imageUrls.length > 0) q.image_url = q.imageUrls[0];
+
+      // Auto-Erkennung falls keine Unterkategorie
+      if (!q.subcategory && q.category === 'Signale') {
+        const detected = window.detectSignalSubcategory(q.text);
+        if (detected) q.autoSubcategory = detected;
       }
 
       const localMeta = localAuthorStore[q.id] || {};
@@ -7552,7 +8333,19 @@ window.loadAllData = async function() {
         if (meta.vb && !fc.verified_by) fc.verified_by = meta.vb;
         if (meta.vbn && !fc.verified_by_name) fc.verified_by_name = meta.vbn;
         if (meta.dr) fc.duplicateReviewed = true;
+        if (meta.sub && !fc.subcategory) fc.subcategory = meta.sub;
+        if (Array.isArray(meta.imgs) && meta.imgs.length > 0 && (!fc.imageUrls || fc.imageUrls.length === 0)) {
+          fc.imageUrls = meta.imgs;
+        }
       }
+
+      const rawFcImgs = [];
+      if (Array.isArray(fc.image_urls) && fc.image_urls.length > 0) rawFcImgs.push(...fc.image_urls);
+      else if (Array.isArray(fc.imageUrls) && fc.imageUrls.length > 0) rawFcImgs.push(...fc.imageUrls);
+      else if (Array.isArray(meta?.imgs) && meta.imgs.length > 0) rawFcImgs.push(...meta.imgs);
+      if (fc.image_url && !rawFcImgs.includes(fc.image_url)) rawFcImgs.unshift(fc.image_url);
+      fc.imageUrls = rawFcImgs.filter(u => typeof u === 'string' && u.trim().length > 0);
+      if (!fc.image_url && fc.imageUrls.length > 0) fc.image_url = fc.imageUrls[0];
 
       const localMeta = localFcAuthorStore[fc.id] || {};
       if (!fc.created_by && localMeta.created_by) fc.created_by = localMeta.created_by;
@@ -7576,6 +8369,8 @@ window.loadAllData = async function() {
 
     // Filter-Pills mit echten Counts rendern und initial filtern
     renderCategoryFilterPills();
+    renderQuestionSubcategoryPills();
+    renderSubcategories();
     filterQuestions();
     filterFlashcards();
     renderQuestionReviewStats();
@@ -7766,33 +8561,75 @@ window.renderQuestions = function(list) {
       ? '<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1"><i data-lucide="copy" class="w-3 h-3 text-amber-400"></i><span>⚠️ Doppelt</span></span>'
       : '';
 
+    const currentSub = q.subcategory || q.autoSubcategory;
+    const isAutoSub = !q.subcategory && !!q.autoSubcategory;
+    const subcatBadge = currentSub
+      ? '<button type="button" onclick="window.selectQuestionSubcategory(\'' + escapeHtml(currentSub).replace(/'/g, "\\'") + '\')" class="px-2.5 py-0.5 rounded-full text-xs font-bold ' + 
+          (isAutoSub ? 'bg-amber-500/15 text-amber-300 border border-amber-500/40 hover:bg-amber-500/25' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30') + 
+          ' flex items-center gap-1 transition" title="' + (isAutoSub ? 'Automatisch erkannt (Klicken zum Filtern)' : 'Unterkategorie (Klicken zum Filtern)') + '">' +
+          '<i data-lucide="layers" class="w-3 h-3 ' + (isAutoSub ? 'text-amber-400' : 'text-cyan-400') + '"></i>' +
+          '<span>' + (isAutoSub ? '💡 ' : '') + escapeHtml(currentSub) + '</span>' +
+        '</button>'
+      : '<button type="button" onclick="window.openQuickAssignModal(\'' + q.id + '\', event)" class="px-2 py-0.5 rounded-full text-[11px] font-semibold text-gray-400 bg-gray-950 border border-dashed border-gray-800 hover:border-cyan-500/60 hover:text-cyan-300 transition flex items-center gap-1" title="Unterkategorie jetzt zuordnen">' +
+          '<i data-lucide="plus" class="w-3 h-3 text-gray-500"></i>' +
+          '<span>+ Unterkategorie</span>' +
+        '</button>';
+
+    const qImages = (Array.isArray(q.imageUrls) && q.imageUrls.length > 0)
+      ? q.imageUrls
+      : (q.image_url ? [q.image_url] : []);
+
+    let imagesHtml = '';
+    if (qImages.length === 1) {
+      imagesHtml = '<div class="mb-3.5 p-2.5 rounded-xl bg-gray-950 border border-gray-800 flex items-center justify-between gap-3">' +
+        '<div class="flex items-center gap-3 min-w-0">' +
+          '<div class="w-16 h-16 rounded-lg bg-gray-900 border border-gray-800 overflow-hidden flex items-center justify-center shrink-0 cursor-pointer shadow hover:border-brand-500/50 transition" onclick="window.openQuestionImagesLightbox(\'' + q.id + '\', 0)">' +
+            '<img src="' + qImages[0] + '" alt="Signalbild" class="w-full h-full object-contain hover:scale-105 transition">' +
+          '</div>' +
+          '<div class="min-w-0 text-xs">' +
+            '<div class="font-bold text-gray-200 flex items-center gap-1.5"><i data-lucide="image" class="w-3.5 h-3.5 text-brand-400"></i><span>Signalbild / Abbildung enthalten</span></div>' +
+            '<button type="button" onclick="window.openQuestionImagesLightbox(\'' + q.id + '\', 0)" class="text-brand-400 hover:text-brand-300 text-[11px] font-semibold mt-1 flex items-center gap-1"><i data-lucide="maximize-2" class="w-3 h-3"></i><span>Großansicht öffnen</span></button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    } else if (qImages.length > 1) {
+      imagesHtml = '<div class="mb-3.5 p-3 rounded-2xl bg-gray-950/90 border border-cyan-500/30 shadow-inner">' +
+        '<div class="flex items-center justify-between mb-2">' +
+          '<div class="text-xs font-bold text-cyan-300 flex items-center gap-1.5">' +
+            '<i data-lucide="images" class="w-4 h-4 text-cyan-400"></i>' +
+            '<span>' + qImages.length + ' Signalbilder / Ansichten vorhanden</span>' +
+          '</div>' +
+          '<button type="button" onclick="window.openQuestionImagesLightbox(\'' + q.id + '\', 0)" class="text-cyan-400 hover:text-cyan-300 text-[11px] font-semibold flex items-center gap-1"><i data-lucide="maximize-2" class="w-3 h-3"></i><span>Galerie öffnen (' + qImages.length + ')</span></button>' +
+        '</div>' +
+        '<div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">' +
+          qImages.map((src, idx) => {
+            return '<div class="relative w-20 h-20 rounded-xl bg-gray-900 border ' + (idx === 0 ? 'border-cyan-500/70 ring-1 ring-cyan-500/40' : 'border-gray-800') + ' overflow-hidden flex items-center justify-center shrink-0 cursor-pointer shadow hover:border-cyan-400 transition group" onclick="window.openQuestionImagesLightbox(\'' + q.id + '\', ' + idx + ')" title="Bild ' + (idx + 1) + ' vergrößern">' +
+              '<img src="' + src + '" alt="Bild ' + (idx + 1) + '" class="w-full h-full object-contain group-hover:scale-110 transition duration-150">' +
+              '<span class="absolute top-1 left-1 px-1 py-0.2 rounded text-[9px] font-bold ' + (idx === 0 ? 'bg-cyan-600 text-white shadow' : 'bg-black/75 text-gray-300') + '">' + (idx === 0 ? '★ 1' : (idx + 1)) + '</span>' +
+            '</div>';
+          }).join('') +
+        '</div>' +
+      '</div>';
+    }
+
     return '<div class="border rounded-2xl p-5 shadow-lg transition ' + cardBorder + '">' +
       '<div class="flex items-start justify-between gap-4 mb-3">' +
         '<div class="flex items-center gap-2 flex-wrap">' +
           '<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand-500/20 text-brand-400 border border-brand-500/30">#' + (q.category || 'Allgemein') + '</span>' +
+          subcatBadge +
           dupBadge +
           optionsCountBadge +
           modeBadge +
           verifiedBtn +
         '</div>' +
-        '<div class="flex items-center gap-2">' +
+        '<div class="flex items-center gap-1.5">' +
+          '<button onclick="window.openQuickAssignModal(\'' + q.id + '\', event)" class="p-1.5 text-gray-400 hover:text-cyan-400 hover:bg-gray-800 rounded-lg transition" title="Unterkategorie zuordnen"><i data-lucide="layers" class="w-4 h-4"></i></button>' +
           '<button onclick="window.editQuestion(\'' + q.id + '\')" class="p-1.5 text-gray-400 hover:text-brand-400 hover:bg-gray-800 rounded-lg transition" title="Bearbeiten"><i data-lucide="edit-3" class="w-4 h-4"></i></button>' +
           '<button onclick="window.deleteQuestion(\'' + q.id + '\')" class="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition" title="Löschen"><i data-lucide="trash-2" class="w-4 h-4"></i></button>' +
         '</div>' +
       '</div>' +
       '<p class="font-bold text-base text-gray-100 mb-3 whitespace-pre-line leading-relaxed">' + window.formatRichContent(q.text) + '</p>' +
-      (q.image_url ? 
-        '<div class="mb-3.5 p-2.5 rounded-xl bg-gray-950 border border-gray-800 flex items-center justify-between gap-3">' +
-          '<div class="flex items-center gap-3 min-w-0">' +
-            '<div class="w-16 h-16 rounded-lg bg-gray-900 border border-gray-800 overflow-hidden flex items-center justify-center shrink-0 cursor-pointer shadow hover:border-brand-500/50 transition" onclick="window.openImageLightbox(this.querySelector(\'img\').src)">' +
-              '<img src="' + q.image_url + '" alt="Fragenbild" class="w-full h-full object-contain hover:scale-105 transition">' +
-            '</div>' +
-            '<div class="min-w-0 text-xs">' +
-              '<div class="font-bold text-gray-200 flex items-center gap-1.5"><i data-lucide="image" class="w-3.5 h-3.5 text-brand-400"></i><span>Signalbild / Abbildung enthalten</span></div>' +
-              '<button type="button" onclick="window.openImageLightbox(\'' + escapeHtml(q.image_url) + '\')" class="text-brand-400 hover:text-brand-300 text-[11px] font-semibold mt-1 flex items-center gap-1"><i data-lucide="maximize-2" class="w-3 h-3"></i><span>Großansicht öffnen</span></button>' +
-            '</div>' +
-          '</div>' +
-        '</div>' : '') +
+      imagesHtml +
       optionsHtml +
       (q.explanation ? '<div class="bg-gray-950/70 rounded-xl p-3 border border-gray-800/80 text-xs text-gray-300 whitespace-pre-line leading-relaxed mb-3"><span class="font-bold text-brand-400">Erklärung:</span> ' + window.formatRichContent(q.explanation) + '</div>' : '') +
       '<div class="mt-3 pt-2.5 border-t border-gray-800/70 flex items-center justify-between gap-3 text-[11px] text-gray-400 flex-wrap">' +
@@ -8065,6 +8902,23 @@ window.checkQuestionDuplicates = function(text) {
   } else {
     warnBox.classList.add('hidden');
   }
+
+  // Live Unterkategorie Signal-Erkennung prüfen
+  const currentCat = document.getElementById('q_category')?.value;
+  const subSelect = document.getElementById('q_subcategory');
+  const customSubcatInput = document.getElementById('q_subcategory_custom');
+  if (currentCat === 'Signale' && subSelect && (!subSelect.value || (subSelect.value === '__custom__' && !customSubcatInput?.value))) {
+    const detected = window.detectSignalSubcategory(currentText);
+    const hintEl = document.getElementById('q_subcat_detect_hint');
+    const detectText = document.getElementById('q_subcat_detect_text');
+    if (detected && hintEl && detectText) {
+      detectedSubcategoryTemp.q = detected;
+      detectText.textContent = '💡 Erkannt als: ' + detected;
+      hintEl.classList.remove('hidden');
+    } else if (hintEl) {
+      hintEl.classList.add('hidden');
+    }
+  }
 };
 
 // LIVE DUPLIKATE PRÜFEN (LERNKARTEN)
@@ -8138,6 +8992,9 @@ window.openQuestionModal = function() {
   window.clearImage('q');
   window.switchImageTab('q', 'file');
 
+  const defaultCat = document.getElementById('q_category')?.value || 'Signale';
+  window.updateQuestionSubcategoryOptions(defaultCat, '');
+
   const metaBox = document.getElementById('questionModalMetaInfo');
   if (metaBox) {
     metaBox.classList.add('hidden');
@@ -8162,11 +9019,13 @@ window.editQuestion = function(id) {
   document.getElementById('q_category').value = q.category;
   document.getElementById('q_text').value = q.text;
   document.getElementById('q_explanation').value = (q.explanation || '').replace(/\s*<!--RT_META:.*?-->/gs, '').trim();
-  if (q.image_url) {
-    window.applyImageToPrefix('q', q.image_url, q.image_url.startsWith('http') ? q.image_url : 'Gespeichertes Bild');
-  } else {
-    window.clearImage('q');
-  }
+  
+  window.updateQuestionSubcategoryOptions(q.category, q.subcategory || q.autoSubcategory || '');
+
+  const qImgs = (Array.isArray(q.imageUrls) && q.imageUrls.length > 0)
+    ? q.imageUrls
+    : (q.image_url ? [q.image_url] : []);
+  window.setModalImages('q', qImgs);
   const qVer = document.getElementById('q_verified');
   const canVerify = typeof window.hasPermission === 'function' ? window.hasPermission('can_verify_content') : true;
   if (qVer) {
@@ -8252,7 +9111,19 @@ window.handleSaveQuestion = async function(e, andNext = false) {
   const category = document.getElementById('q_category').value;
   const text = document.getElementById('q_text').value.trim();
   const explanation = document.getElementById('q_explanation').value.trim();
-  const imageUrl = document.getElementById('q_image')?.value.trim() || null;
+
+  const subcatSelect = document.getElementById('q_subcategory');
+  const customSubcatInput = document.getElementById('q_subcategory_custom');
+  let subcategory = null;
+  if (subcatSelect && subcatSelect.value === '__custom__') {
+    subcategory = (customSubcatInput?.value || '').trim() || null;
+  } else if (subcatSelect && subcatSelect.value) {
+    subcategory = subcatSelect.value.trim() || null;
+  }
+
+  const qImgs = (window.modalImages && Array.isArray(window.modalImages.q)) ? window.modalImages.q.slice() : [];
+  const primaryImageUrl = qImgs[0] || (document.getElementById('q_image')?.value.trim() || null);
+  const imageUrl = primaryImageUrl;
   let isVerified = document.getElementById('q_verified')?.checked || false;
   if (typeof window.hasPermission === 'function' && !window.hasPermission('can_verify_content')) {
     const existingQ = id ? allQuestions.find(x => x.id === id) : null;
@@ -8344,18 +9215,22 @@ window.handleSaveQuestion = async function(e, andNext = false) {
     createdByName: createdByName,
     creatorRole: creatorRole,
     verifiedBy: verifiedBy,
-    verifiedByName: verifiedByName
+    verifiedByName: verifiedByName,
+    subcategory: subcategory,
+    imageUrls: qImgs
   });
 
   const payload = { 
     id, 
     category, 
+    subcategory,
     text, 
     options, 
     correct_index: correctIndex, 
     correct_indices: correctIndices,
     explanation: finalExplanation, 
-    image_url: imageUrl, 
+    image_url: primaryImageUrl, 
+    image_urls: qImgs.length > 0 ? qImgs : null,
     is_verified: isVerified,
     danger_indices: dangerIndices,
     created_by: createdBy,
@@ -8387,6 +9262,8 @@ window.handleSaveQuestion = async function(e, andNext = false) {
       if (errText.includes('correct_indices')) delete fallbackPayload.correct_indices;
       if (errText.includes('danger_indices')) delete fallbackPayload.danger_indices;
       if (errText.includes('question_type')) delete fallbackPayload.question_type;
+      if (errText.includes('subcategory')) delete fallbackPayload.subcategory;
+      if (errText.includes('image_urls')) delete fallbackPayload.image_urls;
 
       res = await fetch(SUPABASE_URL + '/rest/v1/quiz_questions', {
         method: 'POST',
@@ -8414,6 +9291,7 @@ window.handleSaveQuestion = async function(e, andNext = false) {
       currentDangerIndices = [];
       window.setQuestionOptionsCount(4);
       window.updateDangerOptionButtons();
+      window.updateQuestionSubcategoryOptions(category, '');
       window.clearImage('q');
       window.setCorrectOptions([0]);
       window.resizeAllModalTextareas('questionModal');
@@ -8942,6 +9820,7 @@ window.toggleQuestionCategory = function(name) {
     selectedQuestionCategories.add(name);
   }
   renderCategoryFilterPills();
+  renderQuestionSubcategoryPills();
   filterQuestions();
 };
 
@@ -8952,6 +9831,7 @@ window.toggleAllQuestionCategories = function(selectAll) {
     selectedQuestionCategories.clear();
   }
   renderCategoryFilterPills();
+  renderQuestionSubcategoryPills();
   filterQuestions();
 };
 
