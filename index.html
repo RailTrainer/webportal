@@ -555,8 +555,8 @@
             <div id="questionCategoryPills" class="flex flex-wrap gap-2"></div>
           </div>
 
-          <!-- DYNAMISCHE UNTERKATEGORIEN FILTER-CHIPS -->
-          <div id="questionSubcategoryFilterSection" class="pt-3 border-t border-gray-800/80">
+          <!-- DYNAMISCHE UNTERKATEGORIEN FILTER-CHIPS (BEI PRÜFUNGSFRAGEN AUSGEBLENDET, DA FÜR LERNKARTEN GEWÜNSCHT) -->
+          <div id="questionSubcategoryFilterSection" class="hidden pt-3 border-t border-gray-800/80">
             <div class="flex items-center justify-between mb-2">
               <div class="text-[11px] font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
                 <i data-lucide="layers" class="w-3.5 h-3.5 text-cyan-400"></i>
@@ -673,6 +673,21 @@
               Kategorien-Filter (Mehrfachauswahl):
             </div>
             <div id="flashcardCategoryPills" class="flex flex-wrap gap-2"></div>
+          </div>
+
+          <!-- DYNAMISCHE UNTERKATEGORIEN FILTER-CHIPS FÜR LERNKARTEN (SIGNALE BESSER ZUORDNEN) -->
+          <div id="flashcardSubcategoryFilterSection" class="pt-3 border-t border-gray-800/80">
+            <div class="flex items-center justify-between mb-2">
+              <div class="text-[11px] font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+                <i data-lucide="layers" class="w-3.5 h-3.5 text-cyan-400"></i>
+                <span>Signal-Unterkategorien:</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span id="flashcardSubcatFilterStatusBadge" class="text-[11px] text-gray-400 font-medium">Alle Unterkategorien</span>
+                <button type="button" onclick="window.resetFlashcardSubcatFilter()" class="text-[11px] text-brand-400 hover:text-brand-300 font-semibold underline">Alle anzeigen</button>
+              </div>
+            </div>
+            <div id="flashcardSubcategoryPills" class="flex flex-wrap gap-2"></div>
           </div>
         </div>
 
@@ -946,6 +961,26 @@
               </span>
             </div>
           </div>
+
+          <!-- PLATTFORM / OS FILTER-CHIPS -->
+          <div class="flex items-center gap-2 pt-2 border-t border-gray-800/60 flex-wrap">
+            <span class="text-xs text-gray-400 font-semibold mr-1 flex items-center gap-1.5">
+              <i data-lucide="smartphone" class="w-3.5 h-3.5 text-brand-400"></i>
+              <span>Plattform:</span>
+            </span>
+            <button type="button" onclick="window.setUserPlatformFilter('all')" id="btn-user-plat-all" class="px-3 py-1 rounded-xl text-xs font-bold transition border bg-brand-600 text-white border-brand-500 shadow-sm">
+              Alle (<span id="user-plat-count-all">0</span>)
+            </button>
+            <button type="button" onclick="window.setUserPlatformFilter('ios')" id="btn-user-plat-ios" class="px-3 py-1 rounded-xl text-xs font-semibold transition border bg-gray-950 text-gray-400 border-gray-800 hover:text-indigo-300 hover:border-indigo-500/40 flex items-center gap-1.5">
+              <span>🍏 Apple iOS</span> (<span id="user-plat-count-ios">0</span>)
+            </button>
+            <button type="button" onclick="window.setUserPlatformFilter('android')" id="btn-user-plat-android" class="px-3 py-1 rounded-xl text-xs font-semibold transition border bg-gray-950 text-gray-400 border-gray-800 hover:text-emerald-300 hover:border-emerald-500/40 flex items-center gap-1.5">
+              <span>🤖 Android</span> (<span id="user-plat-count-android">0</span>)
+            </button>
+            <button type="button" onclick="window.setUserPlatformFilter('web')" id="btn-user-plat-web" class="px-3 py-1 rounded-xl text-xs font-semibold transition border bg-gray-950 text-gray-400 border-gray-800 hover:text-cyan-300 hover:border-cyan-500/40 flex items-center gap-1.5">
+              <span>🌐 Webportal</span> (<span id="user-plat-count-web">0</span>)
+            </button>
+          </div>
         </div>
 
         <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-lg">
@@ -966,6 +1001,7 @@
                     </div>
                   </th>
                   <th class="px-5 py-3.5">Rolle</th>
+                  <th class="px-5 py-3.5">Plattform / App</th>
                   <th class="px-5 py-3.5">Dozenten-Titel</th>
                   <th class="px-5 py-3.5 cursor-pointer hover:text-white transition" onclick="window.sortUsersBy('created_at')" title="Klicken zum Sortieren nach Registrierungsdatum (auf- / absteigend)">
                     <div class="flex items-center gap-1.5">
@@ -2420,9 +2456,29 @@
 
       <form id="flashcardForm" onsubmit="handleSaveFlashcard(event, false)" class="space-y-4">
         <input type="hidden" id="fc_id">
-        <div>
-          <label class="block text-xs font-bold text-gray-300 uppercase mb-1.5">Kategorie *</label>
-          <select id="fc_category" required class="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 focus:outline-none focus:border-brand-500"></select>
+        <!-- KATEGORIE & UNTERKATEGORIE (2-SPALTIG) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-gray-300 uppercase mb-1.5">Kategorie *</label>
+            <select id="fc_category" required onchange="window.updateFlashcardSubcategoryOptions(this.value)" class="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 focus:outline-none focus:border-brand-500"></select>
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-xs font-bold text-cyan-400 uppercase flex items-center gap-1.5">
+                <i data-lucide="layers" class="w-3.5 h-3.5 text-cyan-400"></i>
+                <span>Unterkategorie (Signale & Co.)</span>
+              </label>
+              <button type="button" onclick="window.toggleCustomSubcategoryInput('fc')" class="text-[11px] text-brand-400 hover:text-brand-300 font-semibold underline">+ Neu</button>
+            </div>
+            <select id="fc_subcategory" onchange="window.handleSubcategorySelectChange('fc')" class="w-full px-3.5 py-2.5 bg-gray-950 border border-cyan-500/40 rounded-xl text-sm text-gray-100 focus:outline-none focus:border-cyan-400">
+              <option value="">-- Keine Unterkategorie --</option>
+            </select>
+            <input type="text" id="fc_subcategory_custom" placeholder="Name der neuen Unterkategorie eingeben..." class="hidden mt-2 w-full px-3 py-2 bg-gray-950 border border-cyan-500/50 rounded-xl text-xs text-gray-100 placeholder-gray-500 focus:outline-none focus:border-cyan-400">
+            <div id="fc_subcat_detect_hint" class="hidden mt-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center justify-between">
+              <span id="fc_subcat_detect_text">💡 Erkannt als: Nebensignale</span>
+              <button type="button" onclick="window.applyDetectedSubcategory('fc')" class="px-2 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 text-[10px] font-bold border border-amber-500/40 transition">Übernehmen</button>
+            </div>
+          </div>
         </div>
 
         <div>
@@ -2460,12 +2516,13 @@
           <input type="text" id="fc_reference" placeholder="z.B. Ril 301.0101 / VDV 757" class="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-brand-500">
         </div>
 
-        <!-- BILD HINZUFÜGEN (FESTPLATTE ODER LINK) -->
+        <!-- BILD HINZUFÜGEN (FESTPLATTE ODER LINK - MEHRERE BILDER UNTERSTÜTZT) -->
         <div class="bg-gray-950/70 border border-gray-800 rounded-2xl p-4 space-y-3">
           <div class="flex items-center justify-between">
             <label class="block text-xs font-bold text-gray-300 uppercase flex items-center gap-1.5">
               <i data-lucide="image" class="w-4 h-4 text-brand-500"></i>
-              <span>Bild / Signalabbildung (Optional)</span>
+              <span>Signalbilder / Abbildungen (Mehrere Bilder möglich)</span>
+              <span id="fc_images_count_badge" class="hidden text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30">0 Bilder</span>
             </label>
             <div class="flex items-center gap-1 bg-gray-900 p-0.5 rounded-lg border border-gray-800 text-xs">
               <button type="button" onclick="switchImageTab('fc', 'file')" id="fc-img-tab-file" class="px-2.5 py-1 rounded-md font-semibold bg-brand-600 text-white transition flex items-center gap-1">
@@ -2483,16 +2540,16 @@
 
           <!-- TAB 1: FESTPLATTE -->
           <div id="fc-image-file-section" class="space-y-2">
-            <input type="file" id="fc_file_input" accept="image/*" class="hidden" onchange="handleImageFileSelect(event, 'fc')">
+            <input type="file" id="fc_file_input" accept="image/*" multiple class="hidden" onchange="handleImageFileSelect(event, 'fc')">
             <div id="fc-dropzone" onclick="document.getElementById('fc_file_input').click()" class="border-2 border-dashed border-gray-800 hover:border-brand-500/70 bg-gray-900/50 hover:bg-gray-900 rounded-xl p-4 text-center cursor-pointer transition flex flex-col items-center justify-center gap-1.5 group">
               <div class="w-10 h-10 rounded-full bg-gray-800 group-hover:bg-brand-500/20 text-gray-400 group-hover:text-brand-400 flex items-center justify-center transition">
                 <i data-lucide="upload-cloud" class="w-5 h-5"></i>
               </div>
               <div class="text-xs font-semibold text-gray-200">
-                Klicken zum Auswählen oder Bild hierher ziehen
+                Klicken zum Auswählen (auch mehrere Dateien) oder Bilder hierher ziehen
               </div>
               <div class="text-[11px] text-gray-500">
-                PNG, JPG, JPEG, WebP, SVG • Strg+V zum Einfügen • Für Mobile App optimiert
+                PNG, JPG, WebP, SVG • Strg+V zum Einfügen • Für Mobile App optimiert
               </div>
             </div>
           </div>
@@ -2502,36 +2559,22 @@
             <div class="flex items-center gap-2">
               <div class="relative flex-1">
                 <i data-lucide="link" class="w-4 h-4 absolute left-3.5 top-3 text-gray-500"></i>
-                <input type="url" id="fc_image_url_input" oninput="handleImageUrlInput('fc', this.value)" placeholder="https://beispiel.de/signal.png" class="w-full pl-10 pr-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-brand-500">
+                <input type="url" id="fc_image_url_input" placeholder="https://beispiel.de/signal.png" onkeydown="if(event.key==='Enter'){event.preventDefault();window.handleAddImageUrl('fc');}" class="w-full pl-10 pr-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-brand-500">
               </div>
-              <button type="button" onclick="handleImageUrlInput('fc', document.getElementById('fc_image_url_input').value)" class="px-3.5 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-bold rounded-xl border border-gray-700 transition shrink-0">
-                Laden
+              <button type="button" onclick="window.handleAddImageUrl('fc')" class="px-3.5 py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl transition shrink-0 flex items-center gap-1 shadow">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                <span>Hinzufügen</span>
               </button>
             </div>
           </div>
 
-          <!-- VORSCHAU BOX -->
-          <div id="fc-image-preview-box" class="hidden bg-gray-900 border border-gray-800 rounded-xl p-3 items-center justify-between gap-3">
-            <div class="flex items-center gap-3 min-w-0">
-              <div class="w-16 h-16 rounded-lg bg-gray-950 border border-gray-800 overflow-hidden flex items-center justify-center shrink-0 cursor-pointer" onclick="openImageLightbox(document.getElementById('fc_image').value)">
-                <img id="fc-image-preview-img" src="" alt="Vorschau" class="w-full h-full object-contain">
-              </div>
-              <div class="min-w-0">
-                <div class="text-xs font-bold text-gray-200 truncate" id="fc-image-preview-info">Bild geladen</div>
-                <div class="text-[11px] text-brand-400 font-medium flex items-center gap-1 mt-0.5">
-                  <i data-lucide="check-circle" class="w-3 h-3"></i>
-                  <span>Bereit für Speichern</span>
-                </div>
-              </div>
+          <!-- DYNAMISCHE THUMBNAIL-GALERIE FÜR MEHRERE BILDER -->
+          <div id="fc-images-gallery" class="hidden mt-3 pt-3 border-t border-gray-800/80 space-y-2">
+            <div class="text-xs font-bold text-gray-300 flex items-center justify-between">
+              <span>Hinzugefügte Bilder (Klick zum Vergrößern):</span>
+              <button type="button" onclick="clearImage('fc')" class="text-[11px] text-red-400 hover:text-red-300 font-semibold underline">Alle entfernen</button>
             </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <button type="button" onclick="openImageLightbox(document.getElementById('fc_image').value)" class="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 transition" title="Großansicht">
-                <i data-lucide="maximize-2" class="w-4 h-4"></i>
-              </button>
-              <button type="button" onclick="clearImage('fc')" class="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 transition" title="Bild entfernen">
-                <i data-lucide="trash-2" class="w-4 h-4"></i>
-              </button>
-            </div>
+            <div id="fc-images-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5"></div>
           </div>
         </div>
 
@@ -3244,6 +3287,49 @@ window.updateQuestionSubcategoryOptions = function(categoryName, selectedSubcat 
   }
 };
 
+window.updateFlashcardSubcategoryOptions = function(categoryName, selectedSubcat = '') {
+  const select = document.getElementById('fc_subcategory');
+  const customInput = document.getElementById('fc_subcategory_custom');
+  const hintEl = document.getElementById('fc_subcat_detect_hint');
+  if (hintEl) hintEl.classList.add('hidden');
+  if (!select) return;
+
+  const subcats = window.getSubcategoriesForCategory(categoryName);
+  let html = '<option value="">-- Keine Unterkategorie --</option>';
+  subcats.forEach(s => {
+    const isSel = (selectedSubcat && s.name.toLowerCase() === selectedSubcat.trim().toLowerCase()) ? 'selected' : '';
+    html += '<option value="' + escapeHtml(s.name) + '" ' + isSel + '>' + escapeHtml(s.name) + '</option>';
+  });
+  html += '<option value="__custom__">+ Neue Unterkategorie anlegen...</option>';
+  select.innerHTML = html;
+
+  if (selectedSubcat && !subcats.some(s => s.name.toLowerCase() === selectedSubcat.trim().toLowerCase())) {
+    select.value = '__custom__';
+    if (customInput) {
+      customInput.value = selectedSubcat;
+      customInput.classList.remove('hidden');
+    }
+  } else {
+    if (customInput) {
+      customInput.value = '';
+      customInput.classList.add('hidden');
+    }
+  }
+
+  // Live Auto-Erkennung prüfen
+  const fcTitle = document.getElementById('fc_title')?.value || '';
+  const fcContent = document.getElementById('fc_content')?.value || '';
+  if (categoryName === 'Signale' && !select.value && (fcTitle || fcContent)) {
+    const detected = window.detectSignalSubcategory(fcTitle + ' ' + fcContent);
+    if (detected) {
+      detectedSubcategoryTemp.fc = detected;
+      const detectText = document.getElementById('fc_subcat_detect_text');
+      if (detectText) detectText.textContent = '💡 Erkannt als: ' + detected;
+      if (hintEl) hintEl.classList.remove('hidden');
+    }
+  }
+};
+
 window.handleSubcategorySelectChange = function(prefix) {
   const select = document.getElementById(prefix + '_subcategory');
   const customInput = document.getElementById(prefix + '_subcategory_custom');
@@ -3292,14 +3378,22 @@ window.applyDetectedSubcategory = function(prefix) {
   document.getElementById(prefix + '_subcat_detect_hint')?.classList.add('hidden');
 };
 
-// Schnell-Zuordnung Modal
-let quickAssignTargetQuestionId = null;
+// Schnell-Zuordnung Modal (für Lernkarten und Fragen)
+let quickAssignTargetId = null;
+let quickAssignTargetType = 'fc'; // 'fc' | 'q'
 
-window.openQuickAssignModal = function(qId, event) {
+window.openQuickAssignModal = function(id, event, type = 'fc') {
   if (event) event.stopPropagation();
-  const q = allQuestions.find(item => item.id === qId);
-  if (!q) return;
-  quickAssignTargetQuestionId = qId;
+  quickAssignTargetId = id;
+  quickAssignTargetType = type;
+
+  let item = null;
+  if (type === 'q') {
+    item = allQuestions.find(item => item.id === id);
+  } else {
+    item = allFlashcards.find(item => item.id === id);
+  }
+  if (!item) return;
 
   const modal = document.getElementById('quickAssignModal');
   const idEl = document.getElementById('quickAssignQuestionId');
@@ -3308,13 +3402,14 @@ window.openQuickAssignModal = function(qId, event) {
   const list = document.getElementById('quickAssignButtonsList');
   const customInput = document.getElementById('quickAssignCustomInput');
 
-  if (idEl) idEl.value = qId;
-  if (catBadge) catBadge.textContent = 'Fachbereich: #' + (q.category || 'Allgemein');
-  if (snippet) snippet.textContent = q.text || '';
+  if (idEl) idEl.value = id;
+  if (catBadge) catBadge.textContent = (type === 'fc' ? 'Lernkarte: #' : 'Frage: #') + (item.category || 'Allgemein');
+  const previewText = (type === 'fc') ? (item.title + (item.content ? ' — ' + item.content : '')) : (item.text || '');
+  if (snippet) snippet.textContent = previewText;
   if (customInput) customInput.value = '';
 
-  const subcats = window.getSubcategoriesForCategory(q.category);
-  const detected = (!q.subcategory && q.category === 'Signale') ? window.detectSignalSubcategory(q.text) : '';
+  const subcats = window.getSubcategoriesForCategory(item.category);
+  const detected = (!item.subcategory && item.category === 'Signale') ? window.detectSignalSubcategory(previewText) : '';
 
   let html = '';
   if (detected) {
@@ -3325,7 +3420,7 @@ window.openQuickAssignModal = function(qId, event) {
   }
 
   subcats.forEach(s => {
-    const isCurrent = (q.subcategory && q.subcategory.toLowerCase() === s.name.toLowerCase());
+    const isCurrent = (item.subcategory && item.subcategory.toLowerCase() === s.name.toLowerCase());
     html += '<button type="button" onclick="window.saveQuickAssign(\'' + escapeHtml(s.name).replace(/'/g, "\\'") + '\')" class="px-3 py-1.5 rounded-xl text-xs font-semibold border transition flex items-center gap-1.5 ' +
       (isCurrent ? 'bg-cyan-600 text-white border-cyan-400 shadow' : 'bg-gray-950 text-gray-200 border-gray-800 hover:border-cyan-500/50 hover:bg-gray-800') + '">' +
       '<span class="w-2 h-2 rounded-full" style="background-color: ' + (s.color || '#06b6d4') + '"></span>' +
@@ -3350,48 +3445,67 @@ window.closeQuickAssignModal = function() {
     modal.classList.add('hidden');
     modal.classList.remove('flex');
   }
-  quickAssignTargetQuestionId = null;
+  quickAssignTargetId = null;
 };
 
 window.saveQuickAssign = async function(subcatName) {
-  if (!quickAssignTargetQuestionId) return;
-  const qId = quickAssignTargetQuestionId;
-  const q = allQuestions.find(item => item.id === qId);
-  if (!q) return;
+  if (!quickAssignTargetId) return;
+  const targetId = quickAssignTargetId;
+  const type = quickAssignTargetType;
+  const subVal = subcatName ? subcatName.trim() : null;
 
-  q.subcategory = subcatName ? subcatName.trim() : null;
-  q.autoSubcategory = null;
-
-  // Speichern in Supabase & Metadata
-  const cleanExp = (q.explanation || '').replace(/\s*<!--RT_META:.*?-->/gs, '').trim();
-  const metaExp = packQuestionMetadata(q);
-
-  try {
-    const patchBody = {
-      explanation: metaExp,
-      subcategory: q.subcategory
-    };
-    await fetch(SUPABASE_URL + '/rest/v1/quiz_questions?id=eq.' + qId, {
-      method: 'PATCH',
-      headers: { ...restHeaders, 'Prefer': 'return=minimal' },
-      body: JSON.stringify(patchBody)
-    }).catch(async (e) => {
-      // Fallback ohne subcategory Spalte
-      await fetch(SUPABASE_URL + '/rest/v1/quiz_questions?id=eq.' + qId, {
+  if (type === 'fc') {
+    const fc = allFlashcards.find(item => item.id === targetId);
+    if (!fc) return;
+    fc.subcategory = subVal;
+    fc.autoSubcategory = null;
+    const metaRef = packFactMetadata(fc);
+    try {
+      await fetch(SUPABASE_URL + '/rest/v1/flashcards?id=eq.' + targetId, {
         method: 'PATCH',
         headers: { ...restHeaders, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ explanation: metaExp })
+        body: JSON.stringify({ reference: metaRef, subcategory: subVal })
+      }).catch(async () => {
+        await fetch(SUPABASE_URL + '/rest/v1/flashcards?id=eq.' + targetId, {
+          method: 'PATCH',
+          headers: { ...restHeaders, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ reference: metaRef })
+        });
       });
-    });
-    showToast(subcatName ? ('Unterkategorie "' + subcatName + '" zugewiesen! ✨') : 'Unterkategorie entfernt.');
-  } catch(e) {
-    console.error('Fehler bei Schnell-Zuordnung:', e);
+      showToast(subcatName ? ('Lernkarte Unterkategorie "' + subcatName + '" zugewiesen! ✨') : 'Unterkategorie entfernt.');
+    } catch(e) {
+      console.error('Fehler bei Lernkarten-Schnellzuordnung:', e);
+    }
+    window.closeQuickAssignModal();
+    renderFlashcardSubcategoryPills();
+    filterFlashcards();
+    renderSubcategories();
+  } else {
+    const q = allQuestions.find(item => item.id === targetId);
+    if (!q) return;
+    q.subcategory = subVal;
+    q.autoSubcategory = null;
+    const metaExp = packQuestionMetadata(q);
+    try {
+      await fetch(SUPABASE_URL + '/rest/v1/quiz_questions?id=eq.' + targetId, {
+        method: 'PATCH',
+        headers: { ...restHeaders, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ explanation: metaExp, subcategory: subVal })
+      }).catch(async () => {
+        await fetch(SUPABASE_URL + '/rest/v1/quiz_questions?id=eq.' + targetId, {
+          method: 'PATCH',
+          headers: { ...restHeaders, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ explanation: metaExp })
+        });
+      });
+      showToast(subcatName ? ('Unterkategorie "' + subcatName + '" zugewiesen! ✨') : 'Unterkategorie entfernt.');
+    } catch(e) {
+      console.error('Fehler bei Fragen-Schnellzuordnung:', e);
+    }
+    window.closeQuickAssignModal();
+    filterQuestions();
+    renderSubcategories();
   }
-
-  window.closeQuickAssignModal();
-  renderQuestionSubcategoryPills();
-  filterQuestions();
-  renderSubcategories();
 };
 
 window.saveQuickAssignCustom = function() {
@@ -3694,6 +3808,16 @@ window.openQuestionImagesLightbox = function(qId, initialIndex = 0) {
   const images = (Array.isArray(q.imageUrls) && q.imageUrls.length > 0)
     ? q.imageUrls
     : (q.image_url ? [q.image_url] : []);
+  if (images.length === 0) return;
+  window.openImageLightbox(images[initialIndex] || images[0], images, initialIndex);
+};
+
+window.openFlashcardImagesLightbox = function(fcId, initialIndex = 0) {
+  const fc = allFlashcards.find(item => item.id === fcId);
+  if (!fc) return;
+  const images = (Array.isArray(fc.imageUrls) && fc.imageUrls.length > 0)
+    ? fc.imageUrls
+    : (fc.image_url ? [fc.image_url] : []);
   if (images.length === 0) return;
   window.openImageLightbox(images[initialIndex] || images[0], images, initialIndex);
 };
@@ -7164,6 +7288,8 @@ window.filterQuestionsByReview = function(filterType) {
   filterQuestions();
 };
 
+let selectedFlashcardSubcategory = 'all'; // 'all' | '__none__' | string
+
 function getFilteredFlashcardsList() {
   const search = (document.getElementById('searchFlashcardsInput')?.value || '').toLowerCase();
   return allFlashcards.filter(fc => {
@@ -7177,9 +7303,113 @@ function getFilteredFlashcardsList() {
                           (flashcardReviewFilter === 'verified' && isVerified) || 
                           (flashcardReviewFilter === 'unverified' && !isVerified) ||
                           (flashcardReviewFilter === 'duplicate' && isDuplicate);
-    return matchesCat && matchesSearch && matchesReview;
+
+    let matchesSubcat = true;
+    if (selectedFlashcardSubcategory && selectedFlashcardSubcategory !== 'all') {
+      const fcSub = (fc.subcategory || '').trim().toLowerCase();
+      if (selectedFlashcardSubcategory === '__none__') {
+        matchesSubcat = !fcSub;
+      } else {
+        matchesSubcat = (fcSub === selectedFlashcardSubcategory.trim().toLowerCase()) ||
+          (!fcSub && (fc.autoSubcategory || '').trim().toLowerCase() === selectedFlashcardSubcategory.trim().toLowerCase());
+      }
+    }
+
+    return matchesCat && matchesSearch && matchesReview && matchesSubcat;
   });
 }
+
+window.selectFlashcardSubcategory = function(subcatName) {
+  selectedFlashcardSubcategory = subcatName;
+  window.renderFlashcardSubcategoryPills();
+  filterFlashcards();
+};
+
+window.resetFlashcardSubcatFilter = function() {
+  window.selectFlashcardSubcategory('all');
+};
+
+window.renderFlashcardSubcategoryPills = function() {
+  const pillsEl = document.getElementById('flashcardSubcategoryPills');
+  const statusBadge = document.getElementById('flashcardSubcatFilterStatusBadge');
+  if (!pillsEl) return;
+
+  const subcatCounts = new Map();
+  let unassignedCount = 0;
+
+  allFlashcards.forEach(fc => {
+    if (selectedFlashcardCategories.size > 0 && !selectedFlashcardCategories.has(fc.category)) return;
+    const sc = (fc.subcategory || fc.autoSubcategory || '').trim();
+    if (sc) {
+      subcatCounts.set(sc, (subcatCounts.get(sc) || 0) + 1);
+    } else {
+      unassignedCount++;
+    }
+  });
+
+  allSubcategories.forEach(s => {
+    const parent = s.category || 'Signale';
+    if (selectedFlashcardCategories.size === 0 || selectedFlashcardCategories.has(parent)) {
+      if (!subcatCounts.has(s.name)) {
+        subcatCounts.set(s.name, 0);
+      }
+    }
+  });
+
+  const totalCardsInCats = allFlashcards.filter(fc => selectedFlashcardCategories.size === 0 || selectedFlashcardCategories.has(fc.category)).length;
+
+  let html = '<button type="button" onclick="window.selectFlashcardSubcategory(\'all\')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition cursor-pointer ' +
+    (selectedFlashcardSubcategory === 'all'
+      ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 shadow-sm shadow-cyan-500/10'
+      : 'bg-gray-950/80 text-gray-400 border-gray-800 hover:text-gray-200 hover:border-gray-700') + '">' +
+    '<span>Alle Unterkategorien</span>' +
+    '<span class="text-[10px] px-1.5 py-0.5 rounded-full font-bold ' +
+      (selectedFlashcardSubcategory === 'all' ? 'bg-cyan-500/30 text-cyan-200' : 'bg-gray-800 text-gray-400') + '">' + totalCardsInCats + '</span>' +
+  '</button>';
+
+  const sorted = Array.from(subcatCounts.keys()).sort((a, b) => {
+    const ca = subcatCounts.get(a) || 0;
+    const cb = subcatCounts.get(b) || 0;
+    if (cb !== ca) return cb - ca;
+    return a.localeCompare(b);
+  });
+
+  sorted.forEach(name => {
+    const isSel = (selectedFlashcardSubcategory && selectedFlashcardSubcategory.toLowerCase() === name.toLowerCase());
+    const count = subcatCounts.get(name) || 0;
+    html += '<button type="button" onclick="window.selectFlashcardSubcategory(\'' + escapeHtml(name).replace(/'/g, "\\'") + '\')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition cursor-pointer ' +
+      (isSel
+        ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 shadow-sm shadow-cyan-500/10'
+        : 'bg-gray-950/80 text-gray-400 border-gray-800 hover:text-cyan-300 hover:border-cyan-800/80') + '">' +
+      '<span class="w-2 h-2 rounded-full ' + (isSel ? 'bg-cyan-400' : 'bg-gray-600') + '"></span>' +
+      '<span>' + escapeHtml(name) + '</span>' +
+      '<span class="text-[10px] px-1.5 py-0.5 rounded-full font-bold ' +
+        (isSel ? 'bg-cyan-500/30 text-cyan-200' : 'bg-gray-800 text-gray-400') + '">' + count + '</span>' +
+    '</button>';
+  });
+
+  const isNoneSel = (selectedFlashcardSubcategory === '__none__');
+  html += '<button type="button" onclick="window.selectFlashcardSubcategory(\'__none__\')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition cursor-pointer ' +
+    (isNoneSel
+      ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-sm'
+      : 'bg-gray-950/80 text-gray-500 border-dashed border-gray-800 hover:text-amber-400 hover:border-amber-500/40') + '">' +
+    '<span>Ohne Unterkategorie</span>' +
+    '<span class="text-[10px] px-1.5 py-0.5 rounded-full font-bold ' +
+      (isNoneSel ? 'bg-amber-500/30 text-amber-200' : 'bg-gray-800 text-gray-400') + '">' + unassignedCount + '</span>' +
+  '</button>';
+
+  pillsEl.innerHTML = html;
+
+  if (statusBadge) {
+    if (selectedFlashcardSubcategory === 'all') {
+      statusBadge.textContent = 'Alle Unterkategorien';
+    } else if (selectedFlashcardSubcategory === '__none__') {
+      statusBadge.textContent = 'Filter: Ohne Unterkategorie (' + unassignedCount + ')';
+    } else {
+      statusBadge.textContent = 'Filter: ' + selectedFlashcardSubcategory + ' (' + (subcatCounts.get(selectedFlashcardSubcategory) || 0) + ')';
+    }
+  }
+};
 
 window.renderFlashcardReviewStats = function() {
   const total = allFlashcards.length;
@@ -8369,7 +8599,7 @@ window.loadAllData = async function() {
 
     // Filter-Pills mit echten Counts rendern und initial filtern
     renderCategoryFilterPills();
-    renderQuestionSubcategoryPills();
+    renderFlashcardSubcategoryPills();
     renderSubcategories();
     filterQuestions();
     filterFlashcards();
@@ -8380,9 +8610,41 @@ window.loadAllData = async function() {
       runDoppelCheck(false);
     }, 250);
 
-    const uRes = await fetch(SUPABASE_URL + '/rest/v1/users?select=*&order=created_at.desc', { headers: restHeaders });
-    allUsers = await uRes.json();
-    if (!Array.isArray(allUsers)) allUsers = [];
+    try {
+      const uRes = await fetch(SUPABASE_URL + '/rest/v1/users?select=*&order=created_at.desc', { headers: restHeaders });
+      if (uRes.ok) {
+        const uData = await uRes.json();
+        if (Array.isArray(uData) && uData.length > 0) {
+          allUsers = uData;
+          try { localStorage.setItem('railtrainer_cached_users', JSON.stringify(uData)); } catch(e) {}
+        }
+      }
+    } catch(e) {
+      console.warn('Ladefehler Benutzer:', e);
+    }
+
+    if (!allUsers || allUsers.length === 0) {
+      try {
+        const cached = localStorage.getItem('railtrainer_cached_users');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) allUsers = parsed;
+        }
+      } catch(e) {}
+    }
+
+    if (currentPortalUser && !allUsers.some(u => u.id === currentPortalUser.id || (u.email && u.email.toLowerCase() === (currentPortalUser.email || '').toLowerCase()))) {
+      allUsers.unshift({
+        id: currentPortalUser.id || 'u_admin',
+        name: currentPortalUser.name || 'Ausbilder',
+        email: currentPortalUser.email || 'admin@railtrainer.de',
+        role: currentPortalUser.role || 'admin',
+        title: currentPortalUser.title || 'Administrator',
+        created_at: new Date().toISOString(),
+        platform: 'web'
+      });
+    }
+
     const bu = document.getElementById('badge-users-count');
     if (bu) bu.textContent = allUsers.length;
     renderUsers();
@@ -8963,6 +9225,23 @@ window.checkFlashcardDuplicates = function() {
   } else {
     warnBox.classList.add('hidden');
   }
+
+  // Live Unterkategorie Signal-Erkennung für Lernkarten prüfen
+  const currentCat = document.getElementById('fc_category')?.value;
+  const subSelect = document.getElementById('fc_subcategory');
+  const customSubcatInput = document.getElementById('fc_subcategory_custom');
+  if (currentCat === 'Signale' && subSelect && (!subSelect.value || (subSelect.value === '__custom__' && !customSubcatInput?.value))) {
+    const detected = window.detectSignalSubcategory(currentTitle + ' ' + currentContent);
+    const hintEl = document.getElementById('fc_subcat_detect_hint');
+    const detectText = document.getElementById('fc_subcat_detect_text');
+    if (detected && hintEl && detectText) {
+      detectedSubcategoryTemp.fc = detected;
+      detectText.textContent = '💡 Erkannt als: ' + detected;
+      hintEl.classList.remove('hidden');
+    } else if (hintEl) {
+      hintEl.classList.add('hidden');
+    }
+  }
 };
 
 window.openQuestionModal = function() {
@@ -9327,19 +9606,6 @@ window.deleteQuestion = async function(id) {
   }
 };
 
-function getFilteredFlashcardsList() {
-  const search = (document.getElementById('searchFlashcardsInput')?.value || '').toLowerCase();
-  return allFlashcards.filter(fc => {
-    const matchesCat = selectedFlashcardCategories.size === 0 ? false : selectedFlashcardCategories.has(fc.category);
-    const matchesSearch = (fc.title || '').toLowerCase().includes(search) || ((fc.content || '').toLowerCase().includes(search)) || ((fc.reference || '').toLowerCase().includes(search));
-    const isVerified = verifiedFlashcardIds.has(fc.id);
-    const matchesReview = (flashcardReviewFilter === 'all') || 
-                          (flashcardReviewFilter === 'verified' && isVerified) || 
-                          (flashcardReviewFilter === 'unverified' && !isVerified);
-    return matchesCat && matchesSearch && matchesReview;
-  });
-}
-
 window.renderFlashcardReviewStats = function() {
   const total = allFlashcards.length;
   let verifiedCount = 0;
@@ -9379,7 +9645,7 @@ window.renderFlashcards = function(list) {
   }
 
   container.innerHTML = list.map(fc => {
-    const isVerified = verifiedFlashcardIds.has(fc.id);
+    const isVerified = (fc.is_verified === true || verifiedFlashcardIds.has(fc.id));
 
     const verifiedBtn = isVerified
       ? '<button type="button" onclick="window.toggleFlashcardVerification(\'' + fc.id + '\', event)" class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 transition shadow-sm" title="Klicken, um als ungeprüft zu markieren">' +
@@ -9413,32 +9679,76 @@ window.renderFlashcards = function(list) {
       ? '<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1"><i data-lucide="copy" class="w-3 h-3 text-amber-400"></i><span>⚠️ Doppelt</span></span>'
       : '';
 
+    // Unterkategorie Badge
+    const currentSub = fc.subcategory || fc.autoSubcategory;
+    const isAutoSub = !fc.subcategory && !!fc.autoSubcategory;
+    const subcatBadge = currentSub
+      ? '<button type="button" onclick="window.selectFlashcardSubcategory(\'' + escapeHtml(currentSub).replace(/'/g, "\\'") + '\')" class="px-2.5 py-0.5 rounded-full text-xs font-bold ' + 
+          (isAutoSub ? 'bg-amber-500/15 text-amber-300 border border-amber-500/40 hover:bg-amber-500/25' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30') + 
+          ' flex items-center gap-1 transition shadow-sm" title="' + (isAutoSub ? 'Automatisch erkannt (Klicken zum Filtern)' : 'Unterkategorie (Klicken zum Filtern)') + '">' +
+          '<i data-lucide="layers" class="w-3 h-3 ' + (isAutoSub ? 'text-amber-400' : 'text-cyan-400') + '"></i>' +
+          '<span>' + (isAutoSub ? '💡 ' : '') + escapeHtml(currentSub) + '</span>' +
+        '</button>'
+      : '<button type="button" onclick="window.openQuickAssignModal(\'' + fc.id + '\', event, \'fc\')" class="px-2 py-0.5 rounded-full text-[11px] font-semibold text-gray-400 bg-gray-950 border border-dashed border-gray-800 hover:border-cyan-500/60 hover:text-cyan-300 hover:bg-cyan-500/10 transition flex items-center gap-1" title="Unterkategorie jetzt zuordnen">' +
+          '<i data-lucide="plus" class="w-3 h-3 text-gray-500"></i>' +
+          '<span>+ Unterkategorie</span>' +
+        '</button>';
+
+    // Multi-Bilder für Lernkarte
+    const fcImages = (Array.isArray(fc.imageUrls) && fc.imageUrls.length > 0)
+      ? fc.imageUrls
+      : (fc.image_url ? [fc.image_url] : []);
+
+    let imagesHtml = '';
+    if (fcImages.length === 1) {
+      imagesHtml = '<div class="mb-3 p-2.5 rounded-xl bg-gray-950 border border-gray-800 flex items-center justify-between gap-3">' +
+        '<div class="flex items-center gap-2.5 min-w-0">' +
+          '<div class="w-14 h-14 rounded-lg bg-gray-900 border border-gray-800 overflow-hidden flex items-center justify-center shrink-0 cursor-pointer shadow hover:border-brand-500/50 transition" onclick="window.openFlashcardImagesLightbox(\'' + fc.id + '\', 0)">' +
+            '<img src="' + fcImages[0] + '" alt="Lernkartenbild" class="w-full h-full object-contain hover:scale-105 transition">' +
+          '</div>' +
+          '<div class="min-w-0 text-xs">' +
+            '<div class="font-bold text-gray-200 flex items-center gap-1.5"><i data-lucide="image" class="w-3.5 h-3.5 text-brand-400"></i><span>Signalbild / Abbildung</span></div>' +
+            '<button type="button" onclick="window.openFlashcardImagesLightbox(\'' + fc.id + '\', 0)" class="text-brand-400 hover:text-brand-300 text-[11px] font-semibold mt-0.5 flex items-center gap-1"><i data-lucide="maximize-2" class="w-3 h-3"></i><span>Großansicht öffnen</span></button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    } else if (fcImages.length > 1) {
+      imagesHtml = '<div class="mb-3 p-3 rounded-2xl bg-gray-950/90 border border-cyan-500/30 shadow-inner">' +
+        '<div class="flex items-center justify-between mb-2">' +
+          '<div class="text-xs font-bold text-cyan-300 flex items-center gap-1.5">' +
+            '<i data-lucide="images" class="w-4 h-4 text-cyan-400"></i>' +
+            '<span>' + fcImages.length + ' Signalbilder / Varianten</span>' +
+          '</div>' +
+          '<button type="button" onclick="window.openFlashcardImagesLightbox(\'' + fc.id + '\', 0)" class="text-cyan-400 hover:text-cyan-300 text-[11px] font-semibold flex items-center gap-1"><i data-lucide="maximize-2" class="w-3 h-3"></i><span>Galerie öffnen (' + fcImages.length + ')</span></button>' +
+        '</div>' +
+        '<div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">' +
+          fcImages.map((src, idx) => {
+            return '<div class="relative w-16 h-16 rounded-xl bg-gray-900 border ' + (idx === 0 ? 'border-cyan-500/70 ring-1 ring-cyan-500/40' : 'border-gray-800') + ' overflow-hidden flex items-center justify-center shrink-0 cursor-pointer shadow hover:border-cyan-400 transition group" onclick="window.openFlashcardImagesLightbox(\'' + fc.id + '\', ' + idx + ')" title="Bild ' + (idx + 1) + ' vergrößern">' +
+              '<img src="' + src + '" alt="Bild ' + (idx + 1) + '" class="w-full h-full object-contain group-hover:scale-110 transition duration-150">' +
+              '<span class="absolute top-1 left-1 px-1 py-0.2 rounded text-[9px] font-bold ' + (idx === 0 ? 'bg-cyan-600 text-white shadow' : 'bg-black/75 text-gray-300') + '">' + (idx === 0 ? '★ 1' : (idx + 1)) + '</span>' +
+            '</div>';
+          }).join('') +
+        '</div>' +
+      '</div>';
+    }
+
     return '<div class="border rounded-2xl p-5 shadow-lg flex flex-col justify-between transition ' + cardBorder + '">' +
       '<div>' +
         '<div class="flex items-center justify-between gap-2 mb-3">' +
           '<div class="flex items-center gap-2 flex-wrap">' +
             '<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand-500/20 text-brand-400 border border-brand-500/30">#' + fc.category + '</span>' +
+            subcatBadge +
             dupBadge +
             verifiedBtn +
           '</div>' +
           '<div class="flex items-center gap-1 shrink-0">' +
+            '<button onclick="window.openQuickAssignModal(\'' + fc.id + '\', event, \'fc\')" class="p-1.5 text-gray-400 hover:text-cyan-400 hover:bg-gray-800 rounded-lg transition" title="Unterkategorie zuordnen"><i data-lucide="layers" class="w-4 h-4"></i></button>' +
             '<button onclick="window.editFlashcard(\'' + fc.id + '\')" class="p-1.5 text-gray-400 hover:text-brand-400 hover:bg-gray-800 rounded-lg transition" title="Bearbeiten"><i data-lucide="edit-3" class="w-4 h-4"></i></button>' +
             '<button onclick="window.deleteFlashcard(\'' + fc.id + '\')" class="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition" title="Löschen"><i data-lucide="trash-2" class="w-4 h-4"></i></button>' +
           '</div>' +
         '</div>' +
         '<h4 class="font-bold text-base text-white mb-2 leading-snug">' + fc.title + '</h4>' +
-        (fc.image_url ? 
-          '<div class="mb-3 p-2 rounded-xl bg-gray-950 border border-gray-800 flex items-center justify-between gap-3">' +
-            '<div class="flex items-center gap-2.5 min-w-0">' +
-              '<div class="w-14 h-14 rounded-lg bg-gray-900 border border-gray-800 overflow-hidden flex items-center justify-center shrink-0 cursor-pointer shadow hover:border-brand-500/50 transition" onclick="window.openImageLightbox(this.querySelector(\'img\').src)">' +
-                '<img src="' + fc.image_url + '" alt="Lernkartenbild" class="w-full h-full object-contain hover:scale-105 transition">' +
-              '</div>' +
-              '<div class="min-w-0 text-xs">' +
-                '<div class="font-bold text-gray-200 truncate">Abbildung / Signal</div>' +
-                '<button type="button" onclick="window.openImageLightbox(\'' + escapeHtml(fc.image_url) + '\')" class="text-brand-400 hover:text-brand-300 text-[11px] font-semibold mt-0.5 flex items-center gap-1"><i data-lucide="maximize-2" class="w-3 h-3"></i><span>Vergrößern</span></button>' +
-              '</div>' +
-            '</div>' +
-          '</div>' : '') +
+        imagesHtml +
         '<div class="text-xs text-gray-300 leading-relaxed mb-4 whitespace-pre-line">' + window.formatRichContent(fc.content) + '</div>' +
       '</div>' +
       '<div>' +
@@ -9479,6 +9789,10 @@ window.openFlashcardModal = function() {
     fcVer.disabled = !canVerify;
     fcVer.title = canVerify ? '' : 'Nur mit Freigabe-Berechtigung veränderbar';
   }
+  const defaultCat = document.getElementById('fc_category')?.value || 'Signale';
+  if (window.updateFlashcardSubcategoryOptions) {
+    window.updateFlashcardSubcategoryOptions(defaultCat, '');
+  }
   window.clearImage('fc');
   window.switchImageTab('fc', 'file');
 
@@ -9505,15 +9819,25 @@ window.editFlashcard = function(id) {
   if (!fc) return;
   document.getElementById('fc_id').value = fc.id;
   document.getElementById('fc_category').value = fc.category;
+  if (window.updateFlashcardSubcategoryOptions) {
+    window.updateFlashcardSubcategoryOptions(fc.category, fc.subcategory || fc.autoSubcategory || '');
+  }
   document.getElementById('fc_title').value = fc.title;
   document.getElementById('fc_content').value = fc.content;
   document.getElementById('fc_reference').value = fc.reference || '';
   document.getElementById('fc_duplicate_warning')?.classList.add('hidden');
-  if (fc.image_url) {
-    window.applyImageToPrefix('fc', fc.image_url, fc.image_url.startsWith('http') ? fc.image_url : 'Gespeichertes Bild');
+
+  const fcImgs = (Array.isArray(fc.imageUrls) && fc.imageUrls.length > 0)
+    ? fc.imageUrls
+    : (fc.image_url ? [fc.image_url] : []);
+  if (window.setModalImages) {
+    window.setModalImages('fc', fcImgs);
+  } else if (fcImgs.length > 0) {
+    window.applyImageToPrefix('fc', fcImgs[0], fcImgs[0].startsWith('http') ? fcImgs[0] : 'Gespeichertes Bild');
   } else {
     window.clearImage('fc');
   }
+
   const fcVer = document.getElementById('fc_verified');
   const canVerify = typeof window.hasPermission === 'function' ? window.hasPermission('can_verify_content') : true;
   if (fcVer) {
@@ -9569,10 +9893,23 @@ window.handleSaveFlashcard = async function(e, andNext = false) {
   const isNew = !rawId;
   const id = rawId || ('fact_' + Math.random().toString(36).substr(2, 9));
   const category = document.getElementById('fc_category').value;
+
+  // Subkategorie auslesen
+  let subcategory = (document.getElementById('fc_subcategory')?.value || '').trim();
+  if (subcategory === '__custom__') {
+    subcategory = (document.getElementById('fc_subcategory_custom')?.value || '').trim();
+  }
+
   const title = document.getElementById('fc_title').value.trim();
   const content = document.getElementById('fc_content').value.trim();
   const reference = document.getElementById('fc_reference').value.trim();
-  const imageUrl = document.getElementById('fc_image')?.value.trim() || null;
+
+  // Multi-Bilder auslesen
+  const fcImgs = (window.modalImages && Array.isArray(window.modalImages.fc))
+    ? window.modalImages.fc.slice()
+    : [];
+  const primaryImageUrl = fcImgs[0] || (document.getElementById('fc_image')?.value.trim() || null);
+
   let isVerified = document.getElementById('fc_verified')?.checked || false;
   if (typeof window.hasPermission === 'function' && !window.hasPermission('can_verify_content')) {
     const existingFc = isNew ? null : allFlashcards.find(item => item.id === id);
@@ -9618,6 +9955,8 @@ window.handleSaveFlashcard = async function(e, andNext = false) {
 
   const finalReference = packFactMetadata({
     reference: reference,
+    subcategory: subcategory,
+    imageUrls: fcImgs,
     createdBy: createdBy,
     createdByName: createdByName,
     creatorRole: creatorRole,
@@ -9628,10 +9967,12 @@ window.handleSaveFlashcard = async function(e, andNext = false) {
   const payload = { 
     id, 
     category, 
+    subcategory,
     title, 
     content, 
     reference: finalReference, 
-    image_url: imageUrl, 
+    image_url: primaryImageUrl, 
+    image_urls: fcImgs.length > 0 ? fcImgs : null,
     is_verified: isVerified,
     created_by: createdBy,
     created_by_name: createdByName,
@@ -9649,8 +9990,18 @@ window.handleSaveFlashcard = async function(e, andNext = false) {
       body: JSON.stringify(payload)
     });
     if (!res.ok) {
-      // Fallback falls Spalten in Supabase noch nicht existieren
-      const fallbackPayload = { id, category, title, content, reference: finalReference, image_url: imageUrl, is_verified: isVerified };
+      const errText = await res.text();
+      // Fallback falls optionale Spalten in Supabase noch nicht existieren
+      const fallbackPayload = { ...payload };
+      delete fallbackPayload.created_by;
+      delete fallbackPayload.created_by_name;
+      delete fallbackPayload.creator_role;
+      delete fallbackPayload.updated_by;
+      delete fallbackPayload.updated_by_name;
+      delete fallbackPayload.updated_at;
+      if (errText.includes('subcategory')) delete fallbackPayload.subcategory;
+      if (errText.includes('image_urls')) delete fallbackPayload.image_urls;
+
       res = await fetch(SUPABASE_URL + '/rest/v1/flashcards', {
         method: 'POST',
         headers: { ...restHeaders, 'Prefer': 'resolution=merge-duplicates' },
@@ -9671,6 +10022,9 @@ window.handleSaveFlashcard = async function(e, andNext = false) {
       document.getElementById('fc_title').value = '';
       document.getElementById('fc_content').value = '';
       document.getElementById('fc_reference').value = '';
+      if (window.updateFlashcardSubcategoryOptions) {
+        window.updateFlashcardSubcategoryOptions(category, '');
+      }
       window.clearImage('fc');
       window.resizeAllModalTextareas('flashcardModal');
       showToast('Lernkarte gespeichert (4-Augen-Prinzip)! Bereit für nächste Karte... 🃏');
@@ -9842,6 +10196,7 @@ window.toggleFlashcardCategory = function(name) {
     selectedFlashcardCategories.add(name);
   }
   renderCategoryFilterPills();
+  renderFlashcardSubcategoryPills();
   filterFlashcards();
 };
 
@@ -9852,6 +10207,7 @@ window.toggleAllFlashcardCategories = function(selectAll) {
     selectedFlashcardCategories.clear();
   }
   renderCategoryFilterPills();
+  renderFlashcardSubcategoryPills();
   filterFlashcards();
 };
 
@@ -10419,6 +10775,53 @@ window.handlePortalLogout = function() {
 let userSortField = 'last_online';
 let userSortOrder = 'desc';
 let isUsersLoading = false;
+let userPlatformFilter = 'all'; // 'all' | 'ios' | 'android' | 'web'
+
+window.getUserPlatform = function(u) {
+  if (!u) return 'web';
+  const p = (u.platform || u.os || u.device_os || u.device || '').toLowerCase();
+  if (p.includes('ios') || p.includes('iphone') || p.includes('ipad') || p.includes('apple')) return 'ios';
+  if (p.includes('android')) return 'android';
+  if (p.includes('web') || p.includes('browser') || p.includes('desktop')) return 'web';
+
+  // In Versuchen nachschauen
+  if (Array.isArray(allAttempts)) {
+    const userAtt = allAttempts.find(a => a.user_id === u.id && (a.platform || a.os));
+    if (userAtt) {
+      const ap = (userAtt.platform || userAtt.os || '').toLowerCase();
+      if (ap.includes('ios')) return 'ios';
+      if (ap.includes('android')) return 'android';
+      if (ap.includes('web')) return 'web';
+    }
+  }
+
+  const t = (u.title || '').toLowerCase();
+  if (t.includes('ios') || t.includes('iphone') || t.includes('apple')) return 'ios';
+  if (t.includes('android')) return 'android';
+
+  // Standard: Wenn Administrator/Moderator -> Web, ansonsten Android
+  if (u.role === 'admin' || u.role === 'moderator') return 'web';
+  return 'android';
+};
+
+window.setUserPlatformFilter = function(filter) {
+  userPlatformFilter = filter;
+  const btns = ['btn-user-plat-all', 'btn-user-plat-ios', 'btn-user-plat-android', 'btn-user-plat-web'];
+  btns.forEach(id => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    const isTarget = (filter === 'all' && id.endsWith('-all')) ||
+                     (filter === 'ios' && id.endsWith('-ios')) ||
+                     (filter === 'android' && id.endsWith('-android')) ||
+                     (filter === 'web' && id.endsWith('-web'));
+    if (isTarget) {
+      btn.className = 'px-3 py-1 rounded-xl text-xs font-bold transition border bg-brand-600 text-white border-brand-500 shadow-sm';
+    } else {
+      btn.className = 'px-3 py-1 rounded-xl text-xs font-semibold transition border bg-gray-950 text-gray-400 border-gray-800 hover:text-gray-200 hover:border-gray-700 flex items-center gap-1.5';
+    }
+  });
+  window.renderUsers();
+};
 
 function getUserRegisteredTimestamp(u) {
   if (!u) return 0;
@@ -10465,20 +10868,32 @@ window.loadUsers = async function(showLoading = false) {
     if (icon) icon.classList.add('animate-spin');
   }
   try {
-    const cb = Date.now();
-    const uRes = await fetch(SUPABASE_URL + '/rest/v1/users?select=*&order=created_at.desc&_cb=' + cb, {
+    const uRes = await fetch(SUPABASE_URL + '/rest/v1/users?select=*&order=created_at.desc', {
       headers: { ...restHeaders, 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
     });
     if (uRes.ok) {
       const data = await uRes.json();
-      if (Array.isArray(data)) {
+      if (Array.isArray(data) && data.length > 0) {
         allUsers = data;
-        const bu = document.getElementById('badge-users-count');
-        if (bu) bu.textContent = allUsers.length;
+        try { localStorage.setItem('railtrainer_cached_users', JSON.stringify(data)); } catch(e) {}
       }
+    } else {
+      console.warn('Laden der Benutzer aus Supabase nicht erfolgreich (Status ' + uRes.status + ')');
     }
+
+    // Falls allUsers noch leer ist, aus Cache oder Versuchen wiederherstellen
+    if (!allUsers || allUsers.length === 0) {
+      try {
+        const cached = localStorage.getItem('railtrainer_cached_users');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) allUsers = parsed;
+        }
+      } catch(e) {}
+    }
+
     try {
-      const attRes = await fetch(SUPABASE_URL + '/rest/v1/quiz_attempts?select=id,user_id,timestamp,created_at&order=timestamp.desc&limit=500&_cb=' + cb, {
+      const attRes = await fetch(SUPABASE_URL + '/rest/v1/quiz_attempts?select=id,user_id,timestamp,created_at&order=timestamp.desc&limit=500', {
         headers: { ...restHeaders, 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
       });
       if (attRes.ok) {
@@ -10489,13 +10904,37 @@ window.loadUsers = async function(showLoading = false) {
       }
     } catch (attErr) {}
 
+    // Falls der angemeldete Admin nicht in der Liste vorkommt, hinzufügen
+    if (currentPortalUser && !allUsers.some(u => u.id === currentPortalUser.id || (u.email && u.email.toLowerCase() === (currentPortalUser.email || '').toLowerCase()))) {
+      allUsers.unshift({
+        id: currentPortalUser.id || 'u_admin',
+        name: currentPortalUser.name || 'Ausbilder',
+        email: currentPortalUser.email || 'admin@railtrainer.de',
+        role: currentPortalUser.role || 'admin',
+        title: currentPortalUser.title || 'Administrator',
+        created_at: new Date().toISOString(),
+        platform: 'web'
+      });
+    }
+
+    const bu = document.getElementById('badge-users-count');
+    if (bu) bu.textContent = allUsers.length;
+
     window.renderUsers();
     if (typeof window.renderRolePermissionsOverview === 'function') {
       window.renderRolePermissionsOverview();
     }
-    if (showLoading) showToast('Benutzerliste erfolgreich aktualisiert! 🔄');
+    if (showLoading) showToast('Benutzerliste erfolgreich geladen (' + allUsers.length + ' Benutzer)! 🔄');
   } catch (err) {
     console.error('Fehler beim Laden der Benutzer:', err);
+    try {
+      const cached = localStorage.getItem('railtrainer_cached_users');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) allUsers = parsed;
+      }
+    } catch(e) {}
+    window.renderUsers();
   } finally {
     isUsersLoading = false;
     if (refreshBtn && showLoading) {
@@ -10575,11 +11014,28 @@ window.renderUsers = function() {
     else clearBtn.classList.add('hidden');
   }
 
-  // 1. Timestamps für akkurates & performantes Sortieren vorab berechnen
+  // 1. Timestamps & Plattform für akkurates & performantes Sortieren und Filtern vorab berechnen
+  let countIos = 0;
+  let countAndroid = 0;
+  let countWeb = 0;
+
   allUsers.forEach(u => {
     u._lastOnline = getUserLastOnlineTimestamp(u);
     u._registered = getUserRegisteredTimestamp(u);
+    u._platform = window.getUserPlatform(u);
+    if (u._platform === 'ios') countIos++;
+    else if (u._platform === 'android') countAndroid++;
+    else countWeb++;
   });
+
+  const cntAll = document.getElementById('user-plat-count-all');
+  if (cntAll) cntAll.textContent = allUsers.length;
+  const cntIos = document.getElementById('user-plat-count-ios');
+  if (cntIos) cntIos.textContent = countIos;
+  const cntAnd = document.getElementById('user-plat-count-android');
+  if (cntAnd) cntAnd.textContent = countAndroid;
+  const cntWeb = document.getElementById('user-plat-count-web');
+  if (cntWeb) cntWeb.textContent = countWeb;
 
   // 2. Suche nach Name oder E-Mail oder Dozenten-Titel
   let filtered = allUsers;
@@ -10592,7 +11048,12 @@ window.renderUsers = function() {
     });
   }
 
-  // 3. Sortierung anwenden
+  // 3. Plattform-Filter anwenden (iOS vs Android vs Web)
+  if (userPlatformFilter && userPlatformFilter !== 'all') {
+    filtered = filtered.filter(u => u._platform === userPlatformFilter);
+  }
+
+  // 4. Sortierung anwenden
   filtered = [...filtered].sort((a, b) => {
     let valA, valB;
     if (userSortField === 'last_online') {
@@ -10620,7 +11081,7 @@ window.renderUsers = function() {
   // Badge aktualisieren
   const badge = document.getElementById('usersFilterStatusBadge');
   if (badge) {
-    if (query) {
+    if (query || userPlatformFilter !== 'all') {
       badge.textContent = `${filtered.length} von ${allUsers.length} Benutzer`;
     } else {
       badge.textContent = `${allUsers.length} Benutzer`;
@@ -10630,7 +11091,7 @@ window.renderUsers = function() {
   updateUserSortHeadersUI();
 
   if (filtered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="px-5 py-12 text-center text-gray-500">' +
+    tbody.innerHTML = '<tr><td colspan="8" class="px-5 py-12 text-center text-gray-500">' +
       '<i data-lucide="user-x" class="w-8 h-8 text-gray-600 mx-auto mb-2"></i>' +
       '<p class="font-bold text-gray-300">Keine Benutzer gefunden</p>' +
       (query ? '<p class="text-xs text-gray-500 mt-1">Kein Treffer für "' + escapeHtml(query) + '".</p>' : '') +
@@ -10654,6 +11115,25 @@ window.renderUsers = function() {
           '<option value="admin" ' + (u.role === 'admin' ? 'selected' : '') + '>Ausbilder</option>' +
         '</select>'
       : roleBadge;
+
+    const plat = u._platform || window.getUserPlatform(u);
+    let platformBadge = '';
+    if (plat === 'ios') {
+      platformBadge = '<span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 flex items-center gap-1.5 w-fit" title="Apple iOS (iPhone/iPad)">' +
+        '<span class="text-sm">🍏</span>' +
+        '<span>Apple iOS</span>' +
+      '</span>';
+    } else if (plat === 'android') {
+      platformBadge = '<span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 w-fit" title="Google Android">' +
+        '<span class="text-sm">🤖</span>' +
+        '<span>Android</span>' +
+      '</span>';
+    } else {
+      platformBadge = '<span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center gap-1.5 w-fit" title="Webportal / Desktop Browser">' +
+        '<span class="text-sm">🌐</span>' +
+        '<span>Webportal</span>' +
+      '</span>';
+    }
 
     const titleCell = isAdmin
       ? '<input type="text" value="' + (u.title || '') + '" placeholder="z.B. Dozent" onblur="window.updateUserTitle(\'' + u.id + '\', this.value)" class="px-2 py-1 bg-gray-950 border border-gray-700 rounded-lg text-xs text-gray-200 w-32 focus:border-brand-500 focus:outline-none">'
@@ -10700,7 +11180,12 @@ window.renderUsers = function() {
       '</td>' +
       '<td class="px-5 py-3 text-gray-300 text-xs">' + escapeHtml(u.email || '') + '</td>' +
       '<td class="px-5 py-3">' + roleCell + '</td>' +
+      '<td class="px-5 py-3">' + platformBadge + '</td>' +
       '<td class="px-5 py-3">' + titleCell + '</td>' +
+      '<td class="px-5 py-3 text-xs text-gray-400">' + regStr + '</td>' +
+      '<td class="px-5 py-3">' + lastOnlineHtml + '</td>' +
+      '<td class="px-5 py-3 text-right">' + deleteBtn + '</td>' +
+    '</tr>'; +
       '<td class="px-5 py-3 text-xs text-gray-400">' + regStr + '</td>' +
       '<td class="px-5 py-3">' + lastOnlineHtml + '</td>' +
       '<td class="px-5 py-3 text-right">' + deleteBtn + '</td>' +
