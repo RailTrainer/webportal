@@ -3461,17 +3461,12 @@ window.saveQuickAssign = async function(subcatName) {
     fc.autoSubcategory = null;
     const metaRef = packFactMetadata(fc);
     try {
-      await fetch(SUPABASE_URL + '/rest/v1/flashcards?id=eq.' + targetId, {
+      const res = await fetch(SUPABASE_URL + '/rest/v1/flashcards?id=eq.' + encodeURIComponent(targetId), {
         method: 'PATCH',
         headers: { ...restHeaders, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ reference: metaRef, subcategory: subVal })
-      }).catch(async () => {
-        await fetch(SUPABASE_URL + '/rest/v1/flashcards?id=eq.' + targetId, {
-          method: 'PATCH',
-          headers: { ...restHeaders, 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ reference: metaRef })
-        });
+        body: JSON.stringify({ reference: metaRef })
       });
+      if (!res.ok) throw new Error(await res.text());
       showToast(subcatName ? ('Lernkarte Unterkategorie "' + subcatName + '" zugewiesen! ✨') : 'Unterkategorie entfernt.');
     } catch(e) {
       console.error('Fehler bei Lernkarten-Schnellzuordnung:', e);
@@ -3487,17 +3482,18 @@ window.saveQuickAssign = async function(subcatName) {
     q.autoSubcategory = null;
     const metaExp = packQuestionMetadata(q);
     try {
-      await fetch(SUPABASE_URL + '/rest/v1/quiz_questions?id=eq.' + targetId, {
+      let patchRes = await fetch(SUPABASE_URL + '/rest/v1/quiz_questions?id=eq.' + encodeURIComponent(targetId), {
         method: 'PATCH',
         headers: { ...restHeaders, 'Prefer': 'return=minimal' },
         body: JSON.stringify({ explanation: metaExp, subcategory: subVal })
-      }).catch(async () => {
-        await fetch(SUPABASE_URL + '/rest/v1/quiz_questions?id=eq.' + targetId, {
+      });
+      if (!patchRes.ok) {
+        patchRes = await fetch(SUPABASE_URL + '/rest/v1/quiz_questions?id=eq.' + encodeURIComponent(targetId), {
           method: 'PATCH',
           headers: { ...restHeaders, 'Prefer': 'return=minimal' },
           body: JSON.stringify({ explanation: metaExp })
         });
-      });
+      }
       showToast(subcatName ? ('Unterkategorie "' + subcatName + '" zugewiesen! ✨') : 'Unterkategorie entfernt.');
     } catch(e) {
       console.error('Fehler bei Fragen-Schnellzuordnung:', e);
@@ -9529,25 +9525,22 @@ window.handleSaveQuestion = async function(e, andNext = false) {
     });
 
     if (!res.ok) {
-      const errText = await res.text();
-      // Falls optionale Spalten in Supabase noch nicht existieren (z.B. PGRST204), ohne diese erneut versuchen
-      const fallbackPayload = { ...payload };
-      delete fallbackPayload.created_by;
-      delete fallbackPayload.created_by_name;
-      delete fallbackPayload.creator_role;
-      delete fallbackPayload.updated_by;
-      delete fallbackPayload.updated_by_name;
-      delete fallbackPayload.updated_at;
-      if (errText.includes('correct_indices')) delete fallbackPayload.correct_indices;
-      if (errText.includes('danger_indices')) delete fallbackPayload.danger_indices;
-      if (errText.includes('question_type')) delete fallbackPayload.question_type;
-      if (errText.includes('subcategory')) delete fallbackPayload.subcategory;
-      if (errText.includes('image_urls')) delete fallbackPayload.image_urls;
+      // Fallback falls optionale Spalten in Supabase noch nicht existieren (z.B. PGRST204)
+      const corePayload = {
+        id, 
+        category, 
+        text, 
+        options, 
+        correct_index: correctIndex, 
+        explanation: finalExplanation, 
+        image_url: primaryImageUrl, 
+        is_verified: isVerified
+      };
 
       res = await fetch(SUPABASE_URL + '/rest/v1/quiz_questions', {
         method: 'POST',
         headers: { ...restHeaders, 'Prefer': 'resolution=merge-duplicates' },
-        body: JSON.stringify(fallbackPayload)
+        body: JSON.stringify(corePayload)
       });
       if (!res.ok) throw new Error(await res.text());
     }
@@ -9967,12 +9960,10 @@ window.handleSaveFlashcard = async function(e, andNext = false) {
   const payload = { 
     id, 
     category, 
-    subcategory,
     title, 
     content, 
     reference: finalReference, 
     image_url: primaryImageUrl, 
-    image_urls: fcImgs.length > 0 ? fcImgs : null,
     is_verified: isVerified,
     created_by: createdBy,
     created_by_name: createdByName,
@@ -9990,25 +9981,46 @@ window.handleSaveFlashcard = async function(e, andNext = false) {
       body: JSON.stringify(payload)
     });
     if (!res.ok) {
-      const errText = await res.text();
-      // Fallback falls optionale Spalten in Supabase noch nicht existieren
-      const fallbackPayload = { ...payload };
-      delete fallbackPayload.created_by;
-      delete fallbackPayload.created_by_name;
-      delete fallbackPayload.creator_role;
-      delete fallbackPayload.updated_by;
-      delete fallbackPayload.updated_by_name;
-      delete fallbackPayload.updated_at;
-      if (errText.includes('subcategory')) delete fallbackPayload.subcategory;
-      if (errText.includes('image_urls')) delete fallbackPayload.image_urls;
-
+      // Fallback falls optionale Autorenspalten in Supabase noch nicht existieren (z.B. PGRST204)
+      const corePayload = {
+        id,
+        category,
+        title,
+        content,
+        reference: finalReference,
+        image_url: primaryImageUrl,
+        is_verified: isVerified
+      };
       res = await fetch(SUPABASE_URL + '/rest/v1/flashcards', {
         method: 'POST',
         headers: { ...restHeaders, 'Prefer': 'resolution=merge-duplicates' },
-        body: JSON.stringify(fallbackPayload)
+        body: JSON.stringify(corePayload)
       });
       if (!res.ok) throw new Error(await res.text());
     }
+
+    // Sofort lokal im Arbeitsspeicher aktualisieren für sofortige Reaktivität
+    let inMemoryFc = allFlashcards.find(item => item.id === id);
+    if (!inMemoryFc) {
+      inMemoryFc = { id, category, title, content };
+      allFlashcards.unshift(inMemoryFc);
+    }
+    inMemoryFc.category = category;
+    inMemoryFc.subcategory = subcategory;
+    inMemoryFc.autoSubcategory = null;
+    inMemoryFc.title = title;
+    inMemoryFc.content = content;
+    inMemoryFc.reference = reference;
+    inMemoryFc.image_url = primaryImageUrl;
+    inMemoryFc.imageUrls = fcImgs;
+    inMemoryFc.is_verified = isVerified;
+    inMemoryFc.created_by = createdBy;
+    inMemoryFc.created_by_name = createdByName;
+    inMemoryFc.creator_role = creatorRole;
+    inMemoryFc.created_at = createdAt;
+    inMemoryFc.updated_by = updatedBy;
+    inMemoryFc.updated_by_name = updatedByName;
+    inMemoryFc.updated_at = updatedAt;
 
     if (isVerified) {
       verifiedFlashcardIds.add(id);
