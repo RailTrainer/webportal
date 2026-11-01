@@ -39,6 +39,18 @@ async function initDashboard() {
   }
 }
 
+async function fetchAllTableRows(table, orderCol = 'created_at', ascending = false) {
+  const PAGE = 1000;
+  const all = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase.from(table).select('*').order(orderCol, { ascending }).range(from, from + PAGE - 1);
+    if (error || !data || data.length === 0) break;
+    all.push(...data);
+    if (data.length < PAGE) break;
+  }
+  return all;
+}
+
 // Global Exports
 window.loadAllData = async function() {
   if (!supabase) {
@@ -53,15 +65,13 @@ window.loadAllData = async function() {
     renderCategories();
 
     // 2. Fragen
-    const { data: qData, error: qErr } = await supabase.from('quiz_questions').select('*').order('created_at', { ascending: false });
-    allQuestions = qData || [];
+    allQuestions = await fetchAllTableRows('quiz_questions', 'created_at', false);
     const bq = document.getElementById('badge-questions-count');
     if (bq) bq.textContent = allQuestions.length;
     renderQuestions(allQuestions);
 
     // 3. Lernkarten
-    const { data: fcData, error: fcErr } = await supabase.from('flashcards').select('*').order('created_at', { ascending: false });
-    allFlashcards = fcData || [];
+    allFlashcards = await fetchAllTableRows('flashcards', 'created_at', false);
     const bfc = document.getElementById('badge-flashcards-count');
     if (bfc) bfc.textContent = allFlashcards.length;
     renderFlashcards(allFlashcards);

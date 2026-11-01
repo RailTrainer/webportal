@@ -8636,6 +8636,29 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
+// Automatische Synchronisation im Minutentakt (wie auf den Handys)
+setInterval(() => {
+  if (currentPortalUser && document.visibilityState === 'visible') {
+    window.syncPortalData(false);
+  }
+}, 60000);
+
+// Hilfsfunktion: Lädt alle Zeilen seitenweise (umgeht das 1000-Zeilen-Limit von Supabase/PostgREST)
+async function fetchAllRestRows(endpointQuery, headers) {
+  const PAGE = 1000;
+  const all = [];
+  for (let from = 0; ; from += PAGE) {
+    const pageHeaders = { ...headers, 'Range-Unit': 'items', 'Range': `${from}-${from + PAGE - 1}` };
+    const res = await fetch(SUPABASE_URL + endpointQuery, { headers: pageHeaders, cache: 'no-store' });
+    if (!res.ok) break;
+    const chunk = await res.json();
+    if (!Array.isArray(chunk) || chunk.length === 0) break;
+    all.push(...chunk);
+    if (chunk.length < PAGE) break;
+  }
+  return all;
+}
+
 window.loadAllData = async function(forceNoCache = false) {
   console.log('Lade Daten über native REST API...');
   const fetchHeaders = forceNoCache
@@ -8673,9 +8696,7 @@ window.loadAllData = async function(forceNoCache = false) {
     renderCategorySelects();
     renderCategories();
 
-    const qRes = await fetch(SUPABASE_URL + '/rest/v1/quiz_questions?select=*&order=created_at.asc,id.asc', { headers: fetchHeaders, cache: 'no-store' });
-    allQuestions = await qRes.json();
-    if (!Array.isArray(allQuestions)) allQuestions = [];
+    allQuestions = await fetchAllRestRows('/rest/v1/quiz_questions?select=*&order=created_at.asc,id.asc', fetchHeaders);
 
     // Ersteller- & Bearbeiterdaten mit lokalem Store zusammenführen
     let localAuthorStore = {};
@@ -8741,9 +8762,7 @@ window.loadAllData = async function(forceNoCache = false) {
     const bq = document.getElementById('badge-questions-count');
     if (bq) bq.textContent = allQuestions.length;
 
-    const fcRes = await fetch(SUPABASE_URL + '/rest/v1/flashcards?select=*&order=created_at.asc,id.asc', { headers: fetchHeaders, cache: 'no-store' });
-    allFlashcards = await fcRes.json();
-    if (!Array.isArray(allFlashcards)) allFlashcards = [];
+    allFlashcards = await fetchAllRestRows('/rest/v1/flashcards?select=*&order=created_at.asc,id.asc', fetchHeaders);
 
     let localFcAuthorStore = {};
     try {
