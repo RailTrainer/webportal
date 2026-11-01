@@ -275,6 +275,7 @@
       justify-content: space-between !important;
     }
   </style>
+  <script src="/env.js"></script>
 </head>
 <body class="bg-gray-950 text-gray-100 min-h-screen flex flex-col transition-colors duration-200 relative overflow-x-hidden">
 
@@ -2966,8 +2967,8 @@
 
 <!-- JAVASCRIPT LOGIC -->
 <script>
-const SUPABASE_URL = 'https://ahmcoyfmdrgpmclaxgfj.supabase.co';
-const SUPABASE_ANON_KEY = ['sb_publishable', 'cENpbfjZbysfKIjFKxTFWg_YziNteq1'].join('_');
+const SUPABASE_URL = (window.__ENV && window.__ENV.SUPABASE_URL) || localStorage.getItem('RT_SUPABASE_URL') || '';
+const SUPABASE_ANON_KEY = (window.__ENV && window.__ENV.SUPABASE_ANON_KEY) || localStorage.getItem('RT_SUPABASE_ANON_KEY') || '';
 
 const restHeaders = {
   'apikey': SUPABASE_ANON_KEY,
@@ -3190,21 +3191,21 @@ let selectedQuestionSubcategory = 'all'; // 'all' | '__none__' | string
 let categoryCurrentSubView = 'subcategories'; // 'subcategories' | 'main'
 let detectedSubcategoryTemp = { q: '', fc: '' };
 
-window.detectSignalSubcategory = function(text) {
-  if (!text) return '';
+window.detectSignalSubcategory = function(text, fallback = '') {
+  if (!text) return fallback;
   const t = text.toLowerCase();
   if (/\b(ne\s*\d+[a-z]?|nebensignal|trapeztafel|kreuztafel|vorsignaltafel|h-tafel)\b/i.test(t)) return 'Nebensignale';
   if (/\b(wn\s*\d+[a-z]?|weichensignal)\b/i.test(t)) return 'Weichensignale';
   if (/\b(zs\s*\d+[a-z]?|zusatzsignal|ersatzsignal|vorsichtsignal|gegenträger)\b/i.test(t)) return 'Zusatzsignale';
   if (/\b(sh\s*\d+[a-z]?|ra\s*\d+[a-z]?|sperrsignal|schutzsignal|rangiersignal|haltetafel)\b/i.test(t)) return 'Sperr- & Schutzsignale';
-  if (/\b(hp\s*\d+[a-z]?|ks\s*\d+[a-z]?|hl\s*\d+[a-z]?|sv\s*\d+[a-z]?|hauptsignal)\b/i.test(t)) return 'Hauptsignale';
+  if (/\b(hp\s*\d+[a-z]?|ks\s*\d+[a-z]?|hl\s*\d+[a-z]?|hl-|sv\s*\d+[a-z]?|sv-|hauptsignal)\b/i.test(t)) return 'Hauptsignale';
   if (/\b(vr\s*\d+[a-z]?|vorsignal|vorsignaltabelle)\b/i.test(t)) return 'Vorsignale';
-  if (/\b(bü\s*\d+[a-z]?|bue\s*\d+[a-z]?|bahnübergang)\b/i.test(t)) return 'Bahnübergangssignale';
-  if (/\b(lf\s*\d+[a-z]?|langsamfahr)\b/i.test(t)) return 'Langsamfahrsignale';
-  if (/\b(zp\s*\d+[a-z]?|bremsprobensignal|zugpersonalsignal)\b/i.test(t)) return 'Zugpersonal Signale';
   if (/\b(mastschild|weiß-rot-weiß|gelbes dreieck)\b/i.test(t)) return 'Mastschilder';
+  if (/\b(zp\s*\d+[a-z]?|bremsprobensignal|zugpersonal)\b/i.test(t)) return 'Zugpersonal Signale';
   if (/\b(ts\s*\d+[a-z]?)\b/i.test(t)) return 'Ts-Signale';
-  return '';
+  if (/\b(lf\s*\d+[a-z]?|langsamfahr)\b/i.test(t)) return 'Langsamfahrsignale';
+  if (/\b(b[üu]\s*\d+[a-z]?|b[üu]e?\s*\d+[a-z]?|bahn[üu]bergang)\b/i.test(t)) return 'Bahnübergangssignale';
+  return fallback;
 };
 
 window.getSubcategoriesForCategory = function(catName) {
@@ -3342,9 +3343,8 @@ window.updateFlashcardSubcategoryOptions = function(categoryName, selectedSubcat
 
   // Live Auto-Erkennung prüfen
   const fcTitle = document.getElementById('fc_title')?.value || '';
-  const fcContent = document.getElementById('fc_content')?.value || '';
-  if (isSignal && !select.value && (fcTitle || fcContent)) {
-    const detected = window.detectSignalSubcategory(fcTitle + ' ' + fcContent);
+  if (isSignal && !select.value && fcTitle) {
+    const detected = window.detectSignalSubcategory(fcTitle, 'Sonstige Signale');
     if (detected) {
       detectedSubcategoryTemp.fc = detected;
       const detectText = document.getElementById('fc_subcat_detect_text');
@@ -5276,7 +5276,7 @@ async function presentBattleQuestion(qIdx) {
       catBadge.className = 'text-xs font-extrabold text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-3 py-1 rounded-xl';
     }
   }
-  document.getElementById('battleQuestionText').innerHTML = q.text;
+  document.getElementById('battleQuestionText').textContent = q.text;
 
   const imgCont = document.getElementById('battleQuestionImageContainer');
   if (imgCont && imgEl) {
@@ -5499,7 +5499,7 @@ window.revealBattleRoundResults = async function() {
 
   // 2. Frage & Signalabbildung auf Beamer anzeigen
   const qTextEl = document.getElementById('battleResultQuestionText');
-  if (qTextEl) qTextEl.innerHTML = q.text || 'Frage geladen';
+  if (qTextEl) qTextEl.textContent = q.text || 'Frage geladen';
 
   const resImgCont = document.getElementById('battleResultQuestionImageContainer');
   const resImg = document.getElementById('battleResultQuestionImage');
@@ -8622,8 +8622,11 @@ window.loadAllData = async function() {
         fc.subcategory = null;
         fc.autoSubcategory = null;
       } else if (!fc.subcategory) {
-        const detected = window.detectSignalSubcategory(fc.title + ' ' + (fc.content || ''));
-        if (detected) fc.autoSubcategory = detected;
+        const detected = window.detectSignalSubcategory(fc.title || '', 'Sonstige Signale');
+        if (detected) {
+          fc.subcategory = detected;
+          fc.autoSubcategory = detected;
+        }
       }
 
       const rawFcImgs = [];
@@ -8670,7 +8673,7 @@ window.loadAllData = async function() {
     }, 250);
 
     try {
-      const uRes = await fetch(SUPABASE_URL + '/rest/v1/users?select=*&order=created_at.desc', { headers: restHeaders });
+      const uRes = await fetch(SUPABASE_URL + '/rest/v1/users?select=id,name,email,role,title,avatar_url,created_at,updated_at,last_login&order=created_at.desc', { headers: restHeaders });
       if (uRes.ok) {
         const uData = await uRes.json();
         if (Array.isArray(uData) && uData.length > 0) {
@@ -9997,19 +10000,21 @@ window.handleSaveFlashcard = async function(e, andNext = false) {
   const category = document.getElementById('fc_category').value;
   const isSignal = (category || '').trim().toLowerCase() === 'signale';
 
-  // Subkategorie auslesen (ausschließlich für Signale zulassen)
+  const title = document.getElementById('fc_title').value.trim();
+  const content = document.getElementById('fc_content').value.trim();
+  const reference = document.getElementById('fc_reference').value.trim();
+
+  // Subkategorie auslesen (ausschließlich für Signale zulassen; Fallback wie in der App)
   let subcategory = null;
   if (isSignal) {
     subcategory = (document.getElementById('fc_subcategory')?.value || '').trim();
     if (subcategory === '__custom__') {
       subcategory = (document.getElementById('fc_subcategory_custom')?.value || '').trim();
     }
-    if (!subcategory) subcategory = null;
+    if (!subcategory) {
+      subcategory = window.detectSignalSubcategory(title, 'Sonstige Signale') || 'Sonstige Signale';
+    }
   }
-
-  const title = document.getElementById('fc_title').value.trim();
-  const content = document.getElementById('fc_content').value.trim();
-  const reference = document.getElementById('fc_reference').value.trim();
 
   // Multi-Bilder auslesen
   const fcImgs = (window.modalImages && Array.isArray(window.modalImages.fc))
@@ -11093,13 +11098,10 @@ window.handlePortalLogin = async function(e) {
 
     // Rollenprüfung: Admins, Moderatoren, Dozenten und Dennis Köster zulassen
     const userEmail = (user.email || '').toLowerCase().trim();
-    const isDennisMaster = userEmail === 'dennis.koester@aixrail.de' || 
-      userEmail === 'dschmitz112@web.de' || 
-      userEmail === 'dennis.schmitz112@gmail.com' ||
-      userEmail === 'dennis.schmitz@aixrail.de';
+    // Rollenprüfung basiert strikt auf der Datenbank-Rolle
     const role = (user.role || '').toLowerCase();
     const title = (user.title || '').toLowerCase();
-    const isAllowed = isDennisMaster ||
+    const isAllowed =
       role === 'admin' || 
       role === 'moderator' || 
       role === 'mod' ||
@@ -11116,7 +11118,7 @@ window.handlePortalLogin = async function(e) {
       id: user.id,
       name: user.name,
       email: user.email,
-      role: (isDennisMaster ? 'admin' : (role === 'mod' ? 'moderator' : user.role)) || 'admin',
+      role: (role === 'mod' ? 'moderator' : user.role) || 'moderator',
       title: user.title || ''
     };
     localStorage.setItem('railtrainer_portal_user', JSON.stringify(currentPortalUser));

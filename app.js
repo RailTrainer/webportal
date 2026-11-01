@@ -1,7 +1,7 @@
 
 // SUPABASE CLIENT
-const SUPABASE_URL = 'https://ahmcoyfmdrgpmclaxgfj.supabase.co';
-const SUPABASE_ANON_KEY = ['sb_publishable', 'cENpbfjZbysfKIjFKxTFWg_YziNteq1'].join('_');
+const SUPABASE_URL = (window.__ENV && window.__ENV.SUPABASE_URL) || localStorage.getItem('RT_SUPABASE_URL') || '';
+const SUPABASE_ANON_KEY = (window.__ENV && window.__ENV.SUPABASE_ANON_KEY) || localStorage.getItem('RT_SUPABASE_ANON_KEY') || '';
 const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
 let allQuestions = [];
