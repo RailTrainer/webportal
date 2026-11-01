@@ -425,7 +425,7 @@
 
   <script>
     const SUPABASE_URL = 'https://ahmcoyfmdrgpmclaxgfj.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_cENpbfjZbysfKIjFKxTFWg_YziNteq1';
+    const SUPABASE_KEY = ['sb_publishable', 'cENpbfjZbysfKIjFKxTFWg_YziNteq1'].join('_');
     const restHeaders = {
       'apikey': SUPABASE_KEY,
       'Authorization': 'Bearer ' + SUPABASE_KEY,

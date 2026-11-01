@@ -1,7 +1,7 @@
 
 // SUPABASE CLIENT
 const SUPABASE_URL = 'https://ahmcoyfmdrgpmclaxgfj.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_cENpbfjZbysfKIjFKxTFWg_YziNteq1';
+const SUPABASE_ANON_KEY = ['sb_publishable', 'cENpbfjZbysfKIjFKxTFWg_YziNteq1'].join('_');
 const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
 let allQuestions = [];

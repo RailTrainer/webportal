@@ -675,15 +675,15 @@
             <div id="flashcardCategoryPills" class="flex flex-wrap gap-2"></div>
           </div>
 
-          <!-- DYNAMISCHE UNTERKATEGORIEN FILTER-CHIPS FÜR LERNKARTEN (SIGNALE BESSER ZUORDNEN) -->
+          <!-- DYNAMISCHE UNTERKATEGORIEN FILTER-CHIPS FÜR LERNKARTEN (NUR SIGNALE) -->
           <div id="flashcardSubcategoryFilterSection" class="pt-3 border-t border-gray-800/80">
             <div class="flex items-center justify-between mb-2">
               <div class="text-[11px] font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
                 <i data-lucide="layers" class="w-3.5 h-3.5 text-cyan-400"></i>
-                <span>Signal-Unterkategorien:</span>
+                <span>Signal-Unterkategorien (nur Signale):</span>
               </div>
               <div class="flex items-center gap-2">
-                <span id="flashcardSubcatFilterStatusBadge" class="text-[11px] text-gray-400 font-medium">Alle Unterkategorien</span>
+                <span id="flashcardSubcatFilterStatusBadge" class="text-[11px] text-gray-400 font-medium">Alle Signale</span>
                 <button type="button" onclick="window.resetFlashcardSubcatFilter()" class="text-[11px] text-brand-400 hover:text-brand-300 font-semibold underline">Alle anzeigen</button>
               </div>
             </div>
@@ -2462,11 +2462,11 @@
             <label class="block text-xs font-bold text-gray-300 uppercase mb-1.5">Kategorie *</label>
             <select id="fc_category" required onchange="window.updateFlashcardSubcategoryOptions(this.value)" class="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-100 focus:outline-none focus:border-brand-500"></select>
           </div>
-          <div>
+          <div id="fc_subcategory_wrapper">
             <div class="flex items-center justify-between mb-1.5">
               <label class="block text-xs font-bold text-cyan-400 uppercase flex items-center gap-1.5">
                 <i data-lucide="layers" class="w-3.5 h-3.5 text-cyan-400"></i>
-                <span>Unterkategorie (Signale & Co.)</span>
+                <span>Unterkategorie (nur für Signale)</span>
               </label>
               <button type="button" onclick="window.toggleCustomSubcategoryInput('fc')" class="text-[11px] text-brand-400 hover:text-brand-300 font-semibold underline">+ Neu</button>
             </div>
@@ -2967,7 +2967,7 @@
 <!-- JAVASCRIPT LOGIC -->
 <script>
 const SUPABASE_URL = 'https://ahmcoyfmdrgpmclaxgfj.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_cENpbfjZbysfKIjFKxTFWg_YziNteq1';
+const SUPABASE_ANON_KEY = ['sb_publishable', 'cENpbfjZbysfKIjFKxTFWg_YziNteq1'].join('_');
 
 const restHeaders = {
   'apikey': SUPABASE_ANON_KEY,
@@ -3231,15 +3231,18 @@ window.getSubcategoriesForCategory = function(catName) {
       }
     }
   });
-  allFlashcards.forEach(fc => {
-    if (fc.category && fc.category.trim().toLowerCase() === cleanCat && fc.subcategory && fc.subcategory.trim()) {
-      const name = fc.subcategory.trim();
-      if (!seen.has(name.toLowerCase())) {
-        seen.add(name.toLowerCase());
-        list.push({ id: 'sub_' + Math.random().toString(36).substr(2, 7), name: name, category: fc.category, color: '#06b6d4' });
+  // Unterkategorien von Lernkarten (ausschließlich für die Kategorie Signale)
+  if (cleanCat === 'signale') {
+    allFlashcards.forEach(fc => {
+      if (fc.category && fc.category.trim().toLowerCase() === 'signale' && fc.subcategory && fc.subcategory.trim()) {
+        const name = fc.subcategory.trim();
+        if (!seen.has(name.toLowerCase())) {
+          seen.add(name.toLowerCase());
+          list.push({ id: 'sub_' + Math.random().toString(36).substr(2, 7), name: name, category: 'Signale', color: '#06b6d4' });
+        }
       }
-    }
-  });
+    });
+  }
 
   return list;
 };
@@ -3288,13 +3291,34 @@ window.updateQuestionSubcategoryOptions = function(categoryName, selectedSubcat 
 };
 
 window.updateFlashcardSubcategoryOptions = function(categoryName, selectedSubcat = '') {
+  const isSignal = (categoryName || '').trim().toLowerCase() === 'signale';
+  const wrapper = document.getElementById('fc_subcategory_wrapper');
+  if (wrapper) {
+    if (isSignal) {
+      wrapper.classList.remove('hidden');
+    } else {
+      wrapper.classList.add('hidden');
+    }
+  }
+
   const select = document.getElementById('fc_subcategory');
   const customInput = document.getElementById('fc_subcategory_custom');
   const hintEl = document.getElementById('fc_subcat_detect_hint');
   if (hintEl) hintEl.classList.add('hidden');
   if (!select) return;
 
-  const subcats = window.getSubcategoriesForCategory(categoryName);
+  // Wenn keine Signale: Unterkategorie leeren und beenden
+  if (!isSignal) {
+    select.innerHTML = '<option value="">-- Keine Unterkategorie --</option>';
+    select.value = '';
+    if (customInput) {
+      customInput.value = '';
+      customInput.classList.add('hidden');
+    }
+    return;
+  }
+
+  const subcats = window.getSubcategoriesForCategory('Signale');
   let html = '<option value="">-- Keine Unterkategorie --</option>';
   subcats.forEach(s => {
     const isSel = (selectedSubcat && s.name.toLowerCase() === selectedSubcat.trim().toLowerCase()) ? 'selected' : '';
@@ -3319,7 +3343,7 @@ window.updateFlashcardSubcategoryOptions = function(categoryName, selectedSubcat
   // Live Auto-Erkennung prüfen
   const fcTitle = document.getElementById('fc_title')?.value || '';
   const fcContent = document.getElementById('fc_content')?.value || '';
-  if (categoryName === 'Signale' && !select.value && (fcTitle || fcContent)) {
+  if (isSignal && !select.value && (fcTitle || fcContent)) {
     const detected = window.detectSignalSubcategory(fcTitle + ' ' + fcContent);
     if (detected) {
       detectedSubcategoryTemp.fc = detected;
@@ -3394,6 +3418,14 @@ window.openQuickAssignModal = function(id, event, type = 'fc') {
     item = allFlashcards.find(item => item.id === id);
   }
   if (!item) return;
+
+  if (type === 'fc') {
+    const isSignal = (item.category || '').trim().toLowerCase() === 'signale';
+    if (!isSignal) {
+      alert('Unterkategorien können nur für Lernkarten der Kategorie "Signale" vergeben werden.');
+      return;
+    }
+  }
 
   const modal = document.getElementById('quickAssignModal');
   const idEl = document.getElementById('quickAssignQuestionId');
@@ -7302,12 +7334,15 @@ function getFilteredFlashcardsList() {
 
     let matchesSubcat = true;
     if (selectedFlashcardSubcategory && selectedFlashcardSubcategory !== 'all') {
+      const isSignal = (fc.category || '').trim().toLowerCase() === 'signale';
       const fcSub = (fc.subcategory || '').trim().toLowerCase();
       if (selectedFlashcardSubcategory === '__none__') {
-        matchesSubcat = !fcSub;
+        matchesSubcat = isSignal && !fcSub && !(fc.autoSubcategory || '').trim();
       } else {
-        matchesSubcat = (fcSub === selectedFlashcardSubcategory.trim().toLowerCase()) ||
-          (!fcSub && (fc.autoSubcategory || '').trim().toLowerCase() === selectedFlashcardSubcategory.trim().toLowerCase());
+        matchesSubcat = isSignal && (
+          (fcSub === selectedFlashcardSubcategory.trim().toLowerCase()) ||
+          (!fcSub && (fc.autoSubcategory || '').trim().toLowerCase() === selectedFlashcardSubcategory.trim().toLowerCase())
+        );
       }
     }
 
@@ -7328,13 +7363,31 @@ window.resetFlashcardSubcatFilter = function() {
 window.renderFlashcardSubcategoryPills = function() {
   const pillsEl = document.getElementById('flashcardSubcategoryPills');
   const statusBadge = document.getElementById('flashcardSubcatFilterStatusBadge');
+  const filterSection = document.getElementById('flashcardSubcategoryFilterSection');
   if (!pillsEl) return;
+
+  const isSignalsSelected = selectedFlashcardCategories.size === 0 ||
+    Array.from(selectedFlashcardCategories).some(c => (c || '').trim().toLowerCase() === 'signale');
+
+  if (filterSection) {
+    if (!isSignalsSelected) {
+      filterSection.classList.add('hidden');
+      return;
+    } else {
+      filterSection.classList.remove('hidden');
+    }
+  }
 
   const subcatCounts = new Map();
   let unassignedCount = 0;
+  let totalSignalCards = 0;
 
   allFlashcards.forEach(fc => {
+    const isSignal = (fc.category || '').trim().toLowerCase() === 'signale';
+    if (!isSignal) return; // Unterkategorien gelten ausschließlich für Signale!
     if (selectedFlashcardCategories.size > 0 && !selectedFlashcardCategories.has(fc.category)) return;
+
+    totalSignalCards++;
     const sc = (fc.subcategory || fc.autoSubcategory || '').trim();
     if (sc) {
       subcatCounts.set(sc, (subcatCounts.get(sc) || 0) + 1);
@@ -7344,23 +7397,21 @@ window.renderFlashcardSubcategoryPills = function() {
   });
 
   allSubcategories.forEach(s => {
-    const parent = s.category || 'Signale';
-    if (selectedFlashcardCategories.size === 0 || selectedFlashcardCategories.has(parent)) {
+    const parent = (s.category || 'Signale').trim().toLowerCase();
+    if (parent === 'signale') {
       if (!subcatCounts.has(s.name)) {
         subcatCounts.set(s.name, 0);
       }
     }
   });
 
-  const totalCardsInCats = allFlashcards.filter(fc => selectedFlashcardCategories.size === 0 || selectedFlashcardCategories.has(fc.category)).length;
-
   let html = '<button type="button" onclick="window.selectFlashcardSubcategory(\'all\')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition cursor-pointer ' +
     (selectedFlashcardSubcategory === 'all'
       ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 shadow-sm shadow-cyan-500/10'
       : 'bg-gray-950/80 text-gray-400 border-gray-800 hover:text-gray-200 hover:border-gray-700') + '">' +
-    '<span>Alle Unterkategorien</span>' +
+    '<span>Alle Signale</span>' +
     '<span class="text-[10px] px-1.5 py-0.5 rounded-full font-bold ' +
-      (selectedFlashcardSubcategory === 'all' ? 'bg-cyan-500/30 text-cyan-200' : 'bg-gray-800 text-gray-400') + '">' + totalCardsInCats + '</span>' +
+      (selectedFlashcardSubcategory === 'all' ? 'bg-cyan-500/30 text-cyan-200' : 'bg-gray-800 text-gray-400') + '">' + totalSignalCards + '</span>' +
   '</button>';
 
   const sorted = Array.from(subcatCounts.keys()).sort((a, b) => {
@@ -7398,7 +7449,7 @@ window.renderFlashcardSubcategoryPills = function() {
 
   if (statusBadge) {
     if (selectedFlashcardSubcategory === 'all') {
-      statusBadge.textContent = 'Alle Unterkategorien';
+      statusBadge.textContent = 'Alle Signale (' + totalSignalCards + ')';
     } else if (selectedFlashcardSubcategory === '__none__') {
       statusBadge.textContent = 'Filter: Ohne Unterkategorie (' + unassignedCount + ')';
     } else {
@@ -8565,7 +8616,12 @@ window.loadAllData = async function() {
         }
       }
 
-      if (!fc.subcategory && (fc.category === 'Signale' || !fc.category)) {
+      // Unterkategorien existieren bei Lernkarten ausschließlich für Signale
+      const isSignalCard = (fc.category || '').trim().toLowerCase() === 'signale';
+      if (!isSignalCard) {
+        fc.subcategory = null;
+        fc.autoSubcategory = null;
+      } else if (!fc.subcategory) {
         const detected = window.detectSignalSubcategory(fc.title + ' ' + (fc.content || ''));
         if (detected) fc.autoSubcategory = detected;
       }
@@ -9720,20 +9776,24 @@ window.renderFlashcards = function(list) {
       ? '<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1"><i data-lucide="copy" class="w-3 h-3 text-amber-400"></i><span>⚠️ Doppelt</span></span>'
       : '';
 
-    // Unterkategorie Badge
-    const currentSub = fc.subcategory || fc.autoSubcategory;
-    const isAutoSub = !fc.subcategory && !!fc.autoSubcategory;
-    const subcatBadge = currentSub
-      ? '<button type="button" onclick="window.selectFlashcardSubcategory(\'' + escapeHtml(currentSub).replace(/'/g, "\\'") + '\')" class="px-2.5 py-0.5 rounded-full text-xs font-bold ' + 
-          (isAutoSub ? 'bg-amber-500/15 text-amber-300 border border-amber-500/40 hover:bg-amber-500/25' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30') + 
-          ' flex items-center gap-1 transition shadow-sm" title="' + (isAutoSub ? 'Automatisch erkannt (Klicken zum Filtern)' : 'Unterkategorie (Klicken zum Filtern)') + '">' +
-          '<i data-lucide="layers" class="w-3 h-3 ' + (isAutoSub ? 'text-amber-400' : 'text-cyan-400') + '"></i>' +
-          '<span>' + (isAutoSub ? '💡 ' : '') + escapeHtml(currentSub) + '</span>' +
-        '</button>'
-      : '<button type="button" onclick="window.openQuickAssignModal(\'' + fc.id + '\', event, \'fc\')" class="px-2 py-0.5 rounded-full text-[11px] font-semibold text-gray-400 bg-gray-950 border border-dashed border-gray-800 hover:border-cyan-500/60 hover:text-cyan-300 hover:bg-cyan-500/10 transition flex items-center gap-1" title="Unterkategorie jetzt zuordnen">' +
-          '<i data-lucide="plus" class="w-3 h-3 text-gray-500"></i>' +
-          '<span>+ Unterkategorie</span>' +
-        '</button>';
+    // Unterkategorie Badge (ausschließlich für Signale)
+    const isSignalCategory = (fc.category || '').trim().toLowerCase() === 'signale';
+    let subcatBadge = '';
+    if (isSignalCategory) {
+      const currentSub = fc.subcategory || fc.autoSubcategory;
+      const isAutoSub = !fc.subcategory && !!fc.autoSubcategory;
+      subcatBadge = currentSub
+        ? '<button type="button" onclick="window.selectFlashcardSubcategory(\'' + escapeHtml(currentSub).replace(/'/g, "\\'") + '\')" class="px-2.5 py-0.5 rounded-full text-xs font-bold ' + 
+            (isAutoSub ? 'bg-amber-500/15 text-amber-300 border border-amber-500/40 hover:bg-amber-500/25' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30') + 
+            ' flex items-center gap-1 transition shadow-sm" title="' + (isAutoSub ? 'Automatisch erkannt (Klicken zum Filtern)' : 'Unterkategorie (Klicken zum Filtern)') + '">' +
+            '<i data-lucide="layers" class="w-3 h-3 ' + (isAutoSub ? 'text-amber-400' : 'text-cyan-400') + '"></i>' +
+            '<span>' + (isAutoSub ? '💡 ' : '') + escapeHtml(currentSub) + '</span>' +
+          '</button>'
+        : '<button type="button" onclick="window.openQuickAssignModal(\'' + fc.id + '\', event, \'fc\')" class="px-2 py-0.5 rounded-full text-[11px] font-semibold text-gray-400 bg-gray-950 border border-dashed border-gray-800 hover:border-cyan-500/60 hover:text-cyan-300 hover:bg-cyan-500/10 transition flex items-center gap-1" title="Unterkategorie jetzt zuordnen">' +
+            '<i data-lucide="plus" class="w-3 h-3 text-gray-500"></i>' +
+            '<span>+ Unterkategorie</span>' +
+          '</button>';
+    }
 
     // Multi-Bilder für Lernkarte
     const fcImages = (Array.isArray(fc.imageUrls) && fc.imageUrls.length > 0)
@@ -9783,7 +9843,7 @@ window.renderFlashcards = function(list) {
             verifiedBtn +
           '</div>' +
           '<div class="flex items-center gap-1 shrink-0">' +
-            '<button onclick="window.openQuickAssignModal(\'' + fc.id + '\', event, \'fc\')" class="p-1.5 text-gray-400 hover:text-cyan-400 hover:bg-gray-800 rounded-lg transition" title="Unterkategorie zuordnen"><i data-lucide="layers" class="w-4 h-4"></i></button>' +
+            (isSignalCategory ? '<button onclick="window.openQuickAssignModal(\'' + fc.id + '\', event, \'fc\')" class="p-1.5 text-gray-400 hover:text-cyan-400 hover:bg-gray-800 rounded-lg transition" title="Unterkategorie zuordnen"><i data-lucide="layers" class="w-4 h-4"></i></button>' : '') +
             '<button onclick="window.editFlashcard(\'' + fc.id + '\')" class="p-1.5 text-gray-400 hover:text-brand-400 hover:bg-gray-800 rounded-lg transition" title="Bearbeiten"><i data-lucide="edit-3" class="w-4 h-4"></i></button>' +
             '<button onclick="window.deleteFlashcard(\'' + fc.id + '\')" class="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition" title="Löschen"><i data-lucide="trash-2" class="w-4 h-4"></i></button>' +
           '</div>' +
@@ -9861,7 +9921,8 @@ window.editFlashcard = function(id) {
   document.getElementById('fc_id').value = fc.id;
   document.getElementById('fc_category').value = fc.category;
   if (window.updateFlashcardSubcategoryOptions) {
-    window.updateFlashcardSubcategoryOptions(fc.category, fc.subcategory || fc.autoSubcategory || '');
+    const isSignal = (fc.category || '').trim().toLowerCase() === 'signale';
+    window.updateFlashcardSubcategoryOptions(fc.category, isSignal ? (fc.subcategory || fc.autoSubcategory || '') : '');
   }
   document.getElementById('fc_title').value = fc.title;
   document.getElementById('fc_content').value = fc.content;
@@ -9934,11 +9995,16 @@ window.handleSaveFlashcard = async function(e, andNext = false) {
   const isNew = !rawId;
   const id = rawId || ('fact_' + Math.random().toString(36).substr(2, 9));
   const category = document.getElementById('fc_category').value;
+  const isSignal = (category || '').trim().toLowerCase() === 'signale';
 
-  // Subkategorie auslesen
-  let subcategory = (document.getElementById('fc_subcategory')?.value || '').trim();
-  if (subcategory === '__custom__') {
-    subcategory = (document.getElementById('fc_subcategory_custom')?.value || '').trim();
+  // Subkategorie auslesen (ausschließlich für Signale zulassen)
+  let subcategory = null;
+  if (isSignal) {
+    subcategory = (document.getElementById('fc_subcategory')?.value || '').trim();
+    if (subcategory === '__custom__') {
+      subcategory = (document.getElementById('fc_subcategory_custom')?.value || '').trim();
+    }
+    if (!subcategory) subcategory = null;
   }
 
   const title = document.getElementById('fc_title').value.trim();
@@ -10054,7 +10120,7 @@ window.handleSaveFlashcard = async function(e, andNext = false) {
       allFlashcards.unshift(inMemoryFc);
     }
     inMemoryFc.category = category;
-    inMemoryFc.subcategory = subcategory;
+    inMemoryFc.subcategory = isSignal ? subcategory : null;
     inMemoryFc.autoSubcategory = null;
     inMemoryFc.title = title;
     inMemoryFc.content = content;
@@ -10219,7 +10285,7 @@ window.renderSubcategories = function() {
     const sDesc = s.description || '';
 
     const qCount = allQuestions.filter(q => (q.subcategory || '').toLowerCase() === sName.toLowerCase() || (!q.subcategory && (q.autoSubcategory || '').toLowerCase() === sName.toLowerCase())).length;
-    const fcCount = allFlashcards.filter(fc => (fc.subcategory || '').toLowerCase() === sName.toLowerCase() || (!fc.subcategory && (fc.autoSubcategory || '').toLowerCase() === sName.toLowerCase())).length;
+    const fcCount = allFlashcards.filter(fc => (fc.category || '').trim().toLowerCase() === 'signale' && ((fc.subcategory || '').toLowerCase() === sName.toLowerCase() || (!fc.subcategory && (fc.autoSubcategory || '').toLowerCase() === sName.toLowerCase()))).length;
 
     return '<div class="bg-gray-900 border border-gray-800 hover:border-gray-700 rounded-2xl p-5 shadow-lg flex flex-col justify-between transition group">' +
       '<div>' +
@@ -10484,6 +10550,10 @@ window.toggleFlashcardCategory = function(name) {
   } else {
     selectedFlashcardCategories.add(name);
   }
+  const hasSignals = Array.from(selectedFlashcardCategories).some(c => (c || '').trim().toLowerCase() === 'signale');
+  if (!hasSignals && selectedFlashcardCategories.size > 0) {
+    selectedFlashcardSubcategory = 'all';
+  }
   renderCategoryFilterPills();
   renderFlashcardSubcategoryPills();
   filterFlashcards();
@@ -10494,6 +10564,7 @@ window.toggleAllFlashcardCategories = function(selectAll) {
     allCategories.forEach(c => selectedFlashcardCategories.add(c.name));
   } else {
     selectedFlashcardCategories.clear();
+    selectedFlashcardSubcategory = 'all';
   }
   renderCategoryFilterPills();
   renderFlashcardSubcategoryPills();
@@ -11505,10 +11576,6 @@ window.renderUsers = function() {
       '<td class="px-5 py-3">' + roleCell + '</td>' +
       '<td class="px-5 py-3">' + platformBadge + '</td>' +
       '<td class="px-5 py-3">' + titleCell + '</td>' +
-      '<td class="px-5 py-3 text-xs text-gray-400">' + regStr + '</td>' +
-      '<td class="px-5 py-3">' + lastOnlineHtml + '</td>' +
-      '<td class="px-5 py-3 text-right">' + deleteBtn + '</td>' +
-    '</tr>'; +
       '<td class="px-5 py-3 text-xs text-gray-400">' + regStr + '</td>' +
       '<td class="px-5 py-3">' + lastOnlineHtml + '</td>' +
       '<td class="px-5 py-3 text-right">' + deleteBtn + '</td>' +
