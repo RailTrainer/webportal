@@ -326,8 +326,13 @@
       <div class="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-800/80 border border-gray-700 text-xs">
         <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
         <span class="text-gray-300">Supabase:</span>
-        <span class="text-brand-400 font-semibold">Live</span>
+        <span id="portalSyncStatusText" class="text-brand-400 font-semibold">Live</span>
       </div>
+
+      <button type="button" id="portalSyncBtn" onclick="window.syncPortalData(true)" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-brand-600/20 hover:bg-brand-600/35 border border-brand-500/40 text-brand-300 hover:text-white text-xs font-bold transition shadow-sm" title="Jetzt mit Cloud, Android & Apple App synchronisieren">
+        <i data-lucide="refresh-cw" id="portalSyncIcon" class="w-3.5 h-3.5"></i>
+        <span class="hidden sm:inline" id="portalSyncBtnLabel">Synchronisieren</span>
+      </button>
 
       <button id="themeToggleBtn" class="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 transition" title="Design wechseln">
         <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
@@ -2978,18 +2983,23 @@ const restHeaders = {
 
 function packQuestionMetadata(q) {
   const meta = {};
-  if (Array.isArray(q.correctIndices) && q.correctIndices.length > 1) {
-    meta.ci = q.correctIndices;
+  const ci = q.correctIndices || q.correct_indices;
+  if (Array.isArray(ci) && ci.length > 1) {
+    meta.ci = ci;
   }
-  if (q.questionType) meta.qt = q.questionType;
-  if (q.createdBy) meta.cb = q.createdBy;
-  if (q.createdByName) meta.cbn = q.createdByName;
-  if (q.creatorRole) meta.cr = q.creatorRole;
-  if (q.verifiedBy) meta.vb = q.verifiedBy;
-  if (q.verifiedByName) meta.vbn = q.verifiedByName;
-  if (q.duplicateReviewed) meta.dr = true;
+  const qt = q.questionType || q.question_type;
+  if (qt) meta.qt = qt;
+  if (q.createdBy || q.created_by) meta.cb = q.createdBy || q.created_by;
+  if (q.createdByName || q.created_by_name) meta.cbn = q.createdByName || q.created_by_name;
+  if (q.creatorRole || q.creator_role) meta.cr = q.creatorRole || q.creator_role;
+  if (q.updatedAt || q.updated_at) meta.ua = q.updatedAt || q.updated_at;
+  if (q.updatedByName || q.updated_by_name) meta.ubn = q.updatedByName || q.updated_by_name;
+  if (q.verifiedBy || q.verified_by) meta.vb = q.verifiedBy || q.verified_by;
+  if (q.verifiedByName || q.verified_by_name) meta.vbn = q.verifiedByName || q.verified_by_name;
+  if (q.duplicateReviewed || q.duplicate_reviewed) meta.dr = true;
   if (q.subcategory) meta.sub = q.subcategory;
-  if (Array.isArray(q.imageUrls) && q.imageUrls.length > 0) meta.imgs = q.imageUrls;
+  const imgs = q.imageUrls || q.image_urls;
+  if (Array.isArray(imgs) && imgs.length > 0) meta.imgs = imgs;
 
   const clean = (q.explanation || '').replace(/\s*<!--RT_META:.*?-->/gs, '').trim();
   if (Object.keys(meta).length === 0) return clean;
@@ -3011,14 +3021,17 @@ function unpackQuestionMetadata(rawExplanation) {
 
 function packFactMetadata(f) {
   const meta = {};
-  if (f.createdBy) meta.cb = f.createdBy;
-  if (f.createdByName) meta.cbn = f.createdByName;
-  if (f.creatorRole) meta.cr = f.creatorRole;
-  if (f.verifiedBy) meta.vb = f.verifiedBy;
-  if (f.verifiedByName) meta.vbn = f.verifiedByName;
-  if (f.duplicateReviewed) meta.dr = true;
+  if (f.createdBy || f.created_by) meta.cb = f.createdBy || f.created_by;
+  if (f.createdByName || f.created_by_name) meta.cbn = f.createdByName || f.created_by_name;
+  if (f.creatorRole || f.creator_role) meta.cr = f.creatorRole || f.creator_role;
+  if (f.updatedAt || f.updated_at) meta.ua = f.updatedAt || f.updated_at;
+  if (f.updatedByName || f.updated_by_name) meta.ubn = f.updatedByName || f.updated_by_name;
+  if (f.verifiedBy || f.verified_by) meta.vb = f.verifiedBy || f.verified_by;
+  if (f.verifiedByName || f.verified_by_name) meta.vbn = f.verifiedByName || f.verified_by_name;
+  if (f.duplicateReviewed || f.duplicate_reviewed) meta.dr = true;
   if (f.subcategory) meta.sub = f.subcategory;
-  if (Array.isArray(f.imageUrls) && f.imageUrls.length > 0) meta.imgs = f.imageUrls;
+  const imgs = f.imageUrls || f.image_urls;
+  if (Array.isArray(imgs) && imgs.length > 0) meta.imgs = imgs;
 
   const clean = (f.reference || '').replace(/\s*<!--RT_META:.*?-->/gs, '').trim();
   if (Object.keys(meta).length === 0) return clean;
@@ -3206,6 +3219,85 @@ window.detectSignalSubcategory = function(text, fallback = '') {
   if (/\b(lf\s*\d+[a-z]?|langsamfahr)\b/i.test(t)) return 'Langsamfahrsignale';
   if (/\b(b[üu]\s*\d+[a-z]?|b[üu]e?\s*\d+[a-z]?|bahn[üu]bergang)\b/i.test(t)) return 'Bahnübergangssignale';
   return fallback;
+};
+
+// 1:1 Signal-Sortierung wie in der Android- und Apple-App (Hp 0, Hp 1, Zs 1, Zs 2, Sh 0, Sh 1, ...)
+window.extractSignalSortKey = function(fact, subcategory) {
+  const text = ((fact && fact.title) || '').trim();
+  const subMap = {
+    'Zusatzsignale': /\b(zs)\s*(\d+)\s*([a-zA-Z]?)/i,
+    'Hauptsignale': /\b(hp|ks|hl|sv)\s*(\d+)\s*([a-zA-Z]?)/i,
+    'Vorsignale': /\b(vr|ks)\s*(\d+)\s*([a-zA-Z]?)/i,
+    'Sperr- & Schutzsignale': /\b(sh|ra)\s*(\d+)\s*([a-zA-Z]?)/i,
+    'Weichensignale': /\b(wn)\s*(\d+)\s*([a-zA-Z]?)/i,
+    'Nebensignale': /\b(ne)\s*(\d+)\s*([a-zA-Z]?)/i,
+    'Sonstige Signale': /\b(b[üu]e?|lf|ts|zg|zp|so)\s*(\d+)\s*([a-zA-Z]?)/i,
+  };
+  const specificRegex = subcategory ? subMap[subcategory] : null;
+  if (specificRegex) {
+    const m = text.match(specificRegex);
+    if (m) {
+      return {
+        hasCode: true,
+        prefix: m[1].toLowerCase(),
+        num: parseInt(m[2], 10),
+        suffix: (m[3] || '').toLowerCase(),
+        title: text,
+      };
+    }
+  }
+  const genMatch = text.match(/\b([A-ZÄÖÜa-zäöü]{1,4})\s*(\d+)\s*([a-zA-Z]?)\b/);
+  if (genMatch) {
+    return {
+      hasCode: true,
+      prefix: genMatch[1].toLowerCase(),
+      num: parseInt(genMatch[2], 10),
+      suffix: (genMatch[3] || '').toLowerCase(),
+      title: text,
+    };
+  }
+  const anyNumInTitle = text.match(/\b(\d+)\b/);
+  if (anyNumInTitle) {
+    return {
+      hasCode: false,
+      prefix: 'zzz',
+      num: parseInt(anyNumInTitle[1], 10),
+      suffix: '',
+      title: text,
+    };
+  }
+  return {
+    hasCode: false,
+    prefix: 'zzz',
+    num: 999999,
+    suffix: '',
+    title: text,
+  };
+};
+
+window.compareSignalFacts = function(a, b, subcategory) {
+  const ka = window.extractSignalSortKey(a, subcategory);
+  const kb = window.extractSignalSortKey(b, subcategory);
+  if (subcategory === 'Sperr- & Schutzsignale') {
+    if (ka.prefix === 'sh' && kb.prefix === 'ra') return -1;
+    if (ka.prefix === 'ra' && kb.prefix === 'sh') return 1;
+  }
+  if (ka.hasCode && kb.hasCode) {
+    if (ka.prefix === kb.prefix) {
+      if (ka.num !== kb.num) return ka.num - kb.num;
+      if (ka.suffix !== kb.suffix) return ka.suffix.localeCompare(kb.suffix, 'de');
+      return ka.title.localeCompare(kb.title, 'de');
+    }
+    return ka.prefix.localeCompare(kb.prefix, 'de');
+  }
+  if (ka.hasCode && !kb.hasCode) return -1;
+  if (!ka.hasCode && kb.hasCode) return 1;
+  if (ka.num !== kb.num) return ka.num - kb.num;
+  return ka.title.localeCompare(kb.title, 'de');
+};
+
+window.sortSignalFacts = function(facts, subcategory) {
+  return [...facts].sort((a, b) => window.compareSignalFacts(a, b, subcategory));
 };
 
 window.getSubcategoriesForCategory = function(catName) {
@@ -3491,6 +3583,7 @@ window.saveQuickAssign = async function(subcatName) {
     if (!fc) return;
     fc.subcategory = subVal;
     fc.autoSubcategory = null;
+    fc.updated_at = new Date().toISOString();
     const metaRef = packFactMetadata(fc);
     try {
       const res = await fetch(SUPABASE_URL + '/rest/v1/flashcards?id=eq.' + encodeURIComponent(targetId), {
@@ -3512,6 +3605,7 @@ window.saveQuickAssign = async function(subcatName) {
     if (!q) return;
     q.subcategory = subVal;
     q.autoSubcategory = null;
+    q.updated_at = new Date().toISOString();
     const metaExp = packQuestionMetadata(q);
     try {
       let patchRes = await fetch(SUPABASE_URL + '/rest/v1/quiz_questions?id=eq.' + encodeURIComponent(targetId), {
@@ -6148,7 +6242,10 @@ window.prepareClassroomData = function() {
     classroomFilteredCards = [...allFlashcards];
   } else {
     rawQuestions = allQuestions.filter(q => q.category === classroomCategory);
-    classroomFilteredCards = allFlashcards.filter(fc => fc.category === classroomCategory);
+    const catCards = allFlashcards.filter(fc => fc.category === classroomCategory);
+    classroomFilteredCards = classroomCategory === 'Signale' && typeof window.sortSignalFacts === 'function'
+      ? window.sortSignalFacts(catCards)
+      : catCards;
   }
 
   // 2. Zufällige Mischung & Begrenzung der Fragenanzahl für das Quiz
@@ -7072,16 +7169,12 @@ window.toggleQuestionVerification = async function(id, e) {
   try {
     const patchBody = { is_verified: newStatus };
     if (q) {
-      patchBody.explanation = packQuestionMetadata({
-        explanation: q.explanation,
-        questionType: q.questionType || q.question_type,
-        correctIndices: q.correct_indices,
-        createdBy: q.created_by,
-        createdByName: q.created_by_name,
-        creatorRole: q.creator_role,
-        verifiedBy: q.verified_by,
-        verifiedByName: q.verified_by_name
-      });
+      q.updated_at = new Date().toISOString();
+      if (currentPortalUser) {
+        q.updated_by = currentPortalUser.id;
+        q.updated_by_name = currentPortalUser.name || currentPortalUser.email;
+      }
+      patchBody.explanation = packQuestionMetadata(q);
     }
     await fetch(SUPABASE_URL + '/rest/v1/quiz_questions?id=eq.' + id, {
       method: 'PATCH',
@@ -7320,11 +7413,12 @@ let selectedFlashcardSubcategory = 'all'; // 'all' | '__none__' | string
 
 function getFilteredFlashcardsList() {
   const search = (document.getElementById('searchFlashcardsInput')?.value || '').toLowerCase();
-  return allFlashcards.filter(fc => {
+  const filtered = allFlashcards.filter(fc => {
     const matchesCat = selectedFlashcardCategories.size === 0 ? false : selectedFlashcardCategories.has(fc.category);
     const matchesSearch = (fc.title || '').toLowerCase().includes(search) || 
                           (fc.content || '').toLowerCase().includes(search) || 
-                          (fc.reference || '').toLowerCase().includes(search);
+                          (fc.reference || '').toLowerCase().includes(search) ||
+                          (fc.id || '').toLowerCase().includes(search);
     const isVerified = (fc.is_verified === true || verifiedFlashcardIds.has(fc.id));
     const isDuplicate = duplicateFactIds.has(fc.id);
     const matchesReview = (flashcardReviewFilter === 'all') || 
@@ -7348,6 +7442,21 @@ function getFilteredFlashcardsList() {
 
     return matchesCat && matchesSearch && matchesReview && matchesSubcat;
   });
+
+  // Identische Sortierung wie in der Android- und Apple-App: Signalkarten nach Signalnummer sortieren
+  const activeSubcat = (selectedFlashcardSubcategory && selectedFlashcardSubcategory !== 'all' && selectedFlashcardSubcategory !== '__none__')
+    ? selectedFlashcardSubcategory
+    : undefined;
+  const signalCards = filtered.filter(fc => (fc.category || '').trim().toLowerCase() === 'signale');
+  const otherCards = filtered.filter(fc => (fc.category || '').trim().toLowerCase() !== 'signale');
+  const sortedSignals = typeof window.sortSignalFacts === 'function'
+    ? window.sortSignalFacts(signalCards, activeSubcat)
+    : signalCards;
+
+  if (selectedFlashcardCategories.size === 1 && selectedFlashcardCategories.has('Signale')) {
+    return sortedSignals;
+  }
+  return [...sortedSignals, ...otherCards];
 }
 
 window.selectFlashcardSubcategory = function(subcatName) {
@@ -7555,14 +7664,12 @@ window.toggleFlashcardVerification = async function(id, e) {
   try {
     const patchBody = { is_verified: newStatus };
     if (fc) {
-      patchBody.reference = packFactMetadata({
-        reference: fc.reference,
-        createdBy: fc.created_by,
-        createdByName: fc.created_by_name,
-        creatorRole: fc.creator_role,
-        verifiedBy: fc.verified_by,
-        verifiedByName: fc.verified_by_name
-      });
+      fc.updated_at = new Date().toISOString();
+      if (currentPortalUser) {
+        fc.updated_by = currentPortalUser.id;
+        fc.updated_by_name = currentPortalUser.name || currentPortalUser.email;
+      }
+      patchBody.reference = packFactMetadata(fc);
     }
     await fetch(SUPABASE_URL + '/rest/v1/flashcards?id=eq.' + id, {
       method: 'PATCH',
@@ -8489,10 +8596,51 @@ window.selectCorrectOption = function(idx) {
   window.setCorrectOptions([idx]);
 };
 
-window.loadAllData = async function() {
-  console.log('Lade Daten über native REST API...');
+let lastPortalSyncTime = 0;
+
+window.syncPortalData = async function(manual = false) {
+  const btn = document.getElementById('portalSyncBtn');
+  const icon = document.getElementById('portalSyncIcon');
+  const label = document.getElementById('portalSyncBtnLabel');
+  const statusText = document.getElementById('portalSyncStatusText');
+
+  if (btn) btn.disabled = true;
+  if (icon) icon.classList.add('animate-spin');
+  if (label) label.textContent = 'Synchronisiere...';
+
   try {
-    const catRes = await fetch(SUPABASE_URL + '/rest/v1/categories?select=*&order=name.asc', { headers: restHeaders });
+    await window.loadAllData(true);
+    lastPortalSyncTime = Date.now();
+    const timeStr = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    if (statusText) statusText.textContent = 'Sync ' + timeStr;
+    if (manual && typeof showToast === 'function') {
+      showToast('Synchronisiert: ' + allFlashcards.length + ' Lernkarten & ' + allQuestions.length + ' Fragen abgeglichen! 🔄');
+    }
+  } catch (err) {
+    console.error('Portal Sync Fehler:', err);
+    if (manual && typeof showToast === 'function') {
+      showToast('Fehler bei der Synchronisation mit Supabase.', true);
+    }
+  } finally {
+    if (btn) btn.disabled = false;
+    if (icon) icon.classList.remove('animate-spin');
+    if (label) label.textContent = 'Synchronisieren';
+  }
+};
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && currentPortalUser && Date.now() - lastPortalSyncTime > 15000) {
+    window.syncPortalData(false);
+  }
+});
+
+window.loadAllData = async function(forceNoCache = false) {
+  console.log('Lade Daten über native REST API...');
+  const fetchHeaders = forceNoCache
+    ? { ...restHeaders, 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' }
+    : restHeaders;
+  try {
+    const catRes = await fetch(SUPABASE_URL + '/rest/v1/categories?select=*&order=name.asc', { headers: fetchHeaders, cache: 'no-store' });
     const rawCategories = await catRes.json();
     let loadedSignalSubs = [];
     let loadedGenSubs = [];
@@ -8523,7 +8671,7 @@ window.loadAllData = async function() {
     renderCategorySelects();
     renderCategories();
 
-    const qRes = await fetch(SUPABASE_URL + '/rest/v1/quiz_questions?select=*&order=created_at.desc', { headers: restHeaders });
+    const qRes = await fetch(SUPABASE_URL + '/rest/v1/quiz_questions?select=*&order=created_at.asc,id.asc', { headers: fetchHeaders, cache: 'no-store' });
     allQuestions = await qRes.json();
     if (!Array.isArray(allQuestions)) allQuestions = [];
 
@@ -8547,6 +8695,8 @@ window.loadAllData = async function() {
         if (meta.cb && !q.created_by) q.created_by = meta.cb;
         if (meta.cbn && !q.created_by_name) q.created_by_name = meta.cbn;
         if (meta.cr && !q.creator_role) q.creator_role = meta.cr;
+        if (meta.ua && !q.updated_at) q.updated_at = meta.ua;
+        if (meta.ubn && !q.updated_by_name) q.updated_by_name = meta.ubn;
         if (meta.vb && !q.verified_by) q.verified_by = meta.vb;
         if (meta.vbn && !q.verified_by_name) q.verified_by_name = meta.vbn;
         if (meta.dr) q.duplicateReviewed = true;
@@ -8591,7 +8741,7 @@ window.loadAllData = async function() {
     const bq = document.getElementById('badge-questions-count');
     if (bq) bq.textContent = allQuestions.length;
 
-    const fcRes = await fetch(SUPABASE_URL + '/rest/v1/flashcards?select=*&order=created_at.desc', { headers: restHeaders });
+    const fcRes = await fetch(SUPABASE_URL + '/rest/v1/flashcards?select=*&order=created_at.asc,id.asc', { headers: fetchHeaders, cache: 'no-store' });
     allFlashcards = await fcRes.json();
     if (!Array.isArray(allFlashcards)) allFlashcards = [];
 
@@ -8607,6 +8757,8 @@ window.loadAllData = async function() {
         if (meta.cb && !fc.created_by) fc.created_by = meta.cb;
         if (meta.cbn && !fc.created_by_name) fc.created_by_name = meta.cbn;
         if (meta.cr && !fc.creator_role) fc.creator_role = meta.cr;
+        if (meta.ua && !fc.updated_at) fc.updated_at = meta.ua;
+        if (meta.ubn && !fc.updated_by_name) fc.updated_by_name = meta.ubn;
         if (meta.vb && !fc.verified_by) fc.verified_by = meta.vb;
         if (meta.vbn && !fc.verified_by_name) fc.verified_by_name = meta.vbn;
         if (meta.dr) fc.duplicateReviewed = true;
@@ -9555,8 +9707,11 @@ window.handleSaveQuestion = async function(e, andNext = false) {
     createdBy: createdBy,
     createdByName: createdByName,
     creatorRole: creatorRole,
+    updatedAt: updatedAt,
+    updatedByName: updatedByName,
     verifiedBy: verifiedBy,
     verifiedByName: verifiedByName,
+    duplicateReviewed: existingQ?.duplicateReviewed,
     subcategory: subcategory,
     imageUrls: qImgs
   });
@@ -10072,8 +10227,11 @@ window.handleSaveFlashcard = async function(e, andNext = false) {
     createdBy: createdBy,
     createdByName: createdByName,
     creatorRole: creatorRole,
+    updatedAt: updatedAt,
+    updatedByName: updatedByName,
     verifiedBy: verifiedBy,
-    verifiedByName: verifiedByName
+    verifiedByName: verifiedByName,
+    duplicateReviewed: existingFc?.duplicateReviewed
   });
 
   const payload = { 
