@@ -425,8 +425,8 @@
   </footer>
 
   <script>
-    const SUPABASE_URL = (window.__ENV && window.__ENV.SUPABASE_URL) || localStorage.getItem('RT_SUPABASE_URL') || '';
-    const SUPABASE_KEY = (window.__ENV && window.__ENV.SUPABASE_ANON_KEY) || localStorage.getItem('RT_SUPABASE_ANON_KEY') || '';
+    const SUPABASE_URL = (window.__ENV && window.__ENV.SUPABASE_URL) || localStorage.getItem('RT_SUPABASE_URL') || 'https://ahmcoyfmdrgpmclaxgfj.supabase.co';
+    const SUPABASE_KEY = (window.__ENV && window.__ENV.SUPABASE_ANON_KEY) || localStorage.getItem('RT_SUPABASE_ANON_KEY') || ['sb_publishable', 'cENpbfjZbysfKIjFKxTFWg_YziNteq1'].join('_');
     const restHeaders = {
       'apikey': SUPABASE_KEY,
       'Authorization': 'Bearer ' + SUPABASE_KEY,
