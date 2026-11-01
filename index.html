@@ -8678,19 +8678,35 @@ window.loadAllData = async function(forceNoCache = false) {
       if (genRow && genRow.description) {
         try { loadedGenSubs = JSON.parse(genRow.description); } catch(e){}
       }
+      let orderList = [];
+      const orderRow = rawCategories.find(c => c.name === '__category_order__');
+      if (orderRow && orderRow.description) {
+        try {
+          const parsedOrder = JSON.parse(orderRow.description);
+          if (Array.isArray(parsedOrder)) orderList = parsedOrder.map(n => String(n).toLowerCase());
+        } catch(e){}
+      }
       allCategories = rawCategories.filter(c => c.name && !c.name.startsWith('__'));
+      if (orderList.length > 0) {
+        const orderMap = new Map(orderList.map((n, idx) => [n, idx]));
+        allCategories.sort((a, b) => {
+          const idxA = orderMap.has((a.name || '').toLowerCase()) ? orderMap.get((a.name || '').toLowerCase()) : 9999;
+          const idxB = orderMap.has((b.name || '').toLowerCase()) ? orderMap.get((b.name || '').toLowerCase()) : 9999;
+          return idxA - idxB;
+        });
+      }
     } else {
       allCategories = [];
     }
 
-    // Subkategorien zusammenführen
+    // Subkategorien zusammenführen (Reihenfolge aus Cloud __signal_subcategories__ hat Vorrang)
     let localSubStore = [];
     try { localSubStore = JSON.parse(localStorage.getItem('railtrainer_subcategories') || '[]'); } catch(e){}
     const subMap = new Map();
-    INITIAL_SIGNAL_SUBCATEGORIES.forEach(s => subMap.set(s.name.toLowerCase(), { ...s }));
     if (Array.isArray(loadedSignalSubs)) loadedSignalSubs.forEach(s => subMap.set(s.name.toLowerCase(), { ...s, category: s.category || 'Signale' }));
     if (Array.isArray(loadedGenSubs)) loadedGenSubs.forEach(s => subMap.set(s.name.toLowerCase(), { ...s }));
-    if (Array.isArray(localSubStore)) localSubStore.forEach(s => subMap.set(s.name.toLowerCase(), { ...s }));
+    INITIAL_SIGNAL_SUBCATEGORIES.forEach(s => { if (!subMap.has(s.name.toLowerCase())) subMap.set(s.name.toLowerCase(), { ...s }); });
+    if (Array.isArray(localSubStore)) localSubStore.forEach(s => { if (!subMap.has(s.name.toLowerCase())) subMap.set(s.name.toLowerCase(), { ...s }); });
     allSubcategories = Array.from(subMap.values());
 
     renderCategorySelects();
