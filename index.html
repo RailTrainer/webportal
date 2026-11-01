@@ -12373,6 +12373,8 @@ window.loadTickets = async function() {
       try {
         localTickets = JSON.parse(local);
         if (!Array.isArray(localTickets)) localTickets = [];
+        // Entferne Demo-Tickets aus dem lokalen Speicher
+        localTickets = localTickets.filter(t => !['ticket_1001', 'ticket_1002', 'ticket_1003'].includes(t?.id));
       } catch (e) {}
     }
 
@@ -12387,27 +12389,22 @@ window.loadTickets = async function() {
         rows.forEach(r => {
           try {
             const t = JSON.parse(r.text);
-            if (t && t.id) cloudTickets.push(t);
+            // Ignoriere alte Demo-Tickets auch aus der Cloud
+            if (t && t.id && !['ticket_1001', 'ticket_1002', 'ticket_1003'].includes(t.id)) {
+              cloudTickets.push(t);
+            }
           } catch (e) {}
         });
         allTickets = cloudTickets;
-      } else if (localTickets.length > 0) {
-        allTickets = localTickets;
       } else {
-        allTickets = DEFAULT_SAMPLE_TICKETS;
-        localStorage.setItem('railtrainer_tickets', JSON.stringify(allTickets));
-        for (const t of allTickets) {
-          await window.saveTicketToStorage(t, false);
-        }
+        allTickets = localTickets;
       }
-    } else if (localTickets.length > 0) {
-      allTickets = localTickets;
     } else {
-      allTickets = DEFAULT_SAMPLE_TICKETS;
+      allTickets = localTickets;
     }
   } catch (err) {
     console.warn('Ladefehler bei Tickets:', err);
-    allTickets = DEFAULT_SAMPLE_TICKETS;
+    allTickets = [];
   }
 
   localStorage.setItem('railtrainer_tickets', JSON.stringify(allTickets));
