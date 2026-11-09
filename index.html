@@ -247,6 +247,74 @@
       padding: 0 !important;
     }
 
+    /* Volle Breite und Höhe wenn Bremsproben-Baukasten aktiv ist */
+    body.bremsprobe-active {
+      overflow: hidden !important;
+      height: 100vh !important;
+    }
+
+    body.bremsprobe-active #classroomWrapper {
+      display: flex !important;
+      flex-direction: column !important;
+      height: calc(100vh - 68px) !important;
+      max-height: calc(100vh - 68px) !important;
+      overflow: hidden !important;
+    }
+
+    body.bremsprobe-active #classroomContentArea {
+      max-width: 100% !important;
+      width: 100% !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      justify-content: stretch !important;
+      align-items: stretch !important;
+      height: calc(100vh - 126px) !important;
+      max-height: calc(100vh - 126px) !important;
+      flex: 1 1 auto !important;
+    }
+
+    body.bremsprobe-active #classroomBremsprobeView {
+      display: flex !important;
+      flex-direction: column !important;
+      width: 100% !important;
+      height: calc(100vh - 126px) !important;
+      min-height: calc(100vh - 126px) !important;
+    }
+
+    body.bremsprobe-active #bremsprobeIframe {
+      display: block !important;
+      width: 100% !important;
+      height: calc(100vh - 126px) !important;
+      min-height: calc(100vh - 126px) !important;
+      flex: 1 1 auto !important;
+    }
+
+    body.bremsprobe-active #railtrainerWatermarkBg {
+      display: none !important;
+    }
+
+    /* Wenn der Container oder iframe selbst im Fullscreen ist */
+    #classroomBremsprobeView:fullscreen,
+    #bremsprobeIframe:fullscreen,
+    :fullscreen #classroomBremsprobeView,
+    body.is-fullscreen #classroomBremsprobeView {
+      width: 100vw !important;
+      height: 100vh !important;
+      max-width: 100vw !important;
+      max-height: 100vh !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      border: 0 !important;
+      background-color: #f3f5f8 !important;
+    }
+
+    #classroomBremsprobeView:fullscreen iframe,
+    :fullscreen #bremsprobeIframe,
+    body.is-fullscreen #bremsprobeIframe {
+      width: 100vw !important;
+      height: 100vh !important;
+    }
+
     body.battle-running #classroomWrapper {
       overflow-y: hidden !important;
     }
@@ -280,7 +348,7 @@
 <body class="bg-gray-950 text-gray-100 min-h-screen flex flex-col transition-colors duration-200 relative overflow-x-hidden">
 
   <!-- SUBTILER RAILTRAINER LOGO-HINTERGRUND (WATERMARK) -->
-  <div class="fixed inset-0 pointer-events-none z-0 flex items-center justify-center overflow-hidden opacity-[0.06] select-none">
+  <div id="railtrainerWatermarkBg" class="fixed inset-0 pointer-events-none z-0 flex items-center justify-center overflow-hidden opacity-[0.06] select-none">
     <img src="logo.png" alt="RailTrainer Hintergrund" class="w-[1250px] md:w-[1450px] lg:w-[1650px] max-w-none transform -rotate-12 filter grayscale contrast-125">
   </div>
 
@@ -413,6 +481,12 @@
         <i data-lucide="layers" class="w-4 h-4"></i>
         <span>Lernkarten & Signale</span>
         <span id="badge-flashcards-count" class="ml-auto text-xs px-2 py-0.5 rounded-full bg-gray-800">0</span>
+      </button>
+
+      <button onclick="switchTab('bremsprobe')" id="tab-btn-bremsprobe" class="nav-tab flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-gray-400 hover:bg-gray-800 hover:text-white">
+        <i data-lucide="train" class="w-4 h-4 text-emerald-400"></i>
+        <span>Bremsproben-Baukasten</span>
+        <span class="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Neu</span>
       </button>
 
       <button onclick="switchTab('duplicates')" id="tab-btn-duplicates" class="nav-tab flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-gray-400 hover:bg-gray-800 hover:text-white">
@@ -1184,6 +1258,36 @@
 
         <!-- DUPLIKATE CONTAINER -->
         <div id="duplicatesListContainer" class="space-y-4"></div>
+      </section>
+
+      <!-- TAB 8: BREMSPROBEN-BAUKASTEN & TRAINER-EDITOR -->
+      <section id="tab-bremsprobe" class="tab-content hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+          <div>
+            <div class="flex items-center gap-2.5">
+              <h2 class="text-2xl font-bold text-white tracking-tight">Bremsproben-Baukasten & Editor</h2>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                <i data-lucide="train" class="w-3.5 h-3.5 text-emerald-400"></i>
+                <span>Training & Editor</span>
+              </span>
+            </div>
+            <p class="text-sm text-gray-400 mt-1">Interaktiver Editor und Ausbildungs-Simulator für Bremsproben-Szenarien nach Baukastenprinzip (Z, L, B, Dh, D-HL).</p>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button type="button" onclick="refreshAdminBremsprobeIframe()" class="px-3.5 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold text-xs rounded-xl border border-gray-700 transition flex items-center gap-2 shadow-sm">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+              <span>Aktualisieren</span>
+            </button>
+            <a href="/bremsprobe/index.html" target="_blank" rel="noopener noreferrer" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-600/30 transition flex items-center gap-2">
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+              <span>In neuem Tab öffnen</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="w-full rounded-2xl overflow-hidden border border-gray-800 shadow-2xl bg-gray-900" style="height: calc(100vh - 180px); min-height: 720px;">
+          <iframe id="adminBremsprobeIframe" src="/bremsprobe/index.html?v=6" allow="fullscreen" class="w-full h-full border-0 bg-[#f3f5f8]" title="Bremsproben-Baukasten"></iframe>
+        </div>
       </section>
     </main>
   </div>
@@ -2021,32 +2125,8 @@
       </div>
 
       <!-- 4. BREMSPROBEN-BAUKASTEN MODUS -->
-      <div id="classroomBremsprobeView" class="hidden w-full flex-1 flex-col items-stretch max-w-7xl mx-auto min-h-[750px] h-[calc(100vh-140px)]">
-        <div class="w-full h-full flex flex-col rounded-3xl overflow-hidden border border-gray-800 shadow-2xl bg-gray-900/95 backdrop-blur-xl">
-          <div class="flex items-center justify-between px-5 py-3 bg-gray-950 border-b border-gray-800">
-            <div class="flex items-center gap-2.5">
-              <span class="text-xl">🚆</span>
-              <div>
-                <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                  Bremsproben-Baukasten
-                  <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/20 text-amber-400 border border-amber-500/30">TRAINING & EDITOR</span>
-                </h3>
-                <p class="text-[11px] text-gray-400">Erstelle Szenarien nach dem Baukastenprinzip oder lass Teilnehmer die Bremsstufen an Ort und Stelle legen.</p>
-              </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <button type="button" onclick="document.getElementById('bremsprobeIframe').src = document.getElementById('bremsprobeIframe').src" class="px-3 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-semibold flex items-center gap-1.5 transition">
-                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
-                <span>Aktualisieren</span>
-              </button>
-              <a href="/bremsprobe/index.html" target="_blank" class="px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold flex items-center gap-1.5 transition shadow">
-                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                <span>In neuem Tab öffnen</span>
-              </a>
-            </div>
-          </div>
-          <iframe id="bremsprobeIframe" src="/bremsprobe/index.html" class="w-full flex-1 border-0 bg-[#f3f5f8]" title="Bremsproben-Baukasten"></iframe>
-        </div>
+      <div id="classroomBremsprobeView" class="hidden w-full flex-1 flex-col items-stretch" style="height: calc(100vh - 126px); min-height: 680px;">
+        <iframe id="bremsprobeIframe" src="/bremsprobe/index.html?v=6" allow="fullscreen" class="w-full flex-1 border-0 bg-[#f3f5f8]" style="width: 100%; height: calc(100vh - 126px); min-height: 680px; display: block;" title="Bremsproben-Baukasten"></iframe>
       </div>
     </div>
   </div>
@@ -4110,14 +4190,36 @@ window.switchClassroomSubTab = function(subTab) {
     bpView?.classList.add('flex');
     if (limitCont) limitCont.classList.add('hidden');
     if (evalBtn) evalBtn.classList.add('hidden');
+    document.body.classList.add('bremsprobe-active');
   }
 
   if (subTab !== 'battle') {
     document.body.classList.remove('battle-running');
   }
+  if (subTab !== 'bremsprobe') {
+    document.body.classList.remove('bremsprobe-active');
+  }
 
   window.updateClassroomCategoryList();
   if (window.lucide) lucide.createIcons();
+};
+
+window.toggleBremsprobeFullscreen = function() {
+  const container = document.getElementById('classroomBremsprobeView');
+  const target = container || document.getElementById('bremsprobeIframe');
+  if (!target) return;
+  const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement);
+  if (!isFs) {
+    const rfs = target.requestFullscreen || target.webkitRequestFullscreen || target.mozRequestFullScreen || target.msRequestFullscreen;
+    if (rfs) {
+      rfs.call(target);
+    }
+  } else {
+    const efs = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen;
+    if (efs) {
+      efs.call(document);
+    }
+  }
 };
 
 // --- LIVE QUIZ-BATTLE (KAHOOT-STYLE) STATE & LOGIC ---
@@ -9001,6 +9103,17 @@ window.switchTab = function(tabId) {
     activeBtn.classList.remove('text-gray-400');
   }
 
+  const mainEl = document.querySelector('#adminWrapper main');
+  if (mainEl) {
+    if (tabId === 'bremsprobe') {
+      mainEl.classList.remove('max-w-7xl');
+      mainEl.classList.add('max-w-full');
+    } else {
+      mainEl.classList.add('max-w-7xl');
+      mainEl.classList.remove('max-w-full');
+    }
+  }
+
   if (tabId === 'stats') {
     renderStats();
   }
@@ -9017,6 +9130,11 @@ window.switchTab = function(tabId) {
   }
 
   if (window.lucide) lucide.createIcons();
+};
+
+window.refreshAdminBremsprobeIframe = function() {
+  const iframe = document.getElementById('adminBremsprobeIframe');
+  if (iframe) iframe.src = '/bremsprobe/index.html?v=' + Date.now();
 };
 
 window.renderQuestions = function(list) {

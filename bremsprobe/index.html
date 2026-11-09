@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bremsprobe-Baukasten | Interaktive Lernplattform</title>
-  <link rel="stylesheet" href="styles.css?v=4" />
+  <link rel="stylesheet" href="styles.css?v=6" />
 </head>
 <body>
   <!-- Top Header Navigation -->
@@ -29,6 +29,9 @@
     </div>
 
     <div class="header-actions">
+      <button id="btnFsToggle" class="btn btn-secondary btn-sm" type="button" onclick="toggleLocalFs()" title="Vollbildmodus aktivieren/beenden">
+        ⛶ Vollbild
+      </button>
       <button id="btnExportJson" class="btn btn-secondary btn-sm" type="button" title="Alle Übungen & Bausteine als Datei exportieren">
         ⬇ Export
       </button>
@@ -43,16 +46,16 @@
   <div class="app-layout">
     <!-- Left Sidebar: Exercise List & Block Palette -->
     <aside class="sidebar">
-      <!-- Exercises Section -->
-      <section class="panel">
+      <!-- Exercises Section (Dropdown) -->
+      <section class="panel exercise-dropdown-panel">
         <div class="panel-header">
-          <h2>Übungen</h2>
+          <h2>Übung wählen</h2>
           <div id="trainerExerciseActions" class="panel-header-actions hidden">
             <button id="btnNewExercise" class="btn btn-primary btn-xs" type="button">+ Neu</button>
             <button id="btnDuplicateExercise" class="btn btn-secondary btn-xs" type="button" title="Aktuelle Übung duplizieren">Kopie</button>
           </div>
         </div>
-        <div id="exerciseList" class="exercise-list"></div>
+        <select id="exerciseSelect" class="exercise-select" aria-label="Übung auswählen"></select>
       </section>
 
       <!-- Building Blocks Palette -->
@@ -280,6 +283,15 @@
     </div>
   </div>
 
-  <script src="app.js?v=4"></script>
+  <script>
+    function toggleLocalFs() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+  </script>
+  <script src="app.js?v=6"></script>
 </body>
 </html>

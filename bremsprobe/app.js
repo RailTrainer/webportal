@@ -31,7 +31,7 @@
     trainerExerciseActions: document.getElementById('trainerExerciseActions'),
     btnNewExercise: document.getElementById('btnNewExercise'),
     btnDuplicateExercise: document.getElementById('btnDuplicateExercise'),
-    exerciseList: document.getElementById('exerciseList'),
+    exerciseSelect: document.getElementById('exerciseSelect'),
     btnNewBlock: document.getElementById('btnNewBlock'),
     blockPalette: document.getElementById('blockPalette'),
     btnEraserTool: document.getElementById('btnEraserTool'),
@@ -181,37 +181,17 @@
   }
 
   function renderExerciseList() {
-    el.exerciseList.innerHTML = '';
+    if (!el.exerciseSelect) return;
+    el.exerciseSelect.innerHTML = '';
     state.exercises.forEach((ex, index) => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'exercise-item' + (ex.id === state.currentExerciseId ? ' active' : '');
-
-      const titleSpan = document.createElement('span');
-      titleSpan.className = 'exercise-item-title';
-      titleSpan.textContent = `${index + 1}. ${ex.title}`;
-
-      const statusSpan = document.createElement('span');
-      statusSpan.className = 'exercise-status-icon';
-      if (state.completedExercises[ex.id]) {
-        statusSpan.textContent = '✅';
-        statusSpan.title = 'Bereits erfolgreich gelöst';
-      } else {
-        statusSpan.textContent = '○';
+      const opt = document.createElement('option');
+      opt.value = ex.id;
+      const checkPrefix = state.completedExercises[ex.id] ? '✅ ' : '';
+      opt.textContent = `${checkPrefix}${index + 1}. ${ex.title}`;
+      if (ex.id === state.currentExerciseId) {
+        opt.selected = true;
       }
-
-      btn.appendChild(titleSpan);
-      btn.appendChild(statusSpan);
-
-      btn.addEventListener('click', () => {
-        state.currentExerciseId = ex.id;
-        state.evaluation = null;
-        state.showingSolutionPreview = false;
-        el.checkResultBox.classList.add('hidden');
-        renderAll();
-      });
-
-      el.exerciseList.appendChild(btn);
+      el.exerciseSelect.appendChild(opt);
     });
   }
 
@@ -1061,6 +1041,17 @@
         applyDragSpan();
       }
     });
+
+    // Exercise Dropdown change
+    if (el.exerciseSelect) {
+      el.exerciseSelect.addEventListener('change', (e) => {
+        state.currentExerciseId = e.target.value;
+        state.evaluation = null;
+        state.showingSolutionPreview = false;
+        el.checkResultBox.classList.add('hidden');
+        renderAll();
+      });
+    }
 
     // Mode switching
     el.btnModeStudent.addEventListener('click', () => {
