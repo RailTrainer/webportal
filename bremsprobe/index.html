@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bremsprobe-Baukasten | Interaktive Lernplattform</title>
+  <link rel="stylesheet" href="styles.css?v=4" />
+</head>
+<body>
+  <!-- Top Header Navigation -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon">🚆</div>
+      <div>
+        <h1>Bremsprobe-Baukasten</h1>
+        <span class="brand-subtitle">Interaktive Lern- &amp; Trainingsplattform</span>
+      </div>
+    </div>
+
+    <div class="mode-switcher" role="tablist" aria-label="Modus wechseln">
+      <button id="btnModeStudent" class="mode-btn active" type="button">
+        <span class="mode-icon">🎓</span>
+        <span>Teilnehmer-Modus</span>
+      </button>
+      <button id="btnModeTrainer" class="mode-btn" type="button">
+        <span class="mode-icon">🛠️</span>
+        <span>Trainer-Modus (Editor)</span>
+      </button>
+    </div>
+
+    <div class="header-actions">
+      <button id="btnExportJson" class="btn btn-secondary btn-sm" type="button" title="Alle Übungen & Bausteine als Datei exportieren">
+        ⬇ Export
+      </button>
+      <label class="btn btn-secondary btn-sm file-label" title="Übungen aus JSON-Datei importieren">
+        ⬆ Import
+        <input id="inputImportJson" type="file" accept=".json" hidden />
+      </label>
+    </div>
+  </header>
+
+  <!-- Main Workspace Layout -->
+  <div class="app-layout">
+    <!-- Left Sidebar: Exercise List & Block Palette -->
+    <aside class="sidebar">
+      <!-- Exercises Section -->
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Übungen</h2>
+          <div id="trainerExerciseActions" class="panel-header-actions hidden">
+            <button id="btnNewExercise" class="btn btn-primary btn-xs" type="button">+ Neu</button>
+            <button id="btnDuplicateExercise" class="btn btn-secondary btn-xs" type="button" title="Aktuelle Übung duplizieren">Kopie</button>
+          </div>
+        </div>
+        <div id="exerciseList" class="exercise-list"></div>
+      </section>
+
+      <!-- Building Blocks Palette -->
+      <section class="panel palette-panel">
+        <div class="panel-header">
+          <h2>Baukasten (Steine)</h2>
+          <button id="btnNewBlock" class="btn btn-secondary btn-xs hidden" type="button">+ Baustein</button>
+        </div>
+        <p class="palette-hint">
+          Baustein <strong>anklicken</strong> und auf das gewünschte Feld im Raster <strong>klicken</strong> (erneuter Klick löscht das Feld wieder). Alternativ per <strong>Drag &amp; Drop</strong> ziehen.
+        </p>
+
+        <div id="blockPalette" class="block-palette"></div>
+
+        <div class="palette-tools">
+          <button id="btnEraserTool" class="tool-btn" type="button" title="Klicken oder über Zellen ziehen, um Steine zu entfernen (Alternativ: Rechtsklick)">
+            🧹 Stein entfernen (Radierer)
+          </button>
+        </div>
+      </section>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-workspace">
+      <!-- Status / Toast Banner -->
+      <div id="toastBanner" class="toast-banner hidden"></div>
+
+      <!-- Exercise Header & Trainer Metadata Controls -->
+      <section class="panel workspace-header-panel">
+        <!-- Student View Header -->
+        <div id="studentHeaderView">
+          <div class="exercise-title-row">
+            <h2 id="studentExerciseTitle">Übung wird geladen...</h2>
+            <span id="studentModeBadge" class="badge badge-student">Lern-Modus</span>
+          </div>
+          <p id="studentExerciseDesc" class="exercise-description"></p>
+        </div>
+
+        <!-- Trainer View Header (Editable Title & Description) -->
+        <div id="trainerHeaderView" class="hidden">
+          <div class="trainer-banner">
+            <div>
+              <strong>🛠️ Trainer-Editor aktiv:</strong> Platzieren Sie unten im Raster die Bausteine an Ort und Stelle, um die Musterlösung für die Teilnehmer festzulegen.
+            </div>
+            <div class="trainer-save-group">
+              <button id="btnDeleteExercise" class="btn btn-danger btn-sm" type="button">🗑️ Übung löschen</button>
+              <button id="btnSaveExercise" class="btn btn-success btn-sm" type="button">💾 Übung speichern</button>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="inputExerciseTitle">Titel der Übung</label>
+              <input id="inputExerciseTitle" type="text" class="form-input" placeholder="z.B. Volle Bremsprobe bei Güterzügen" />
+            </div>
+            <div class="form-group">
+              <label for="inputExerciseDesc">Aufgabenstellung / Hinweis für Teilnehmer</label>
+              <input id="inputExerciseDesc" type="text" class="form-input" placeholder="Kurze Anleitung für den Teilnehmer..." />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Interactive Diagram & Grid Area -->
+      <section class="panel diagram-panel">
+        <!-- Toolbar above diagram -->
+        <div class="diagram-toolbar">
+          <!-- Student Toolbar -->
+          <div id="studentToolbar" class="toolbar-group">
+            <button id="btnCheckSolution" class="btn btn-primary" type="button">
+              ✅ Lösung prüfen
+            </button>
+            <button id="btnClearBoard" class="btn btn-secondary" type="button">
+              🔄 Neu beginnen (Leeren)
+            </button>
+            <button id="btnShowSolution" class="btn btn-outline" type="button">
+              👁️ Musterlösung einblenden
+            </button>
+          </div>
+
+          <!-- Trainer Toolbar (Train & Grid Controls) -->
+          <div id="trainerToolbar" class="toolbar-group hidden">
+            <div class="toolbar-section">
+              <span class="toolbar-label">Zugverband:</span>
+              <button id="btnAddWagon" class="btn btn-secondary btn-sm" type="button">+ Wagen</button>
+              <button id="btnRemoveWagon" class="btn btn-secondary btn-sm" type="button">− Wagen</button>
+              <button id="btnAddTfz" class="btn btn-secondary btn-sm" type="button">+ Tfz am Ende</button>
+            </div>
+            <div class="toolbar-divider"></div>
+            <div class="toolbar-section">
+              <span class="toolbar-label">Prüfschritte (Zeilen):</span>
+              <button id="btnAddRow" class="btn btn-secondary btn-sm" type="button">+ Zeile unten</button>
+              <button id="btnClearTrainerGrid" class="btn btn-secondary btn-sm" type="button">🧹 Raster leeren</button>
+            </div>
+          </div>
+
+          <div id="activeBrushIndicator" class="active-brush-indicator"></div>
+        </div>
+
+        <!-- Feedback Banner (shown after clicking "Lösung prüfen") -->
+        <div id="checkResultBox" class="check-result-box hidden"></div>
+
+        <!-- Trainer Hint for Vehicle & Row config -->
+        <div id="trainerDiagramHint" class="trainer-diagram-hint hidden">
+          💡 <strong>Tipp für Trainer:</strong> Klicken Sie oben auf ein Fahrzeug (<code>Tfz</code> oder <code>Wagen</code>), um Typ, Richtungssymbol (<code>&lt;</code>) oder eine <strong>Kuppelstelle</strong> einzustellen. Nutzen Sie links an jeder Zeile <strong>🔗</strong>, um zwei Zeilen bündig zu verbinden (z.B. <code>Z</code> direkt über <code>L</code> oder <code>B</code>), und <strong>➔ Alle Wagen</strong>, um eine ganze Wagenreihe mit dem gewählten Stein zu füllen.
+        </div>
+
+        <!-- The Railway Brake Test Diagram Canvas -->
+        <div class="diagram-scroll-container">
+          <div id="diagramBoard" class="diagram-board"></div>
+        </div>
+
+        <!-- Prerequisites ("Voraussetzungen:") Section -->
+        <div class="prerequisites-box">
+          <div class="prerequisites-header">
+            <h3>Voraussetzungen:</h3>
+            <button id="btnAddPrerequisite" class="btn btn-secondary btn-xs hidden" type="button">+ Punkt hinzufügen</button>
+          </div>
+          <ul id="studentPrerequisitesList" class="prerequisites-list"></ul>
+          <div id="trainerPrerequisitesEditor" class="prerequisites-editor hidden"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal: Edit Vehicle (Trainer Mode) -->
+  <div id="modalVehicle" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modalVehicleTitle">Fahrzeug / Position bearbeiten</h3>
+        <button id="btnCloseVehicleModal" class="modal-close" type="button">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="selectVehicleType">Fahrzeugtyp</label>
+          <select id="selectVehicleType" class="form-input">
+            <option value="tfz">Triebfahrzeug (Tfz)</option>
+            <option value="wagen">Wagen (Rechteck)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="inputVehicleLabel">Beschriftung im Kasten (z.B. Tfz oder leer für Standard-Wagen)</label>
+          <input id="inputVehicleLabel" type="text" class="form-input" placeholder="Tfz" />
+        </div>
+        <div class="form-group">
+          <label for="selectVehicleDirection">Symbol über dem Fahrzeug (Stromabnehmer / Führerstand)</label>
+          <select id="selectVehicleDirection" class="form-input">
+            <option value="none">Kein Symbol</option>
+            <option value="left">&lt; (nach links geöffnet wie im Original)</option>
+            <option value="right">&gt; (nach rechts geöffnet)</option>
+          </select>
+        </div>
+        <hr class="modal-hr" />
+        <div class="form-group checkbox-group">
+          <label>
+            <input id="checkCouplingAfter" type="checkbox" />
+            <strong>Kuppelstelle rechts nach diesem Fahrzeug anzeigen</strong> (gepunktete Linie + Pfeil)
+          </label>
+        </div>
+        <div class="form-group">
+          <label for="inputCouplingLabel">Beschriftung des Pfeils</label>
+          <input id="inputCouplingLabel" type="text" class="form-input" value="Kuppelstelle" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btnDeleteVehicle" class="btn btn-danger btn-sm" type="button">Fahrzeug entfernen</button>
+        <div class="modal-footer-right">
+          <button id="btnCancelVehicleModal" class="btn btn-secondary btn-sm" type="button">Abbrechen</button>
+          <button id="btnApplyVehicleModal" class="btn btn-primary btn-sm" type="button">Übernehmen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Create / Edit Building Block (Trainer Mode) -->
+  <div id="modalBlock" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modalBlockTitle">Baustein anpassen</h3>
+        <button id="btnCloseBlockModal" class="modal-close" type="button">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="inputBlockLabel">Kürzel im Baustein (für 2 Zeilen z.B. <code>D-HL</code> oder <code>D-\nHL</code>)</label>
+            <input id="inputBlockLabel" type="text" class="form-input" placeholder="z.B. Z, L, B, Dh, D-HL" />
+          </div>
+          <div class="form-group">
+            <label for="inputBlockName">Bezeichnung (in der Palette)</label>
+            <input id="inputBlockName" type="text" class="form-input" placeholder="z.B. Bremszustand prüfen (B)" />
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="inputBlockBgColor">Hintergrundfarbe</label>
+            <input id="inputBlockBgColor" type="color" class="form-input color-input" value="#6aa84f" />
+          </div>
+          <div class="form-group">
+            <label for="inputBlockTextColor">Textfarbe</label>
+            <input id="inputBlockTextColor" type="color" class="form-input color-input" value="#000000" />
+          </div>
+        </div>
+        <div class="form-group checkbox-group">
+          <label>
+            <input id="checkBlockTall" type="checkbox" />
+            Hoher Baustein / 2-zeilig (wie <code>D-HL</code>)
+          </label>
+        </div>
+        <div class="form-group">
+          <label for="inputBlockDesc">Kurzbeschreibung / Bedeutung</label>
+          <input id="inputBlockDesc" type="text" class="form-input" placeholder="Optionale Erklärung..." />
+        </div>
+        <div class="block-preview-container">
+          <span>Vorschau:</span>
+          <div id="blockModalPreview" class="diagram-block-preview"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btnDeleteBlock" class="btn btn-danger btn-sm" type="button">Baustein löschen</button>
+        <div class="modal-footer-right">
+          <button id="btnCancelBlockModal" class="btn btn-secondary btn-sm" type="button">Abbrechen</button>
+          <button id="btnSaveBlockModal" class="btn btn-primary btn-sm" type="button">Speichern</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=4"></script>
+</body>
+</html>

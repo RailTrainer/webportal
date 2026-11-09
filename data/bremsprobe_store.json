@@ -1,0 +1,465 @@
+{
+  "blocks": [
+    {
+      "id": "block_z",
+      "label": "Z",
+      "name": "Zustandsprüfung (Z)",
+      "bgColor": "#ffffff",
+      "textColor": "#000000",
+      "borderColor": "#000000",
+      "tall": false,
+      "description": "Prüfung des technischen Zustands / Bremsstellung"
+    },
+    {
+      "id": "block_l_green",
+      "label": "L",
+      "name": "Lösezustand prüfen (L - Grün)",
+      "bgColor": "#6aa84f",
+      "textColor": "#000000",
+      "borderColor": "#000000",
+      "tall": false,
+      "description": "Bremsen gelöst prüfen (Durchgang am Zug)"
+    },
+    {
+      "id": "block_b_red",
+      "label": "B",
+      "name": "Bremszustand prüfen (B - Rot)",
+      "bgColor": "#f08080",
+      "textColor": "#000000",
+      "borderColor": "#000000",
+      "tall": false,
+      "description": "Bremsen angelegt prüfen (Durchgang am Zug)"
+    },
+    {
+      "id": "block_dh",
+      "label": "Dh",
+      "name": "Luftabsperrhahn / Durchgangshahn (Dh)",
+      "bgColor": "#ffffff",
+      "textColor": "#000000",
+      "borderColor": "#000000",
+      "tall": false,
+      "description": "Luftabsperrhahn an der Kuppelstelle öffnen / bedienen"
+    },
+    {
+      "id": "block_d_hl",
+      "label": "D-\nHL",
+      "name": "Durchgangsprüfung HL (D-HL)",
+      "bgColor": "#f6c358",
+      "textColor": "#000000",
+      "borderColor": "#000000",
+      "tall": true,
+      "description": "Durchgangsprüfung der Hauptluftleitung am letzten Fahrzeug"
+    },
+    {
+      "id": "block_l_yellow",
+      "label": "L",
+      "name": "Lösen prüfen am Schluss (L - Gelb)",
+      "bgColor": "#eef246",
+      "textColor": "#000000",
+      "borderColor": "#000000",
+      "tall": false,
+      "description": "Lösezustand am letzten Fahrzeug prüfen"
+    },
+    {
+      "id": "block_b_pink",
+      "label": "B",
+      "name": "Bremsen prüfen am Schluss (B - Rosa)",
+      "bgColor": "#f4cccc",
+      "textColor": "#000000",
+      "borderColor": "#000000",
+      "tall": false,
+      "description": "Anlegen am letzten Fahrzeug prüfen"
+    },
+    {
+      "id": "block_l_blue",
+      "label": "L",
+      "name": "Lösezustand Kontrollfahrzeug (L - Hellblau)",
+      "bgColor": "#d4e6f1",
+      "textColor": "#000000",
+      "borderColor": "#000000",
+      "tall": false,
+      "description": "Lösezustand an einem Referenzwagen vor dem Kuppeln prüfen"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex_volle_bp_1",
+      "title": "Volle Bremsprobe – Variante 1 (Z & L im ersten Gang)",
+      "description": "Legen Sie die passenden Bausteine für den Ablauf dieser vollen Bremsprobe in der richtigen zeitlichen Reihenfolge (von oben nach unten) unter das Triebfahrzeug (Tfz) und die Wagen.",
+      "prerequisites": [
+        "Bei Güterzügen darf eine volle Bremsprobe ohne separaten Zustandsgang durchgeführt werden, wenn Zustand (Z) und Lösezustand (L) im ersten Prüfgang gemeinsam geprüft werden.",
+        "Das Triebfahrzeug wird an den bestehenden Wagenzug gekuppelt (Kuppelstelle hinter dem Tfz)."
+      ],
+      "train": {
+        "vehicles": [
+          {
+            "id": "v_tfz",
+            "type": "tfz",
+            "label": "Tfz",
+            "direction": "left",
+            "couplingAfter": true,
+            "couplingLabel": "Kuppelstelle"
+          },
+          {
+            "id": "v_w1",
+            "type": "wagen",
+            "label": "",
+            "direction": "none",
+            "couplingAfter": false,
+            "couplingLabel": ""
+          },
+          {
+            "id": "v_w2",
+            "type": "wagen",
+            "label": "",
+            "direction": "none",
+            "couplingAfter": false,
+            "couplingLabel": ""
+          },
+          {
+            "id": "v_w3",
+            "type": "wagen",
+            "label": "",
+            "direction": "none",
+            "couplingAfter": false,
+            "couplingLabel": ""
+          },
+          {
+            "id": "v_w4",
+            "type": "wagen",
+            "label": "",
+            "direction": "none",
+            "couplingAfter": false,
+            "couplingLabel": ""
+          },
+          {
+            "id": "v_w5",
+            "type": "wagen",
+            "label": "",
+            "direction": "none",
+            "couplingAfter": false,
+            "couplingLabel": ""
+          },
+          {
+            "id": "v_w6",
+            "type": "wagen",
+            "label": "",
+            "direction": "none",
+            "couplingAfter": false,
+            "couplingLabel": ""
+          },
+          {
+            "id": "v_w7",
+            "type": "wagen",
+            "label": "",
+            "direction": "none",
+            "couplingAfter": false,
+            "couplingLabel": ""
+          },
+          {
+            "id": "v_w8",
+            "type": "wagen",
+            "label": "",
+            "direction": "none",
+            "couplingAfter": false,
+            "couplingLabel": ""
+          },
+          {
+            "id": "v_w9",
+            "type": "wagen",
+            "label": "",
+            "direction": "none",
+            "couplingAfter": false,
+            "couplingLabel": ""
+          },
+          {
+            "id": "v_w10",
+            "type": "wagen",
+            "label": "",
+            "direction": "none",
+            "couplingAfter": false,
+            "couplingLabel": ""
+          },
+          {
+            "id": "v_w11",
+            "type": "wagen",
+            "label": "",
+            "direction": "none",
+            "couplingAfter": false,
+            "couplingLabel": ""
+          }
+        ]
+      },
+      "rows": [
+        {
+          "id": "r0",
+          "joinWithNext": true
+        },
+        {
+          "id": "r1",
+          "joinWithNext": false
+        },
+        {
+          "id": "r2",
+          "joinWithNext": false
+        },
+        {
+          "id": "r3",
+          "joinWithNext": false
+        },
+        {
+          "id": "r4",
+          "joinWithNext": false
+        },
+        {
+          "id": "r5",
+          "joinWithNext": false
+        },
+        {
+          "id": "r6",
+          "joinWithNext": false
+        },
+        {
+          "id": "r7",
+          "joinWithNext": false
+        }
+      ],
+      "solution": {
+        "0-1": "block_z",
+        "1-1": "block_l_green",
+        "0-2": "block_z",
+        "1-2": "block_l_green",
+        "0-3": "block_z",
+        "1-3": "block_l_green",
+        "0-4": "block_z",
+        "1-4": "block_l_green",
+        "0-5": "block_z",
+        "1-5": "block_l_green",
+        "0-6": "block_z",
+        "1-6": "block_l_green",
+        "0-7": "block_z",
+        "1-7": "block_l_green",
+        "0-8": "block_z",
+        "1-8": "block_l_green",
+        "0-9": "block_z",
+        "1-9": "block_l_green",
+        "0-10": "block_z",
+        "1-10": "block_l_green",
+        "0-11": "block_z",
+        "1-11": "block_l_green",
+        "2-0": "block_dh",
+        "3-1": "block_b_red",
+        "3-2": "block_b_red",
+        "3-3": "block_b_red",
+        "3-4": "block_b_red",
+        "3-5": "block_b_red",
+        "3-6": "block_b_red",
+        "3-7": "block_b_red",
+        "3-8": "block_b_red",
+        "3-9": "block_b_red",
+        "3-10": "block_b_red",
+        "3-11": "block_b_red",
+        "4-11": "block_l_yellow",
+        "5-11": "block_d_hl",
+        "6-11": "block_b_pink",
+        "7-1": "block_l_green",
+        "7-2": "block_l_green",
+        "7-3": "block_l_green",
+        "7-4": "block_l_green",
+        "7-5": "block_l_green",
+        "7-6": "block_l_green",
+        "7-7": "block_l_green",
+        "7-8": "block_l_green",
+        "7-9": "block_l_green",
+        "7-10": "block_l_green",
+        "7-11": "block_l_green"
+      },
+      "updatedAt": "2026-11-09T19:32:17.547Z"
+    },
+    {
+      "id": "ex_volle_bp_2",
+      "title": "Volle Bremsprobe – Variante 2 (Z & B gemeinsam nach Kontroll-L)",
+      "description": "Vervollständigen Sie das Ablaufschema der vollen Bremsprobe bei Güterzügen ohne separaten Zustandsgang (Kontrolle Lösezustand an einem Wagen vorab, danach Z und B gemeinsam).",
+      "prerequisites": [
+        "Bei Güterzügen darf eine volle Bremsprobe ohne separaten Zustandsgang durchgeführt werden.",
+        "Vor dem Öffnen des Luftabsperrhahns (Dh) wird an einem Fahrzeug der Lösezustand (L, hellblau) festgestellt.",
+        "Anschließend werden Zustand (Z) und Bremszustand (B) gemeinsam geprüft."
+      ],
+      "train": {
+        "vehicles": [
+          {
+            "id": "v_tfz",
+            "type": "tfz",
+            "label": "Tfz",
+            "direction": "left",
+            "couplingAfter": true,
+            "couplingLabel": "Kuppelstelle"
+          },
+          {
+            "id": "v_w1",
+            "type": "wagen",
+            "label": "",
+            "direction": "none",
+            "couplingAfter": false,
+            "couplingLabel": ""
+          },
+          {
+            "id": "v_w2",
+            "type": "wagen",
+            "label": "",
+            "direction": "none",
+            "couplingAfter": false,
+            "couplingLabel": ""
+          },
+          {
+            "id": "v_w3",
+            "type": "wagen",
+            "label": "",
+            "direction": "none",
+            "couplingAfter": false,
+            "couplingLabel": ""
+          },
+          {
+            "id": "v_w4",
+            "type": "wagen",
+            "label": "",
+            "direction": "none",
+            "couplingAfter": false,
+            "couplingLabel": ""
+          },
+          {
+            "id": "v_w5",
+            "type": "wagen",
+            "label": "",
+            "direction": "none",
+            "couplingAfter": false,
+            "couplingLabel": ""
+          },
+          {
+            "id": "v_w6",
+            "type": "wagen",
+            "label": "",
+            "direction": "none",
+            "couplingAfter": false,
+            "couplingLabel": ""
+          },
+          {
+            "id": "v_w7",
+            "type": "wagen",
+            "label": "",
+            "direction": "none",
+            "couplingAfter": false,
+            "couplingLabel": ""
+          },
+          {
+            "id": "v_w8",
+            "type": "wagen",
+            "label": "",
+            "direction": "none",
+            "couplingAfter": false,
+            "couplingLabel": ""
+          },
+          {
+            "id": "v_w9",
+            "type": "wagen",
+            "label": "",
+            "direction": "none",
+            "couplingAfter": false,
+            "couplingLabel": ""
+          },
+          {
+            "id": "v_w10",
+            "type": "wagen",
+            "label": "",
+            "direction": "none",
+            "couplingAfter": false,
+            "couplingLabel": ""
+          },
+          {
+            "id": "v_w11",
+            "type": "wagen",
+            "label": "",
+            "direction": "none",
+            "couplingAfter": false,
+            "couplingLabel": ""
+          }
+        ]
+      },
+      "rows": [
+        {
+          "id": "r0",
+          "joinWithNext": false
+        },
+        {
+          "id": "r1",
+          "joinWithNext": false
+        },
+        {
+          "id": "r2",
+          "joinWithNext": true
+        },
+        {
+          "id": "r3",
+          "joinWithNext": false
+        },
+        {
+          "id": "r4",
+          "joinWithNext": false
+        },
+        {
+          "id": "r5",
+          "joinWithNext": false
+        },
+        {
+          "id": "r6",
+          "joinWithNext": false
+        },
+        {
+          "id": "r7",
+          "joinWithNext": false
+        }
+      ],
+      "solution": {
+        "0-9": "block_l_blue",
+        "1-0": "block_dh",
+        "2-1": "block_z",
+        "3-1": "block_b_red",
+        "4-1": "block_l_green",
+        "2-2": "block_z",
+        "3-2": "block_b_red",
+        "4-2": "block_l_green",
+        "2-3": "block_z",
+        "3-3": "block_b_red",
+        "4-3": "block_l_green",
+        "2-4": "block_z",
+        "3-4": "block_b_red",
+        "4-4": "block_l_green",
+        "2-5": "block_z",
+        "3-5": "block_b_red",
+        "4-5": "block_l_green",
+        "2-6": "block_z",
+        "3-6": "block_b_red",
+        "4-6": "block_l_green",
+        "2-7": "block_z",
+        "3-7": "block_b_red",
+        "4-7": "block_l_green",
+        "2-8": "block_z",
+        "3-8": "block_b_red",
+        "4-8": "block_l_green",
+        "2-9": "block_z",
+        "3-9": "block_b_red",
+        "4-9": "block_l_green",
+        "2-10": "block_z",
+        "3-10": "block_b_red",
+        "4-10": "block_l_green",
+        "2-11": "block_z",
+        "3-11": "block_b_red",
+        "4-11": "block_l_green",
+        "5-11": "block_d_hl",
+        "6-11": "block_b_pink",
+        "7-11": "block_l_yellow"
+      },
+      "updatedAt": "2026-11-09T19:32:17.549Z"
+    }
+  ]
+}
