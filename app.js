@@ -114,16 +114,6 @@ window.switchTab = function(tabId) {
     activeBtn.classList.add('bg-brand-600', 'text-white', 'shadow', 'shadow-brand-600/20');
     activeBtn.classList.remove('text-gray-400');
   }
-  const mainEl = document.querySelector('#adminWrapper main');
-  if (mainEl) {
-    if (tabId === 'bremsprobe') {
-      mainEl.classList.remove('max-w-7xl');
-      mainEl.classList.add('max-w-full');
-    } else {
-      mainEl.classList.add('max-w-7xl');
-      mainEl.classList.remove('max-w-full');
-    }
-  }
   if (window.lucide) lucide.createIcons();
 };
 

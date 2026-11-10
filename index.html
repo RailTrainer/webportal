@@ -253,7 +253,7 @@
       height: 100vh !important;
     }
 
-    body.bremsprobe-active #classroomWrapper {
+    body.bremsprobe-active #classroomWrapper:not(.hidden) {
       display: flex !important;
       flex-direction: column !important;
       height: calc(100vh - 68px) !important;
@@ -273,7 +273,7 @@
       flex: 1 1 auto !important;
     }
 
-    body.bremsprobe-active #classroomBremsprobeView {
+    body.bremsprobe-active #classroomBremsprobeView:not(.hidden) {
       display: flex !important;
       flex-direction: column !important;
       width: 100% !important;
@@ -497,12 +497,6 @@
         <i data-lucide="layers" class="w-4 h-4"></i>
         <span>Lernkarten & Signale</span>
         <span id="badge-flashcards-count" class="ml-auto text-xs px-2 py-0.5 rounded-full bg-gray-800">0</span>
-      </button>
-
-      <button onclick="switchTab('bremsprobe')" id="tab-btn-bremsprobe" class="nav-tab flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-gray-400 hover:bg-gray-800 hover:text-white">
-        <i data-lucide="train" class="w-4 h-4 text-emerald-400"></i>
-        <span>Bremsproben-Baukasten</span>
-        <span class="ml-auto text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Neu</span>
       </button>
 
       <button onclick="switchTab('duplicates')" id="tab-btn-duplicates" class="nav-tab flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-gray-400 hover:bg-gray-800 hover:text-white">
@@ -1275,37 +1269,6 @@
         <!-- DUPLIKATE CONTAINER -->
         <div id="duplicatesListContainer" class="space-y-4"></div>
       </section>
-
-      <!-- TAB: BREMSPROBEN-BAUKASTEN & TRAINER-EDITOR -->
-      <section id="tab-bremsprobe" class="tab-content hidden w-full">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-          <div>
-            <div class="flex items-center gap-2.5">
-              <h2 class="text-2xl font-bold text-white tracking-tight">Bremsproben-Baukasten & Editor</h2>
-              <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-                <i data-lucide="train" class="w-3.5 h-3.5 text-emerald-400"></i>
-                <span>Training & Szenarien-Editor</span>
-              </span>
-            </div>
-            <p class="text-sm text-gray-400 mt-1">Interaktiver Editor und Ausbildungs-Simulator für Bremsproben nach Baukastenprinzip (Z, L, B, Dh, D-HL).</p>
-          </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <button type="button" onclick="refreshAdminBremsprobeIframe()" class="px-3.5 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold text-xs rounded-xl border border-gray-700 transition flex items-center gap-2 shadow-sm">
-              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-              <span>Aktualisieren</span>
-            </button>
-            <a href="bremsprobe/index.html" target="_blank" rel="noopener noreferrer" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-600/30 transition flex items-center gap-2">
-              <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-              <span>In neuem Tab öffnen</span>
-            </a>
-          </div>
-        </div>
-
-        <div class="w-full rounded-2xl overflow-hidden border border-gray-800 shadow-2xl bg-gray-900" style="height: calc(100vh - 180px); min-height: 720px;">
-          <iframe id="adminBremsprobeIframe" src="bremsprobe/index.html?v=11" allow="fullscreen" class="w-full h-full border-0 bg-[#f3f5f8]" title="Bremsproben-Baukasten"></iframe>
-        </div>
-      </section>
-
 
     </main>
   </div>
@@ -4133,6 +4096,7 @@ window.switchPortalMode = function(mode) {
     adminWrap?.classList.add('flex');
     classWrap?.classList.add('hidden');
     classWrap?.classList.remove('flex');
+    document.body.classList.remove('bremsprobe-active', 'battle-running');
   } else {
     classBtn?.classList.add('bg-brand-600', 'text-white', 'shadow-lg', 'shadow-brand-600/30');
     classBtn?.classList.remove('text-gray-400');
@@ -4148,6 +4112,12 @@ window.switchPortalMode = function(mode) {
     adminWrap?.classList.remove('flex');
     classWrap?.classList.remove('hidden');
     classWrap?.classList.add('flex');
+
+    if (classroomSubTab === 'bremsprobe') {
+      document.body.classList.add('bremsprobe-active');
+    } else {
+      document.body.classList.remove('bremsprobe-active');
+    }
 
     window.initClassroomMode();
   }
@@ -9121,17 +9091,6 @@ window.switchTab = function(tabId) {
     activeBtn.classList.remove('text-gray-400');
   }
 
-  const mainEl = document.querySelector('#adminWrapper main');
-  if (mainEl) {
-    if (tabId === 'bremsprobe') {
-      mainEl.classList.remove('max-w-7xl');
-      mainEl.classList.add('max-w-full');
-    } else {
-      mainEl.classList.add('max-w-7xl');
-      mainEl.classList.remove('max-w-full');
-    }
-  }
-
   if (tabId === 'stats') {
     renderStats();
   }
@@ -9148,11 +9107,6 @@ window.switchTab = function(tabId) {
   }
 
   if (window.lucide) lucide.createIcons();
-};
-
-window.refreshAdminBremsprobeIframe = function() {
-  const iframe = document.getElementById('adminBremsprobeIframe');
-  if (iframe) iframe.src = 'bremsprobe/index.html?v=' + Date.now();
 };
 
 window.renderQuestions = function(list) {
