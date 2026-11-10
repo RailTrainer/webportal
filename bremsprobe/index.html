@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bremsprobe-Baukasten | Interaktive Lernplattform</title>
-  <link rel="stylesheet" href="styles.css?v=6" />
+  <link rel="stylesheet" href="styles.css?v=10" />
 </head>
 <body>
   <!-- Top Header Navigation -->
@@ -285,13 +285,41 @@
 
   <script>
     function toggleLocalFs() {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {});
+      const doc = document;
+      const parentDoc = (window.parent && window.parent !== window) ? window.parent.document : null;
+      const isFs = !!(doc.fullscreenElement || doc.webkitFullscreenElement || (parentDoc && (parentDoc.fullscreenElement || parentDoc.webkitFullscreenElement)));
+      if (!isFs) {
+        const el = doc.documentElement;
+        const rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+        if (rfs) {
+          rfs.call(el).catch(() => {
+            if (window.parent && window.parent !== window && typeof window.parent.toggleClassroomFullscreen === 'function') {
+              window.parent.toggleClassroomFullscreen();
+            }
+          });
+        } else if (window.parent && window.parent !== window && typeof window.parent.toggleClassroomFullscreen === 'function') {
+          window.parent.toggleClassroomFullscreen();
+        }
       } else {
-        document.exitFullscreen().catch(() => {});
+        if (doc.fullscreenElement || doc.webkitFullscreenElement) {
+          const efs = doc.exitFullscreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+          if (efs) efs.call(doc).catch(() => {});
+        } else if (parentDoc && (parentDoc.fullscreenElement || parentDoc.webkitFullscreenElement)) {
+          const efs = parentDoc.exitFullscreen || parentDoc.webkitExitFullscreen || parentDoc.msExitFullscreen;
+          if (efs) efs.call(parentDoc).catch(() => {});
+        }
       }
     }
+    function updateLocalFsBtn() {
+      const btn = document.getElementById('btnFsToggle');
+      if (!btn) return;
+      const parentDoc = (window.parent && window.parent !== window) ? window.parent.document : null;
+      const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || (parentDoc && (parentDoc.fullscreenElement || parentDoc.webkitFullscreenElement)));
+      btn.textContent = isFs ? '⛶ Vollbild beenden' : '⛶ Vollbild';
+    }
+    document.addEventListener('fullscreenchange', updateLocalFsBtn);
+    document.addEventListener('webkitfullscreenchange', updateLocalFsBtn);
   </script>
-  <script src="app.js?v=6"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>

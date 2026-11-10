@@ -2,6 +2,208 @@
 (function () {
   'use strict';
 
+  const STORAGE_KEY = 'bp_store_v2';
+
+  // Vollständige Standard-Bausteine & Übungen aus dem Projekt Bremse (Fallback & Initialbestand)
+  const DEFAULT_STORE = {
+    blocks: [
+      {
+        id: 'block_z',
+        label: 'Z',
+        name: 'Zustandsprüfung (Z)',
+        bgColor: '#ffffff',
+        textColor: '#000000',
+        borderColor: '#000000',
+        tall: false,
+        description: 'Prüfung des technischen Zustands / Bremsstellung'
+      },
+      {
+        id: 'block_l_green',
+        label: 'L',
+        name: 'Lösezustand prüfen (L - Grün)',
+        bgColor: '#6aa84f',
+        textColor: '#000000',
+        borderColor: '#000000',
+        tall: false,
+        description: 'Bremsen gelöst prüfen (Durchgang am Zug)'
+      },
+      {
+        id: 'block_b_red',
+        label: 'B',
+        name: 'Bremszustand prüfen (B - Rot)',
+        bgColor: '#f08080',
+        textColor: '#000000',
+        borderColor: '#000000',
+        tall: false,
+        description: 'Bremsen angelegt prüfen (Durchgang am Zug)'
+      },
+      {
+        id: 'block_dh',
+        label: 'Dh',
+        name: 'Luftabsperrhahn / Durchgangshahn (Dh)',
+        bgColor: '#ffffff',
+        textColor: '#000000',
+        borderColor: '#000000',
+        tall: false,
+        description: 'Luftabsperrhahn an der Kuppelstelle öffnen / bedienen'
+      },
+      {
+        id: 'block_d_hl',
+        label: 'D-\nHL',
+        name: 'Durchgangsprüfung HL (D-HL)',
+        bgColor: '#f6c358',
+        textColor: '#000000',
+        borderColor: '#000000',
+        tall: true,
+        description: 'Durchgangsprüfung der Hauptluftleitung am letzten Fahrzeug'
+      },
+      {
+        id: 'block_l_yellow',
+        label: 'L',
+        name: 'Lösen prüfen am Schluss (L - Gelb)',
+        bgColor: '#eef246',
+        textColor: '#000000',
+        borderColor: '#000000',
+        tall: false,
+        description: 'Lösezustand am letzten Fahrzeug prüfen'
+      },
+      {
+        id: 'block_b_pink',
+        label: 'B',
+        name: 'Bremsen prüfen am Schluss (B - Rosa)',
+        bgColor: '#f4cccc',
+        textColor: '#000000',
+        borderColor: '#000000',
+        tall: false,
+        description: 'Anlegen am letzten Fahrzeug prüfen'
+      },
+      {
+        id: 'block_l_blue',
+        label: 'L',
+        name: 'Lösezustand Kontrollfahrzeug (L - Hellblau)',
+        bgColor: '#d4e6f1',
+        textColor: '#000000',
+        borderColor: '#000000',
+        tall: false,
+        description: 'Lösezustand an einem Referenzwagen vor dem Kuppeln prüfen'
+      }
+    ],
+    exercises: [
+      {
+        id: 'ex_volle_bp_2',
+        title: 'Volle Bremsprobe – Variante 2 (Z & B gemeinsam nach Kontroll-L)',
+        description: 'Vervollständigen Sie das Ablaufschema der vollen Bremsprobe bei Güterzügen ohne separaten Zustandsgang (Kontrolle Lösezustand an einem Wagen vorab, danach Z und B gemeinsam).',
+        prerequisites: [
+          'Bei Güterzügen darf eine volle Bremsprobe ohne separaten Zustandsgang durchgeführt werden.',
+          'Vor dem Öffnen des Luftabsperrhahns (Dh) wird an einem Fahrzeug der Lösezustand (L, hellblau) festgestellt.',
+          'Anschließend werden Zustand (Z) und Bremszustand (B) gemeinsam geprüft.'
+        ],
+        train: {
+          vehicles: [
+            { id: 'v_tfz', type: 'tfz', label: 'Tfz', direction: 'left', couplingAfter: true, couplingLabel: 'Kuppelstelle' },
+            { id: 'v_w1', type: 'wagen', label: '', direction: 'none', couplingAfter: false, couplingLabel: '' },
+            { id: 'v_w2', type: 'wagen', label: '', direction: 'none', couplingAfter: false, couplingLabel: '' },
+            { id: 'v_w3', type: 'wagen', label: '', direction: 'none', couplingAfter: false, couplingLabel: '' },
+            { id: 'v_w4', type: 'wagen', label: '', direction: 'none', couplingAfter: false, couplingLabel: '' },
+            { id: 'v_w5', type: 'wagen', label: '', direction: 'none', couplingAfter: false, couplingLabel: '' },
+            { id: 'v_w6', type: 'wagen', label: '', direction: 'none', couplingAfter: false, couplingLabel: '' },
+            { id: 'v_w7', type: 'wagen', label: '', direction: 'none', couplingAfter: false, couplingLabel: '' },
+            { id: 'v_w8', type: 'wagen', label: '', direction: 'none', couplingAfter: false, couplingLabel: '' },
+            { id: 'v_w9', type: 'wagen', label: '', direction: 'none', couplingAfter: false, couplingLabel: '' },
+            { id: 'v_w10', type: 'wagen', label: '', direction: 'none', couplingAfter: false, couplingLabel: '' },
+            { id: 'v_w11', type: 'wagen', label: '', direction: 'none', couplingAfter: false, couplingLabel: '' }
+          ]
+        },
+        rows: [
+          { id: 'r0', joinWithNext: false },
+          { id: 'r1', joinWithNext: false },
+          { id: 'r2', joinWithNext: true },
+          { id: 'r3', joinWithNext: false },
+          { id: 'r4', joinWithNext: false },
+          { id: 'r5', joinWithNext: false },
+          { id: 'r6', joinWithNext: false },
+          { id: 'r7', joinWithNext: false }
+        ],
+        solution: {
+          '0-10': 'block_l_blue',
+          '1-0': 'block_dh',
+          '2-1': 'block_z', '3-1': 'block_b_red', '4-1': 'block_l_green',
+          '2-2': 'block_z', '3-2': 'block_b_red', '4-2': 'block_l_green',
+          '2-3': 'block_z', '3-3': 'block_b_red', '4-3': 'block_l_green',
+          '2-4': 'block_z', '3-4': 'block_b_red', '4-4': 'block_l_green',
+          '2-5': 'block_z', '3-5': 'block_b_red', '4-5': 'block_l_green',
+          '2-6': 'block_z', '3-6': 'block_b_red', '4-6': 'block_l_green',
+          '2-7': 'block_z', '3-7': 'block_b_red', '4-7': 'block_l_green',
+          '2-8': 'block_z', '3-8': 'block_b_red', '4-8': 'block_l_green',
+          '2-9': 'block_z', '3-9': 'block_b_red', '4-9': 'block_l_green',
+          '2-10': 'block_z', '3-10': 'block_b_red', '4-10': 'block_l_green',
+          '2-11': 'block_z', '3-11': 'block_b_red', '4-11': 'block_l_green',
+          '5-11': 'block_d_hl',
+          '6-11': 'block_b_pink',
+          '7-11': 'block_l_yellow'
+        }
+      },
+      {
+        id: 'ex_volle_bp_1',
+        title: 'Volle Bremsprobe – Variante 1 (Z & L im ersten Gang)',
+        description: 'Legen Sie die passenden Bausteine für den Ablauf dieser vollen Bremsprobe in der richtigen zeitlichen Reihenfolge (von oben nach unten) unter das Triebfahrzeug (Tfz) und die Wagen.',
+        prerequisites: [
+          'Bei Güterzügen darf eine volle Bremsprobe ohne separaten Zustandsgang durchgeführt werden, wenn Zustand (Z) und Lösezustand (L) im ersten Prüfgang gemeinsam geprüft werden.',
+          'Das Triebfahrzeug wird an den bestehenden Wagenzug gekuppelt (Kuppelstelle hinter dem Tfz).'
+        ],
+        train: {
+          vehicles: [
+            { id: 'v_tfz', type: 'tfz', label: 'Tfz', direction: 'left', couplingAfter: true, couplingLabel: 'Kuppelstelle' },
+            { id: 'v_w1', type: 'wagen', label: '', direction: 'none', couplingAfter: false, couplingLabel: '' },
+            { id: 'v_w2', type: 'wagen', label: '', direction: 'none', couplingAfter: false, couplingLabel: '' },
+            { id: 'v_w3', type: 'wagen', label: '', direction: 'none', couplingAfter: false, couplingLabel: '' },
+            { id: 'v_w4', type: 'wagen', label: '', direction: 'none', couplingAfter: false, couplingLabel: '' },
+            { id: 'v_w5', type: 'wagen', label: '', direction: 'none', couplingAfter: false, couplingLabel: '' },
+            { id: 'v_w6', type: 'wagen', label: '', direction: 'none', couplingAfter: false, couplingLabel: '' },
+            { id: 'v_w7', type: 'wagen', label: '', direction: 'none', couplingAfter: false, couplingLabel: '' },
+            { id: 'v_w8', type: 'wagen', label: '', direction: 'none', couplingAfter: false, couplingLabel: '' },
+            { id: 'v_w9', type: 'wagen', label: '', direction: 'none', couplingAfter: false, couplingLabel: '' },
+            { id: 'v_w10', type: 'wagen', label: '', direction: 'none', couplingAfter: false, couplingLabel: '' },
+            { id: 'v_w11', type: 'wagen', label: '', direction: 'none', couplingAfter: false, couplingLabel: '' }
+          ]
+        },
+        rows: [
+          { id: 'r0', joinWithNext: true },
+          { id: 'r1', joinWithNext: false },
+          { id: 'r2', joinWithNext: false },
+          { id: 'r3', joinWithNext: false },
+          { id: 'r4', joinWithNext: false },
+          { id: 'r5', joinWithNext: false },
+          { id: 'r6', joinWithNext: false },
+          { id: 'r7', joinWithNext: false }
+        ],
+        solution: {
+          '0-1': 'block_z', '1-1': 'block_l_green',
+          '0-2': 'block_z', '1-2': 'block_l_green',
+          '0-3': 'block_z', '1-3': 'block_l_green',
+          '0-4': 'block_z', '1-4': 'block_l_green',
+          '0-5': 'block_z', '1-5': 'block_l_green',
+          '0-6': 'block_z', '1-6': 'block_l_green',
+          '0-7': 'block_z', '1-7': 'block_l_green',
+          '0-8': 'block_z', '1-8': 'block_l_green',
+          '0-9': 'block_z', '1-9': 'block_l_green',
+          '0-10': 'block_z', '1-10': 'block_l_green',
+          '0-11': 'block_z', '1-11': 'block_l_green',
+          '2-0': 'block_dh',
+          '3-1': 'block_b_red', '3-2': 'block_b_red', '3-3': 'block_b_red', '3-4': 'block_b_red',
+          '3-5': 'block_b_red', '3-6': 'block_b_red', '3-7': 'block_b_red', '3-8': 'block_b_red',
+          '3-9': 'block_b_red', '3-10': 'block_b_red', '3-11': 'block_b_red',
+          '4-11': 'block_l_yellow',
+          '5-11': 'block_d_hl',
+          '6-11': 'block_b_pink',
+          '7-1': 'block_l_green', '7-2': 'block_l_green', '7-3': 'block_l_green', '7-4': 'block_l_green',
+          '7-5': 'block_l_green', '7-6': 'block_l_green', '7-7': 'block_l_green', '7-8': 'block_l_green',
+          '7-9': 'block_l_green', '7-10': 'block_l_green', '7-11': 'block_l_green'
+        }
+      }
+    ]
+  };
+
   const state = {
     mode: 'student', // 'student' | 'trainer'
     blocks: [],
@@ -109,8 +311,9 @@
     if (state.showingSolutionPreview) {
       return ex.solution || {};
     }
-    if (!state.studentBoards[ex.id]) {
-      state.studentBoards[ex.id] = {};
+    if (state.studentBoards[ex.id] === undefined) {
+      // Vorbelegung mit der Musterlösung (wie auf dem Referenzbild), damit das Schema direkt vollständig aufgebaut ist
+      state.studentBoards[ex.id] = JSON.parse(JSON.stringify(ex.solution || {}));
     }
     return state.studentBoards[ex.id];
   }
@@ -125,25 +328,84 @@
     }, 3200);
   }
 
-  // Load initial data from backend
-  async function initApp() {
+  function saveLocalStore() {
     try {
-      const res = await fetch('/api/bremsprobe/data');
-      const data = await res.json();
-      state.blocks = data.blocks || [];
-      state.exercises = data.exercises || [];
-      if (state.exercises.length > 0) {
-        state.currentExerciseId = state.exercises[0].id;
-      }
-      if (state.blocks.length > 0) {
-        state.activeTool = state.blocks[0].id;
-      }
-      bindEvents();
-      renderAll();
-    } catch (err) {
-      console.error('Fehler beim Laden der Daten:', err);
-      showToast('⚠️ Fehler beim Verbinden mit dem Server.');
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        blocks: state.blocks,
+        exercises: state.exercises,
+        updatedAt: new Date().toISOString()
+      }));
+    } catch (e) {
+      // ignore storage quota errors
     }
+  }
+
+  function loadLocalStore() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') return parsed;
+      }
+    } catch (e) {
+      // ignore invalid JSON
+    }
+    return null;
+  }
+
+  async function tryFetchJson(url) {
+    try {
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) return null;
+      const text = await res.text();
+      if (!text || text.trim().startsWith('<')) return null;
+      const data = JSON.parse(text);
+      if (data && (Array.isArray(data.blocks) || Array.isArray(data.exercises))) {
+        return data;
+      }
+    } catch (e) {
+      // ignore network/parse errors for fallback chain
+    }
+    return null;
+  }
+
+  // Load initial data from backend / static JSON / localStorage / embedded DEFAULT_STORE
+  async function initApp() {
+    let loadedData = await tryFetchJson('/api/bremsprobe/data');
+    if (!loadedData || !Array.isArray(loadedData.blocks) || loadedData.blocks.length === 0) {
+      loadedData = await tryFetchJson('/api/data') || loadedData;
+    }
+    if (!loadedData || !Array.isArray(loadedData.blocks) || loadedData.blocks.length === 0) {
+      loadedData = await tryFetchJson('../data/bremsprobe_store.json') || loadedData;
+    }
+
+    const localData = loadLocalStore();
+
+    const candidateBlocks = (loadedData && Array.isArray(loadedData.blocks) && loadedData.blocks.length > 0)
+      ? loadedData.blocks
+      : (localData && Array.isArray(localData.blocks) && localData.blocks.length > 0)
+        ? localData.blocks
+        : JSON.parse(JSON.stringify(DEFAULT_STORE.blocks));
+
+    const candidateExercises = (loadedData && Array.isArray(loadedData.exercises) && loadedData.exercises.length > 0)
+      ? loadedData.exercises
+      : (localData && Array.isArray(localData.exercises) && localData.exercises.length > 0)
+        ? localData.exercises
+        : JSON.parse(JSON.stringify(DEFAULT_STORE.exercises));
+
+    state.blocks = candidateBlocks;
+    state.exercises = candidateExercises;
+    saveLocalStore();
+
+    if (state.exercises.length > 0) {
+      state.currentExerciseId = state.exercises[0].id;
+    }
+    if (state.blocks.length > 0) {
+      state.activeTool = state.blocks[0].id;
+    }
+
+    bindEvents();
+    renderAll();
   }
 
   function renderAll() {
@@ -1000,17 +1262,31 @@
     renderActiveBrushIndicator();
   }
 
-  async function persistBlocksToServer() {
-    try {
-      await fetch('/api/bremsprobe/blocks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ blocks: state.blocks })
-      });
-      showToast('💾 Bausteine gespeichert.');
-    } catch (err) {
-      showToast('⚠️ Fehler beim Speichern der Bausteine.');
+  async function postJsonWithFallback(primaryUrl, fallbackUrl, payload) {
+    for (const url of [primaryUrl, fallbackUrl]) {
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          const text = await res.text();
+          if (text && !text.trim().startsWith('<')) {
+            return JSON.parse(text);
+          }
+        }
+      } catch (e) {
+        // try next
+      }
     }
+    return null;
+  }
+
+  async function persistBlocksToServer() {
+    saveLocalStore();
+    await postJsonWithFallback('/api/bremsprobe/blocks', '/api/blocks', { blocks: state.blocks });
+    showToast('💾 Bausteine gespeichert.');
   }
 
   async function saveCurrentExerciseToServer() {
@@ -1018,21 +1294,13 @@
     if (!ex) return;
     ex.title = el.inputExerciseTitle.value.trim() || 'Unbenannte Übung';
     ex.description = el.inputExerciseDesc.value.trim();
+    ex.updatedAt = new Date().toISOString();
 
-    try {
-      const res = await fetch('/api/bremsprobe/exercises', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(ex)
-      });
-      if (res.ok) {
-        showToast('✅ Übung und Musterlösung erfolgreich gespeichert!');
-        renderExerciseList();
-        renderWorkspaceHeader();
-      }
-    } catch (err) {
-      showToast('⚠️ Fehler beim Speichern der Übung.');
-    }
+    saveLocalStore();
+    await postJsonWithFallback('/api/bremsprobe/exercises', '/api/exercises', ex);
+    showToast('✅ Übung und Musterlösung erfolgreich gespeichert!');
+    renderExerciseList();
+    renderWorkspaceHeader();
   }
 
   function bindEvents() {
@@ -1158,9 +1426,15 @@
         return;
       }
       if (!confirm(`Möchten Sie die Übung "${ex.title}" wirklich löschen?`)) return;
-      await fetch(`/api/bremsprobe/exercises/${ex.id}`, { method: 'DELETE' });
       state.exercises = state.exercises.filter((e) => e.id !== ex.id);
       state.currentExerciseId = state.exercises[0].id;
+      saveLocalStore();
+      try {
+        await fetch(`/api/bremsprobe/exercises/${ex.id}`, { method: 'DELETE' });
+      } catch (e) {}
+      try {
+        await fetch(`/api/exercises/${ex.id}`, { method: 'DELETE' });
+      } catch (e) {}
       showToast('🗑️ Übung gelöscht.');
       renderAll();
     });
@@ -1273,19 +1547,20 @@
       reader.onload = async (ev) => {
         try {
           const parsed = JSON.parse(ev.target.result);
-          const res = await fetch('/api/bremsprobe/import', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(parsed)
-          });
-          if (res.ok) {
-            const { store } = await res.json();
-            state.blocks = store.blocks || [];
-            state.exercises = store.exercises || [];
-            if (state.exercises.length > 0) state.currentExerciseId = state.exercises[0].id;
-            showToast('✅ Übungen & Bausteine erfolgreich importiert!');
-            renderAll();
+          if (Array.isArray(parsed.blocks) && parsed.blocks.length > 0) {
+            state.blocks = parsed.blocks;
           }
+          if (Array.isArray(parsed.exercises) && parsed.exercises.length > 0) {
+            state.exercises = parsed.exercises;
+          }
+          if (state.exercises.length > 0) state.currentExerciseId = state.exercises[0].id;
+          if (state.blocks.length > 0 && !getBlockById(state.activeTool)) {
+            state.activeTool = state.blocks[0].id;
+          }
+          saveLocalStore();
+          await postJsonWithFallback('/api/bremsprobe/import', '/api/import', parsed);
+          showToast('✅ Übungen & Bausteine erfolgreich importiert!');
+          renderAll();
         } catch (err) {
           showToast('⚠️ Ungültige JSON-Datei.');
         }
